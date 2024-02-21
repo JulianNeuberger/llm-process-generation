@@ -78,6 +78,7 @@ def parse_experiment(
 
     documents = importer.do_import()
     documents_by_id = {d.id: d for d in documents}
+    print(list(documents_by_id.keys()))
 
     for result in experiment_result.results:
         answer = result.answer
@@ -206,6 +207,8 @@ def print_experiment_results(
     experiment_results = [experiments.ExperimentResult.from_dict(r) for r in contents]
     experiment_stats = parse_experiments(experiment_results, importer, verbose)
 
+    print(experiment_stats)
+
     costs = parse_costs_from_experiments(experiment_results)
     print_experiment_costs(costs)
 
@@ -215,8 +218,8 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        "res/answers/vanderaa/2024-02-20_14-22-37.json",
-        data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
+        "res/answers/quishpi/2024-02-21_16-48-44.json",
+        data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
         verbose=True,
     )
 

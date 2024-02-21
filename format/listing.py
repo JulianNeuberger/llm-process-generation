@@ -1,8 +1,9 @@
+import typing
+
 import data
 from format import base
 
-
-prompt = """You are a business process modelling expert, tasked with identifying
+van_der_aa_prompt = """You are a business process modelling expert, tasked with identifying
 constraints between actions in textual process descriptions. Textual process
 descriptions are sentences that describe a short sequence of actions and execution 
 constraints between them. Below you find a short description of relevant
@@ -51,9 +52,12 @@ Please return raw text, do not use any formatting.
 class VanDerAaListingFormattingStrategy(
     base.BaseFormattingStrategy[data.VanDerAaDocument]
 ):
+    def __init__(self, steps: typing.List[typing.Literal["constraints"]]):
+        super().__init__(steps)
+
     @staticmethod
     def description() -> str:
-        return prompt
+        return van_der_aa_prompt
 
     def output(self, document: data.VanDerAaDocument) -> str:
         constraints = []
@@ -99,4 +103,77 @@ class VanDerAaListingFormattingStrategy(
             name=document.name,
             text=document.text,
             constraints=constraints,
+        )
+
+
+quishpi_prompt = """You are a business process modelling expert, tasked with finding
+actions and conditions in textual business process descriptions. These process descriptions
+are natural language texts that define how a business process has to be executed, with 
+actions that have to be taken and conditions, that make the execution of some actions 
+conditional. More details on actions and conditions:
+
+- action: the task a participant of the process has to execute, a single 
+          verb that defines a unit of work. Should not include the object the work is
+          executed on / with, nor the participant that executes the action, nor additional 
+          specifications, like adjectives or adverbs. Information 
+          about the process itself, such as "the process starts" do not constitute an action 
+          and should not be extracted. 
+- condition: a phrase (span of text) that declares a decision and starts a conditional 
+             path in the process, usually the part directly following conditional words 
+             e.g., "if", "either", and similar words. The condition does not include the 
+             trigger word itself. If the condition does exist only of the trigger word, 
+             do not extract it. Only extract, if the condition affects an earlier or 
+             following action.
+
+Please extract all mentions in the given raw text in the following format:
+Print one mention per line, where you separate the mentions type and text by tabs, 
+e.g. "action\tdo something". An example for the 
+format would be:
+
+action\tannotate
+condition\tit is a relevant element
+action\tformatted
+
+Please return raw text, do not use any code formatting. Do not change the text of extracted
+actions and conditions, keep it exactly the same as it appears in text.
+"""
+
+
+class QuishpiListingFormattingStrategy(
+    base.BaseFormattingStrategy[data.QuishpiDocument]
+):
+    def __init__(self, steps: typing.List[typing.Literal["mentions"]]):
+        super().__init__(steps)
+
+    @staticmethod
+    def description() -> str:
+        return quishpi_prompt
+
+    def output(self, document: data.QuishpiDocument) -> str:
+        mentions = []
+        for mention in document.mentions:
+            mentions.append(f"{mention.type}\t{mention.text}")
+        return "\n".join(mentions)
+
+    def input(self, document: data.QuishpiDocument) -> str:
+        return document.text
+
+    def parse(
+        self, document: data.QuishpiDocument, string: str
+    ) -> data.QuishpiDocument:
+        mentions: typing.List[data.QuishpiMention] = []
+
+        for line in string.splitlines(keepends=False):
+            split_line = line.split("\t")
+            if len(split_line) != 2:
+                print(
+                    f"Expected two tab-separated values, got {len(split_line)} in '{line}' from LLM."
+                )
+                continue
+            mention_type, mention_text = split_line
+            mention = data.QuishpiMention(type=mention_type, text=mention_text)
+            mentions.append(mention)
+
+        return data.QuishpiDocument(
+            id=document.id, text=document.text, mentions=mentions
         )

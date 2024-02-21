@@ -8,20 +8,15 @@ if __name__ == "__main__":
 
     def main():
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/vanderaa/{date_formatted}.json"
+        storage = f"res/answers/quishpi/{date_formatted}.json"
         # storage = "res/answers/pet/2024-02-20_13-04-48.json"
 
         num_shots = 0
-        # formatter = format.ReferencesFormattingStrategy(["relations"])
-        formatter = format.VanDerAaListingFormattingStrategy(steps=["constraints"])
         model_name = "gpt-4-0125-preview"
 
-        # importer = data.PetImporter("res/data/pet/all.new.jsonl")
-        importer = data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv")
-        # with open("res/data/pet/folds.json", "r", encoding="utf8") as f:
-        #   folds = json.load(f)
-
-        folds = [{"train": [], "test": [d.id for d in importer.do_import()]}]
+        formatter = format.QuishpiListingFormattingStrategy(["mentions"])
+        importer = data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"])
+        folds = [{"train": [], "test": ["7-1_calling_leads"]}]
 
         experiments.experiment(
             importer=importer,

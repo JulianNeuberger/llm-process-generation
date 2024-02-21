@@ -271,65 +271,72 @@ def _f1_stats(
         true_attribute = getattr(t, attribute)
         pred_attribute = getattr(p, attribute)
 
-        true_as_set = set([e.to_tuple() for e in true_attribute])
-        assert len(true_as_set) == len(
-            true_attribute
-        ), f"{len(true_as_set)}, {len(true_attribute)}, {true_as_set}, {true_attribute}"
+        true = set([e.to_tuple() for e in true_attribute])
+        pred = set([e.to_tuple() for e in pred_attribute])
+        ok = true.intersection(pred)
+        non_ok = pred.difference(true)
+        missing = true.difference(pred)
 
-        pred_as_set = set([e.to_tuple() for e in pred_attribute])
+        if len(true) != len(true_attribute):
+            # contains identical values, need to use lists
+            true = [e.to_tuple() for e in true_attribute]
+            pred = [e.to_tuple() for e in pred_attribute]
+            true_candidates = [t for t in true]
+            ok = []
+            non_ok = []
+            for cur in pred:
+                if cur in true_candidates:
+                    true_candidates.remove(cur)
+                    ok.append(cur)
+                    continue
+                non_ok.append(cur)
+            missing = true_candidates
 
         _add_to_stats_by_tag(
             stats_by_tag,
             lambda e: _get_ner_tag_for_tuple(attribute, e, t),
-            true_as_set,
+            true,
             "gold",
         )
         _add_to_stats_by_tag(
             stats_by_tag,
             lambda e: _get_ner_tag_for_tuple(attribute, e, p),
-            pred_as_set,
+            pred,
             "pred",
         )
 
-        ok_preds = true_as_set.intersection(pred_as_set)
-
-        ok = [e.to_tuple() for e in pred_attribute if e.to_tuple() in ok_preds]
-
-        non_ok = [
-            e.to_tuple()
-            for e in pred_attribute
-            if e.to_tuple() not in true_as_set
-            # if _get_ner_tag_for_tuple(attribute, e.to_tuple(), p).lower() == 'actor'
-        ]
+        _add_to_stats_by_tag(
+            stats_by_tag,
+            lambda e: _get_ner_tag_for_tuple(attribute, e, p),
+            ok,
+            "ok",
+        )
 
         if verbose:  # and len(non_ok) > 0:
             print(f"=== {t.id} " + "=" * 150)
             print(p.text)
             print("-" * 100)
-            print("true")
-            print([e for e in true_as_set])
+            print(f"{len(true)} x true")
+            print([e for e in true])
             print("-" * 100)
             print()
-            print("pred")
-            print([e for e in pred_as_set])
+            print(f"{len(pred)} x pred")
+            print([e for e in pred])
             print("-" * 100)
             print()
-            print("ok")
+            print(f"{len(ok)} x ok")
             print(ok)
             print("-" * 100)
             print()
-            print("non ok")
+            print(f"{len(non_ok)} x non ok")
             print(non_ok)
+            print("-" * 100)
+            print()
+            print(f"{len(missing)} x missing")
+            print(missing)
             print()
             print("=" * 150)
             print()
-
-        _add_to_stats_by_tag(
-            stats_by_tag,
-            lambda e: _get_ner_tag_for_tuple(attribute, e, p),
-            ok_preds,
-            "ok",
-        )
 
     return {
         tag: Stats(num_pred=p, num_gold=g, num_ok=o)

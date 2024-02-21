@@ -11,7 +11,7 @@ class QuishpiMention:
     type: str
 
     def to_tuple(self) -> typing.Tuple:
-        return self.type, self.text
+        return self.type.lower(), self.text.lower()
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
@@ -21,18 +21,18 @@ class QuishpiRelation:
     type: str
 
     def to_tuple(self) -> typing.Tuple:
-        return self.type, self.head.to_tuple(), self.tail.to_tuple()
+        return self.type.lower(), self.head.to_tuple(), self.tail.to_tuple()
 
 
 @dataclasses.dataclass
 class QuishpiDocument(base.DocumentBase):
     mentions: typing.List[QuishpiMention]
-    relations: typing.List[QuishpiRelation]
 
 
 class QuishpiImporter(base.BaseImporter[QuishpiDocument]):
-    def __init__(self, base_dir_path: str):
+    def __init__(self, base_dir_path: str, exclude_tags: typing.List[str]):
         self._dir_path = base_dir_path
+        self._excluded_tags = [t.lower() for t in exclude_tags]
 
     def do_import(self) -> typing.List[QuishpiDocument]:
         annotation_path = os.path.join(self._dir_path, "judgeannotations")
@@ -61,20 +61,18 @@ class QuishpiImporter(base.BaseImporter[QuishpiDocument]):
                 raw_text = text_file.read()
 
             mentions: typing.Dict[int, QuishpiMention] = {}
-            relations: typing.List[QuishpiRelation] = []
             events_to_resolve = []
-            relations_to_resolve = []
 
             for line in raw_annotations.splitlines(keepends=False):
                 split_line = line.split("\t")
                 annotation_type = split_line[0][0].upper()
                 if annotation_type == "T":
                     mention_id, mention = self.mention_from_line(split_line)
+                    if mention.type.lower() in self._excluded_tags:
+                        continue
                     mentions[mention_id] = mention
                 if annotation_type == "A":
                     events_to_resolve.append(split_line)
-                if annotation_type == "R":
-                    relations_to_resolve.append(split_line)
 
             for event_line in events_to_resolve:
                 event_type, mention_id = event_line[1].split(" ")
@@ -84,15 +82,11 @@ class QuishpiImporter(base.BaseImporter[QuishpiDocument]):
                 new_mention = QuishpiMention(text=old_mention.text, type=event_type)
                 mentions[mention_id] = new_mention
 
-            for relation_line in relations_to_resolve:
-                _, relation = self.relation_from_line(relation_line, mentions)
-                relations.append(relation)
             documents.append(
                 QuishpiDocument(
                     text=raw_text,
                     id=os.path.splitext(annotation_file_name)[0],
                     mentions=list(mentions.values()),
-                    relations=relations,
                 )
             )
         return documents
@@ -131,9 +125,12 @@ class QuishpiImporter(base.BaseImporter[QuishpiDocument]):
 if __name__ == "__main__":
 
     def main():
-        documents = QuishpiImporter("../res/data/quishpi").do_import()
+        documents = QuishpiImporter("../res/data/quishpi", exclude_tags=[]).do_import()
+        fragment_types = set()
         for d in documents:
-            print(d)
-            print()
+            for m in d.mentions:
+                fragment_types.add(m.type)
+        print("Fragment types: ")
+        print("\n".join([t for t in fragment_types]))
 
     main()
