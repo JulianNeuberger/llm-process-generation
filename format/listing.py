@@ -57,13 +57,11 @@ class VanDerAaListingFormattingStrategy(
 
     def output(self, document: data.VanDerAaDocument) -> str:
         constraints = []
-        negative = "TRUE" if document.negative else "FALSE"
         for constraint in document.constraints:
             constraints.append(
                 f"{constraint.type}\t{constraint.head}\t{constraint.tail}"
             )
-        formatted_constraints = "\n".join(constraints)
-        return f"{negative}\n{formatted_constraints}"
+        return "\n".join(constraints)
 
     def input(self, document: data.VanDerAaDocument) -> str:
         return document.text
