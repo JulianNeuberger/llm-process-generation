@@ -1,4 +1,3 @@
-import abc
 import dataclasses
 import json
 import typing
@@ -36,13 +35,12 @@ class PetDocument(base.DocumentBase):
 
 
 @dataclasses.dataclass
-class PetMention:
-    ner_tag: str
+class PetMention(base.HasType):
     token_document_indices: typing.List[int] = dataclasses.field(default_factory=list)
 
     def copy(self) -> "PetMention":
         return PetMention(
-            ner_tag=self.ner_tag,
+            type=self.type,
             token_document_indices=[i for i in self.token_document_indices],
         )
 
@@ -50,7 +48,7 @@ class PetMention:
         return " ".join([document.tokens[i].text for i in self.token_document_indices])
 
     def to_tuple(self):
-        return (self.ner_tag.lower(),) + tuple(sorted(self.token_document_indices))
+        return (self.type.lower(),) + tuple(sorted(self.token_document_indices))
 
 
 @dataclasses.dataclass
@@ -64,27 +62,26 @@ class PetEntity:
         return tuple(sorted(self.mention_indices))
 
     def get_tag(self, document: "PetDocument") -> str:
-        tags = set(document.mentions[i].ner_tag for i in self.mention_indices)
+        tags = set(document.mentions[i].type for i in self.mention_indices)
         if len(tags) > 1:
             print(f"Entity has mentions of mixed ner tags: {tags}")
         return list(tags)[0]
 
 
 @dataclasses.dataclass
-class PetRelation:
+class PetRelation(base.HasType):
     head_mention_index: int
     tail_mention_index: int
-    tag: str
 
     def copy(self) -> "PetRelation":
         return PetRelation(
             head_mention_index=self.head_mention_index,
             tail_mention_index=self.tail_mention_index,
-            tag=self.tag,
+            type=self.type,
         )
 
     def to_tuple(self):
-        return self.tag.lower(), self.head_mention_index, self.tail_mention_index
+        return self.type.lower(), self.head_mention_index, self.tail_mention_index
 
 
 @dataclasses.dataclass
@@ -140,7 +137,7 @@ class PetDictExporter:
 
     def export_mention(self, mention: PetMention) -> typing.Dict:
         return {
-            "nerTag": mention.ner_tag,
+            "type": mention.type,
             "tokenDocumentIndices": mention.token_document_indices,
         }
 
@@ -148,7 +145,7 @@ class PetDictExporter:
         return {
             "headMentionIndex": relation.head_mention_index,
             "tailMentionIndex": relation.tail_mention_index,
-            "tag": relation.tag,
+            "type": relation.type,
         }
 
     def export_entity(self, entity: PetEntity) -> typing.Dict:
@@ -268,7 +265,7 @@ class OldPetFormatImporter(base.BaseImporter[PetDocument]):
         ]
 
         return PetMention(
-            ner_tag=json_mention["ner"],
+            type=json_mention["ner"],
             token_document_indices=document_level_token_indices,
         )
 
@@ -321,7 +318,7 @@ class OldPetFormatImporter(base.BaseImporter[PetDocument]):
             relation = PetRelation(
                 head_mention_index=head_mention_index,
                 tail_mention_index=tail_mention_index,
-                tag=tag,
+                type=tag,
             )
             relations.append(relation)
         return relations
@@ -372,7 +369,7 @@ class NewPetFormatImporter(base.BaseImporter[PetDocument]):
         @staticmethod
         def read_mention_from_dict(json_mention: typing.Dict) -> PetMention:
             return PetMention(
-                ner_tag=json_mention["nerTag"],
+                type=json_mention["type"],
                 token_document_indices=json_mention["tokenDocumentIndices"],
             )
 
@@ -400,7 +397,7 @@ class NewPetFormatImporter(base.BaseImporter[PetDocument]):
             return PetRelation(
                 head_mention_index=head_mention_index,
                 tail_mention_index=tail_mention_index,
-                tag=relation_dict["tag"],
+                type=relation_dict["type"],
             )
 
     def __init__(self, file_path: str):

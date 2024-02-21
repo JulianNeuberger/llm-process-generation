@@ -180,7 +180,7 @@ def _get_ner_tag_for_tuple(
             type(document) == data.PetDocument
         ), "Mentions currently only supported for PET documents."
         mentions = [document.mentions[i] for i in element]
-        return mentions[0].ner_tag
+        return mentions[0].type
     return element[0]
 
 

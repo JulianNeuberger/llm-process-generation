@@ -20,7 +20,7 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
     @staticmethod
     def dump_mention(mention: data.PetMention) -> typing.Dict:
         return {
-            "tag": mention.ner_tag,
+            "tag": mention.type,
             "indices": " ".join(str(i) for i in mention.token_document_indices),
         }
 
@@ -32,7 +32,7 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
     @staticmethod
     def dump_relation(relation: data.PetRelation) -> typing.Dict:
         return {
-            "tag": relation.tag,
+            "tag": relation.type,
             "headIndex": relation.head_mention_index,
             "tailIndex": relation.tail_mention_index,
         }

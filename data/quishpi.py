@@ -10,12 +10,18 @@ class QuishpiMention:
     text: str
     type: str
 
+    def to_tuple(self) -> typing.Tuple:
+        return self.type, self.text
+
 
 @dataclasses.dataclass(frozen=True, eq=True)
 class QuishpiRelation:
     head: QuishpiMention
     tail: QuishpiMention
     type: str
+
+    def to_tuple(self) -> typing.Tuple:
+        return self.type, self.head.to_tuple(), self.tail.to_tuple()
 
 
 @dataclasses.dataclass
