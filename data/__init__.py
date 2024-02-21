@@ -12,3 +12,9 @@ from data.pet import (
 )
 from data.vanderaa import VanDerAaDocument, VanDerAaConstraint, VanDerAaImporter
 from data.base import BaseImporter, DocumentBase
+from data.quishpi import (
+    QuishpiMention,
+    QuishpiRelation,
+    QuishpiDocument,
+    QuishpiImporter,
+)

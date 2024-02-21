@@ -1,5 +1,6 @@
 import csv
 import dataclasses
+import os.path
 import typing
 
 import nltk
@@ -105,20 +106,27 @@ class VanDerAaImporter(base.BaseImporter[pet.PetDocument]):
 
     def do_import(self) -> typing.List[VanDerAaDocument]:
         documents: typing.List[VanDerAaDocument] = []
-        with open(self._file_path, "r", encoding="windows-1252") as f:
-            reader = csv.reader(f, delimiter=";")
-            _ = next(reader)
-            for row in reader:
-                doc_id = str(row[ID_COL])
-                doc_name = row[NAME_COL]
-                text = row[TEXT_COL]
-                constraints = self.parse_constraints(row)
-                documents.append(
-                    VanDerAaDocument(
-                        id=doc_id, text=text, name=doc_name, constraints=constraints
+
+        file_paths = [self._file_path]
+        if os.path.isdir(self._file_path):
+            file_paths = os.listdir(self._file_path)
+            file_paths = [os.path.join(self._file_path, f) for f in file_paths]
+
+        for file_path in file_paths:
+            with open(file_path, "r", encoding="windows-1252") as f:
+                reader = csv.reader(f, delimiter=";")
+                _ = next(reader)
+                for row in reader:
+                    doc_id = str(row[ID_COL])
+                    doc_name = row[NAME_COL]
+                    text = row[TEXT_COL]
+                    constraints = self.parse_constraints(row)
+                    documents.append(
+                        VanDerAaDocument(
+                            id=doc_id, text=text, name=doc_name, constraints=constraints
+                        )
                     )
-                )
-        return documents
+            return documents
 
     @staticmethod
     def parse_constraints(

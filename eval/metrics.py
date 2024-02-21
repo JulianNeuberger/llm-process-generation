@@ -77,7 +77,7 @@ def constraint_f1_stats(
         if verbose:
             print(f"--- {p.name} ------------")
         case_stats = constraint_slot_filling_stats(
-            true=t.constraints, pred=p.constraints, verbose=verbose
+            t, true=t.constraints, pred=p.constraints, verbose=verbose
         )
         if verbose:
             print()
@@ -180,11 +180,12 @@ def _get_ner_tag_for_tuple(
             type(document) == data.PetDocument
         ), "Mentions currently only supported for PET documents."
         mentions = [document.mentions[i] for i in element]
-        return mentions[0].ner_tag
+        return mentions[0].type
     return element[0]
 
 
 def constraint_slot_filling_stats(
+    document: data.VanDerAaDocument,
     *,
     true: typing.List[data.VanDerAaConstraint],
     pred: typing.List[data.VanDerAaConstraint],
@@ -204,24 +205,13 @@ def constraint_slot_filling_stats(
                     continue
                 best_matches[p] = t
                 break
-    has_unmatched_predictions = False
-    for p in pred:
-        if p not in best_matches and verbose:
-            has_unmatched_predictions = True
-            print(f"Found no match for constraint {p.to_tuple()}")
+
+    non_ok = [p for p in pred if p not in best_matches.keys()]
+    ok = list(best_matches.values())
+    missing = [t for t in true if t not in best_matches.values()]
+
     if verbose:
-        if not has_unmatched_predictions:
-            print("Matched all predictions.")
-        else:
-            candidates = [t for t in true if t not in best_matches.values()]
-            if len(candidates) == 0:
-                print(
-                    f"No more ground truth candidates of the {len(true)} ones "
-                    f"remained after matching the other predictions."
-                )
-            else:
-                print("Remaining ground truth candidates are:")
-                print([t.to_tuple() for t in candidates])
+        print_sets(document.id, document.text, true, pred, ok, non_ok, missing)
     stats_by_tag = {}
 
     for t in true:
@@ -271,67 +261,86 @@ def _f1_stats(
         true_attribute = getattr(t, attribute)
         pred_attribute = getattr(p, attribute)
 
-        true_as_set = set([e.to_tuple() for e in true_attribute])
-        assert len(true_as_set) == len(
-            true_attribute
-        ), f"{len(true_as_set)}, {len(true_attribute)}, {true_as_set}, {true_attribute}"
+        true = set([e.to_tuple() for e in true_attribute])
+        pred = set([e.to_tuple() for e in pred_attribute])
+        ok = true.intersection(pred)
+        non_ok = pred.difference(true)
+        missing = true.difference(pred)
 
-        pred_as_set = set([e.to_tuple() for e in pred_attribute])
+        if len(true) != len(true_attribute):
+            # contains identical values, need to use lists
+            true = [e.to_tuple() for e in true_attribute]
+            pred = [e.to_tuple() for e in pred_attribute]
+            true_candidates = [t for t in true]
+            ok = []
+            non_ok = []
+            for cur in pred:
+                if cur in true_candidates:
+                    true_candidates.remove(cur)
+                    ok.append(cur)
+                    continue
+                non_ok.append(cur)
+            missing = true_candidates
 
         _add_to_stats_by_tag(
             stats_by_tag,
             lambda e: _get_ner_tag_for_tuple(attribute, e, t),
-            true_as_set,
+            true,
             "gold",
         )
         _add_to_stats_by_tag(
             stats_by_tag,
             lambda e: _get_ner_tag_for_tuple(attribute, e, p),
-            pred_as_set,
+            pred,
             "pred",
         )
-
-        ok_preds = true_as_set.intersection(pred_as_set)
-
-        ok = [e.to_tuple() for e in pred_attribute if e.to_tuple() in ok_preds]
-
-        non_ok = [
-            e.to_tuple()
-            for e in pred_attribute
-            if e.to_tuple() not in true_as_set
-            # if _get_ner_tag_for_tuple(attribute, e.to_tuple(), p).lower() == 'actor'
-        ]
-
-        if verbose:  # and len(non_ok) > 0:
-            print(f"=== {t.id} " + "=" * 150)
-            print(p.text)
-            print("-" * 100)
-            print("true")
-            print([e for e in true_as_set])
-            print("-" * 100)
-            print()
-            print("pred")
-            print([e for e in pred_as_set])
-            print("-" * 100)
-            print()
-            print("ok")
-            print(ok)
-            print("-" * 100)
-            print()
-            print("non ok")
-            print(non_ok)
-            print()
-            print("=" * 150)
-            print()
 
         _add_to_stats_by_tag(
             stats_by_tag,
             lambda e: _get_ner_tag_for_tuple(attribute, e, p),
-            ok_preds,
+            ok,
             "ok",
         )
+
+        if verbose:  # and len(non_ok) > 0:
+            print_sets(p.id, p.text, true, pred, ok, non_ok, missing)
 
     return {
         tag: Stats(num_pred=p, num_gold=g, num_ok=o)
         for tag, (g, p, o) in stats_by_tag.items()
     }
+
+
+def print_sets(
+    document_id: str,
+    document_text: str,
+    true: typing.Collection,
+    pred: typing.Collection,
+    ok: typing.Collection,
+    non_ok: typing.Collection,
+    missing: typing.Collection,
+):
+    print(f"=== {document_id} " + "=" * 150)
+    print(document_text)
+    print("-" * 100)
+    print(f"{len(true)} x true")
+    print([e for e in true])
+    print("-" * 100)
+    print()
+    print(f"{len(pred)} x pred")
+    print([e for e in pred])
+    print("-" * 100)
+    print()
+    print(f"{len(ok)} x ok")
+    print(ok)
+    print("-" * 100)
+    print()
+    print(f"{len(non_ok)} x non ok")
+    print(non_ok)
+    print("-" * 100)
+    print()
+    print(f"{len(missing)} x missing")
+    print(missing)
+    print()
+    print("=" * 150)
+    print()

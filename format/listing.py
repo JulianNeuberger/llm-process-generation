@@ -1,36 +1,37 @@
+import typing
+
 import data
 from format import base
 
-prompt = """You are a business process modelling expert, tasked with identifying
+van_der_aa_prompt = """You are a business process modelling expert, tasked with identifying
 constraints between actions in textual process descriptions. Textual process
-descriptions are sentences that describe a short sequence of actions. Ordering and existence of actions depend on
-constraints between them. Below you find further details about actions and constraints:
+descriptions are sentences that describe a short sequence of actions and execution 
+constraints between them. Below you find a short description of relevant
+elements:
 
-- action: predicate and object describing a task. Predicate is usually a verb, and object is 
-          some physical or digital object on which is being acted on. 
-
+- action: predicate and object describing a task. Predicate is usually a verb in 
+          infinitive, and object is some physical or digital object on which is
+          being acted on.
+          
 - constraint: defines if and how actions can be executed. Always has a source / head 
               action and sometimes a target / tail action, depending on the type. All 
               constraints are one of the following types:
     - init: this constraint marks a single action as the start of a work process. It has 
-            no target / tail action, only a source / head. 
+            no target / tail action, only a source / head.  
     - end: this constraint marks a single action as the end of a work process. It has 
            no target / tail action, only a source / head.
-    - precedence: The tail action can only be executed, if the head was already executed
-                  before. the head may be executed without the tail being executed.
+    - precedence: marks the source / head action as a requirement for the target / tail 
+                  action. The tail action can only be executed, if the head was executed
+                  first. the head may be executed without the tail being executed.
     - response: if the head action was executed, the tail action also has to be executed,
-                but the tail can also be executed independently of head. 
+                but the tail can also be executed independently of head.
     - succession: if the head action was executed, the tail is also executed, neither of
                   them are executed in isolation, i.e., tail is always executed after head,
                   or none of them are executed at all.
-
+                  
 Additionally you can determine if the given document describes a negation of constraints, 
-e.g., "when something happens, then we DO something" describes a positive constraint,
-while "when something happens, then we DON'T DO something" describes a negation.
-
-Note that constraints having a tail and a head are usually formulated like condition-consequence pairs. They restrict 
-different situations in the execution of process by describing the situation in the form of a condition and the
-consequence as kind of an implication.
+e.g., "when something happens, then we do something" describes a positive constraint,
+while "if something does not happen, then we do something" describes a negation.
 
 Please extract all constraints in the given raw text in the following format:
 Print one constraint per line, where you separate if the constraint is negative (TRUE if 
@@ -38,12 +39,11 @@ the document describes a negation, else it reads FALSE), the type of the constra
 extracted actions by tabs, e.g. "TRUE\tsuccession\tdo something\tdo thing". An example for the 
 format would be:
 
-FALSE\tsuccession\teat apple\tthrow ball
-TRUE\tprecedence\tplay game\twrite message
-TRUE\tresponse\treceive file\tsend results
+FALSE\tsuccession\tdo something\tdo thing
+TRUE\tprecedence\tdo thing\treact to thing
+TRUE\tresponse\treceive ok\tsend something
 
-Actions should be made up of predicate and object, where the predicate is a verb in infinitive and the object
-is usually a noun or a pronoun. Determiners are usually NOT part of an action.
+Actions should be made up of predicate and object, where the predicate is a verb in infinitive. 
 
 Please return raw text, do not use any formatting.
 """
@@ -52,25 +52,26 @@ Please return raw text, do not use any formatting.
 class VanDerAaListingFormattingStrategy(
     base.BaseFormattingStrategy[data.VanDerAaDocument]
 ):
+    def __init__(self, steps: typing.List[typing.Literal["constraints"]]):
+        super().__init__(steps)
+
     @staticmethod
     def description() -> str:
-        return prompt
+        return van_der_aa_prompt
 
     def output(self, document: data.VanDerAaDocument) -> str:
         constraints = []
-        negative = "TRUE" if document.negative else "FALSE"
         for constraint in document.constraints:
             constraints.append(
                 f"{constraint.type}\t{constraint.head}\t{constraint.tail}"
             )
-        formatted_constraints = "\n".join(constraints)
-        return f"{negative}\n{formatted_constraints}"
+        return "\n".join(constraints)
 
     def input(self, document: data.VanDerAaDocument) -> str:
         return document.text
 
     def parse(
-            self, document: data.VanDerAaDocument, string: str
+        self, document: data.VanDerAaDocument, string: str
     ) -> data.VanDerAaDocument:
         lines = string.splitlines(keepends=False)
         constraints = []
@@ -102,4 +103,77 @@ class VanDerAaListingFormattingStrategy(
             name=document.name,
             text=document.text,
             constraints=constraints,
+        )
+
+
+quishpi_prompt = """You are a business process modelling expert, tasked with finding
+actions and conditions in textual business process descriptions. These process descriptions
+are natural language texts that define how a business process has to be executed, with 
+actions that have to be taken and conditions, that make the execution of some actions 
+conditional. More details on actions and conditions:
+
+- action: the task a participant of the process has to execute, a single 
+          verb that defines a unit of work. Should not include the object the work is
+          executed on / with, nor the participant that executes the action, nor additional 
+          specifications, like adjectives or adverbs. Information 
+          about the process itself, such as "the process starts" do not constitute an action 
+          and should not be extracted. 
+- condition: a phrase (span of text) that declares a decision and starts a conditional 
+             path in the process, usually the part directly following conditional words 
+             e.g., "if", "either", and similar words. The condition does not include the 
+             trigger word itself. If the condition does exist only of the trigger word, 
+             do not extract it. Only extract, if the condition affects an earlier or 
+             following action.
+
+Please extract all mentions in the given raw text in the following format:
+Print one mention per line, where you separate the mentions type and text by tabs, 
+e.g. "action\tdo something". An example for the 
+format would be:
+
+action\tannotate
+condition\tit is a relevant element
+action\tformatted
+
+Please return raw text, do not use any code formatting. Do not change the text of extracted
+actions and conditions, keep it exactly the same as it appears in text.
+"""
+
+
+class QuishpiListingFormattingStrategy(
+    base.BaseFormattingStrategy[data.QuishpiDocument]
+):
+    def __init__(self, steps: typing.List[typing.Literal["mentions"]]):
+        super().__init__(steps)
+
+    @staticmethod
+    def description() -> str:
+        return quishpi_prompt
+
+    def output(self, document: data.QuishpiDocument) -> str:
+        mentions = []
+        for mention in document.mentions:
+            mentions.append(f"{mention.type}\t{mention.text}")
+        return "\n".join(mentions)
+
+    def input(self, document: data.QuishpiDocument) -> str:
+        return document.text
+
+    def parse(
+        self, document: data.QuishpiDocument, string: str
+    ) -> data.QuishpiDocument:
+        mentions: typing.List[data.QuishpiMention] = []
+
+        for line in string.splitlines(keepends=False):
+            split_line = line.split("\t")
+            if len(split_line) != 2:
+                print(
+                    f"Expected two tab-separated values, got {len(split_line)} in '{line}' from LLM."
+                )
+                continue
+            mention_type, mention_text = split_line
+            mention = data.QuishpiMention(type=mention_type, text=mention_text)
+            mentions.append(mention)
+
+        return data.QuishpiDocument(
+            id=document.id, text=document.text, mentions=mentions
         )
