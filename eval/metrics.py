@@ -77,7 +77,7 @@ def constraint_f1_stats(
         if verbose:
             print(f"--- {p.name} ------------")
         case_stats = constraint_slot_filling_stats(
-            true=t.constraints, pred=p.constraints, verbose=verbose
+            t, true=t.constraints, pred=p.constraints, verbose=verbose
         )
         if verbose:
             print()
@@ -185,6 +185,7 @@ def _get_ner_tag_for_tuple(
 
 
 def constraint_slot_filling_stats(
+    document: data.VanDerAaDocument,
     *,
     true: typing.List[data.VanDerAaConstraint],
     pred: typing.List[data.VanDerAaConstraint],
@@ -204,24 +205,13 @@ def constraint_slot_filling_stats(
                     continue
                 best_matches[p] = t
                 break
-    has_unmatched_predictions = False
-    for p in pred:
-        if p not in best_matches and verbose:
-            has_unmatched_predictions = True
-            print(f"Found no match for constraint {p.to_tuple()}")
+
+    non_ok = [p for p in pred if p not in best_matches.keys()]
+    ok = list(best_matches.values())
+    missing = [t for t in true if t not in best_matches.values()]
+
     if verbose:
-        if not has_unmatched_predictions:
-            print("Matched all predictions.")
-        else:
-            candidates = [t for t in true if t not in best_matches.values()]
-            if len(candidates) == 0:
-                print(
-                    f"No more ground truth candidates of the {len(true)} ones "
-                    f"remained after matching the other predictions."
-                )
-            else:
-                print("Remaining ground truth candidates are:")
-                print([t.to_tuple() for t in candidates])
+        print_sets(document.id, document.text, true, pred, ok, non_ok, missing)
     stats_by_tag = {}
 
     for t in true:
@@ -313,32 +303,44 @@ def _f1_stats(
         )
 
         if verbose:  # and len(non_ok) > 0:
-            print(f"=== {t.id} " + "=" * 150)
-            print(p.text)
-            print("-" * 100)
-            print(f"{len(true)} x true")
-            print([e for e in true])
-            print("-" * 100)
-            print()
-            print(f"{len(pred)} x pred")
-            print([e for e in pred])
-            print("-" * 100)
-            print()
-            print(f"{len(ok)} x ok")
-            print(ok)
-            print("-" * 100)
-            print()
-            print(f"{len(non_ok)} x non ok")
-            print(non_ok)
-            print("-" * 100)
-            print()
-            print(f"{len(missing)} x missing")
-            print(missing)
-            print()
-            print("=" * 150)
-            print()
+            print_sets(p.id, p.text, true, pred, ok, non_ok, missing)
 
     return {
         tag: Stats(num_pred=p, num_gold=g, num_ok=o)
         for tag, (g, p, o) in stats_by_tag.items()
     }
+
+
+def print_sets(
+    document_id: str,
+    document_text: str,
+    true: typing.Collection,
+    pred: typing.Collection,
+    ok: typing.Collection,
+    non_ok: typing.Collection,
+    missing: typing.Collection,
+):
+    print(f"=== {document_id} " + "=" * 150)
+    print(document_text)
+    print("-" * 100)
+    print(f"{len(true)} x true")
+    print([e for e in true])
+    print("-" * 100)
+    print()
+    print(f"{len(pred)} x pred")
+    print([e for e in pred])
+    print("-" * 100)
+    print()
+    print(f"{len(ok)} x ok")
+    print(ok)
+    print("-" * 100)
+    print()
+    print(f"{len(non_ok)} x non ok")
+    print(non_ok)
+    print("-" * 100)
+    print()
+    print(f"{len(missing)} x missing")
+    print(missing)
+    print()
+    print("=" * 150)
+    print()
