@@ -215,7 +215,7 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        "res/answers/vanderaa/2024-02-20_14-22-37.json",
+        "res/answers/vanderaa/2024-02-21_16-15-30.json",
         data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
         verbose=True,
     )

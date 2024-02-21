@@ -29,7 +29,7 @@ if __name__ == "__main__":
         # with open("res/data/pet/folds.json", "r", encoding="utf8") as f:
         #   folds = json.load(f)
 
-        folds = [{"train": [], "test": [d.id for d in importer.do_import()[5:16]]}]
+        folds = [{"train": [], "test": [d.id for d in importer.do_import()]}]
 
         experiments.experiment(
             importer=importer,
