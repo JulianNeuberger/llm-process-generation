@@ -1,5 +1,7 @@
 import datetime
 
+import nltk
+
 import data
 import experiments
 import format
@@ -7,6 +9,12 @@ import format
 if __name__ == "__main__":
 
     def main():
+        # Load sentence tokenizer if necessary
+        try:
+            nltk.data.find('tokenizers/punkt')
+        except LookupError:
+            nltk.download('punkt')
+
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/vanderaa/{date_formatted}.json"
         # storage = "res/answers/pet/2024-02-20_13-04-48.json"
@@ -21,7 +29,7 @@ if __name__ == "__main__":
         # with open("res/data/pet/folds.json", "r", encoding="utf8") as f:
         #   folds = json.load(f)
 
-        folds = [{"train": [], "test": [d.id for d in importer.do_import()]}]
+        folds = [{"train": [], "test": [d.id for d in importer.do_import()[5:16]]}]
 
         experiments.experiment(
             importer=importer,
