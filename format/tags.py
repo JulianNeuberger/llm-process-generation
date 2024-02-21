@@ -35,6 +35,9 @@ Always leave spaces around each word, tag, and punctuation, under no circumstanc
 alter the original text besides inserting text."""
 
 
+THasMentions
+
+
 class PetTagFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument]):
     """
     Format for mention detection using LLMs, where mentions and their position

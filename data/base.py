@@ -20,3 +20,19 @@ class BaseImporter(abc.ABC, typing.Generic[TDocument]):
 @dataclasses.dataclass
 class HasType(abc.ABC):
     type: str
+
+
+TMention = typing.TypeVar("TMention", bound=HasType)
+
+
+@dataclasses.dataclass
+class HasMentions(abc.ABC, typing.Generic[TMention]):
+    mentions: typing.List[TMention]
+
+
+TRelation = typing.TypeVar("TRelation", bound=HasType)
+
+
+@dataclasses.dataclass
+class HasRelations(abc.ABC, typing.Generic[TRelation]):
+    relations: typing.List[TRelation]

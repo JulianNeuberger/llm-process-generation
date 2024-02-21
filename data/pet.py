@@ -8,13 +8,15 @@ from data import base
 
 
 @dataclasses.dataclass
-class PetDocument(base.DocumentBase):
+class PetDocument(
+    base.DocumentBase, base.HasMentions["PetMention"], base.HasRelations["PetRelation"]
+):
     category: str
     name: str
-    tokens: typing.List["PetToken"] = dataclasses.field(default_factory=list)
-    mentions: typing.List["PetMention"] = dataclasses.field(default_factory=list)
-    entities: typing.List["PetEntity"] = dataclasses.field(default_factory=list)
-    relations: typing.List["PetRelation"] = dataclasses.field(default_factory=list)
+    tokens: typing.List["PetToken"]
+    # mentions: typing.List["PetMention"] = dataclasses.field(default_factory=list)
+    entities: typing.List["PetEntity"]
+    # relations: typing.List["PetRelation"] = dataclasses.field(default_factory=list)
 
     def copy(
         self,
