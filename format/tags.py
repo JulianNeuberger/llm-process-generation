@@ -71,7 +71,7 @@ class PetTagFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument]):
             attributes = {}
             if self._include_ids:
                 attributes["id"] = str(i)
-            opening_tag, closing_tag = self.ner_to_tag(mention.ner_tag, attributes)
+            opening_tag, closing_tag = self.ner_to_tag(mention.type, attributes)
             token_texts.insert(mention.token_document_indices[-1] + 1, closing_tag)
             token_texts.insert(mention.token_document_indices[0], opening_tag)
 
