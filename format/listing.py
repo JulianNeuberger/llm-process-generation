@@ -4,46 +4,54 @@ import data
 from format import base
 
 van_der_aa_prompt = """You are a business process modelling expert, tasked with identifying
-constraints between actions in textual process descriptions. Textual process
-descriptions are sentences that describe a short sequence of actions and execution 
-constraints between them. Below you find a short description of relevant
-elements:
+constraints between actions in textual process descriptions. Processes consist of actions and, thus, textual process
+descriptions are sentences that describe a short sequence of actions. Ordering and existence of actions depend on
+constraints between them. Below you find further details about actions and constraints:
 
-- action: predicate and object describing a task. Predicate is usually a verb in 
-          infinitive, and object is some physical or digital object on which is
-          being acted on.
-          
+- action: predicate and object describing a task. Predicate is usually a verb, and object is 
+          some physical or digital object on which is being acted on. 
+
 - constraint: defines if and how actions can be executed. Always has a source / head 
               action and sometimes a target / tail action, depending on the type. All 
               constraints are one of the following types:
-    - init: this constraint marks a single action as the start of a work process. It has 
-            no target / tail action, only a source / head.  
-    - end: this constraint marks a single action as the end of a work process. It has 
-           no target / tail action, only a source / head.
-    - precedence: marks the source / head action as a requirement for the target / tail 
-                  action. The tail action can only be executed, if the head was executed
-                  first. the head may be executed without the tail being executed.
-    - response: if the head action was executed, the tail action also has to be executed,
-                but the tail can also be executed independently of head.
-    - succession: if the head action was executed, the tail is also executed, neither of
-                  them are executed in isolation, i.e., tail is always executed after head,
-                  or none of them are executed at all.
-                  
+    - init: marks an action as the start of a the whole process. The action is the source / head action. There is no
+            no target / tail action. 
+    - end: marks an action as the end of the whole process. The action is the source / head action. There is no
+            no target / tail action. 
+    - precedence: The tail action can only be executed, if the head was already executed
+                  before. the head may be executed without the tail being executed. tail is the 
+    - response: if the head action was executed, the tail action also has to be executed later, too
+    - succession: this means if the head activity is executed, the tail activity needs to be
+          executed as well and at the same time, the tail activity requires prior execution of the head activity. 
+
 Additionally you can determine if the given document describes a negation of constraints, 
-e.g., "when something happens, then we do something" describes a positive constraint,
-while "if something does not happen, then we do something" describes a negation.
+e.g., "when something happens, then we DO something" describes a positive constraint,
+while "when something happens, then we DON'T DO something" describes a negation.
+
+Note that constraints having a tail and a head are usually formulated like condition-consequence pairs. They restrict 
+different situations in the execution of process by describing the situation in the form of a condition and the
+consequence as kind of an implication. Constraints are ALWAYS described explicitly. Please do NEVER try to guess 
+the valid constraints from the context and your own interpretation of the process. Stick closely to what is written in
+the process description. Further note that response, precedence and succession are easy to be mixed up. Here 
+          are two examples that are not a succession constraint:
+          1. After doing A, you have to do B. (response)
+          2. After doing A, B can be done, too. (precedence)
+It is easy to disambiguate them if you carefully consider the modality if something means a precondition to be able to
+do something else (precedence), requires that something else must be done (response) or if both holds (succession).
 
 Please extract all constraints in the given raw text in the following format:
 Print one constraint per line, where you separate if the constraint is negative (TRUE if 
 the document describes a negation, else it reads FALSE), the type of the constraint, and the 
-extracted actions by tabs, e.g. "TRUE\tsuccession\tdo something\tdo thing". An example for the 
+extracted actions by tabs in the following form (<...> are placeholders): 
+<TRUE or FALSE>\t<constraint type>\t<head action>\t<tail action>. Examples for the 
 format would be:
 
-FALSE\tsuccession\tdo something\tdo thing
-TRUE\tprecedence\tdo thing\treact to thing
-TRUE\tresponse\treceive ok\tsend something
+FALSE\tsuccession\teat apple\tthrow ball
+TRUE\tprecedence\tplay game\twrite message
+TRUE\tresponse\treceive file\tsend results
 
-Actions should be made up of predicate and object, where the predicate is a verb in infinitive. 
+Actions should be made up of predicate and object, where the predicate is a verb in infinitive and the object
+is usually a noun or a pronoun. Determiners are usually NOT part of an action.
 
 Please return raw text, do not use any formatting.
 """
@@ -71,7 +79,7 @@ class VanDerAaListingFormattingStrategy(
         return document.text
 
     def parse(
-        self, document: data.VanDerAaDocument, string: str
+            self, document: data.VanDerAaDocument, string: str
     ) -> data.VanDerAaDocument:
         lines = string.splitlines(keepends=False)
         constraints = []
@@ -159,7 +167,7 @@ class QuishpiListingFormattingStrategy(
         return document.text
 
     def parse(
-        self, document: data.QuishpiDocument, string: str
+            self, document: data.QuishpiDocument, string: str
     ) -> data.QuishpiDocument:
         mentions: typing.List[data.QuishpiMention] = []
 
