@@ -41,6 +41,16 @@ class VanDerAaConstraint:
         return self.type, self.head, self.tail, self.negative
 
     @property
+    def evaluation_type(self):
+        """Negations are handled differently in van der Aa's evaluation:
+        There their actual constraint type does not matter, so they make
+        up their own class, reflect this here, without changing their
+        predicted type."""
+        if self.negative:
+            return "negation"
+        return self.type
+
+    @property
     def num_slots(self):
         slots = 2
         if self.head is not None:
