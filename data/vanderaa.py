@@ -53,7 +53,7 @@ class VanDerAaConstraint:
     @property
     def num_slots(self):
         slots = 2
-        if self.head is not None:
+        if self.tail is not None:
             slots += 1
         if self.negative:
             slots += 1
@@ -101,11 +101,12 @@ class VanDerAaConstraint:
             res += 1
         if VanDerAaConstraint.action_match(self.head, true.head):
             res += 1
-        if VanDerAaConstraint.action_match(self.tail, true.tail):
-            res += 1
+        if true.tail is not None:
+            if VanDerAaConstraint.action_match(self.tail, true.tail):
+                res += 1
         if self.negative and true.negative:
             res += 1
-            if self.type != true.type:
+            if self.type.lower() != true.type.lower():
                 res += 1
         return res
 

@@ -75,7 +75,7 @@ def constraint_f1_stats(
     assert len(predicted_documents) == len(ground_truth_documents)
     for p, t in zip(predicted_documents, ground_truth_documents):
         if verbose:
-            print(f"--- {p.name} ------------")
+            print(f"--- name: {p.name}, id: {p.id} ------------")
         case_stats = constraint_slot_filling_stats(
             t, true=t.constraints, pred=p.constraints, verbose=verbose
         )
@@ -227,8 +227,12 @@ def constraint_slot_filling_stats(
     for p in best_matches:
         t = best_matches[p]
         if p.evaluation_type not in stats_by_tag:
-            stats_by_tag[p.evaluation_type] = Stats(0, 0, 0)
-        stats_by_tag[p.evaluation_type].num_ok += p.correct_slots(t)
+            stats_by_tag[t.evaluation_type] = Stats(0, 0, 0)
+        num_correct_slots = p.correct_slots(t)
+        assert num_correct_slots <= 4
+        stats_by_tag[t.evaluation_type].num_ok += num_correct_slots
+    for _, s in stats_by_tag.items():
+        assert s.num_ok <= s.num_gold
 
     if verbose:
         print()
