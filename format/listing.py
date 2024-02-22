@@ -14,8 +14,9 @@ constraints between them. Below you find further details about actions and const
 - constraint: defines if and how actions can be executed. Always has a source / head 
               action and sometimes a target / tail action, depending on the type. All 
               constraints are one of the following types:
-    - init: marks an action as the start of a the whole process. The action is the source / head action. There is no
-            no target / tail action. 
+    - init: marks an action as the start of an entire process. This action is the source / head action of the init 
+    constraint. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is started 
+    for an init constraint to apply. Signal words alone are not sufficient here.  
     - end: marks an action as the end of the whole process. The action is the source / head action. There is no
             no target / tail action. 
     - precedence: The tail action can only be executed, if the head was already executed
