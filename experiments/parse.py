@@ -78,7 +78,6 @@ def parse_experiment(
 
     documents = importer.do_import()
     documents_by_id = {d.id: d for d in documents}
-    print(list(documents_by_id.keys()))
 
     for result in experiment_result.results:
         answer = result.answer
@@ -206,8 +205,6 @@ def print_experiment_results(
         contents = json.load(f)
     experiment_results = [experiments.ExperimentResult.from_dict(r) for r in contents]
     experiment_stats = parse_experiments(experiment_results, importer, verbose)
-
-    print(experiment_stats)
 
     costs = parse_costs_from_experiments(experiment_results)
     print_experiment_costs(costs)
