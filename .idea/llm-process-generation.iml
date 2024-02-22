@@ -6,7 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/tests/.pytest_cache/v" />
       <excludeFolder url="file://$MODULE_DIR$/res" />
     </content>
-    <orderEntry type="jdk" jdkName="C:\Prog\miniforge3\envs\llm-process-generation" jdkType="Python SDK" />
+    <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
