@@ -3,56 +3,31 @@ import typing
 import data
 from format import base
 
-van_der_aa_prompt = """You are a business process modelling expert, tasked with identifying
-constraints between actions in textual process descriptions. Processes consist of actions and, thus, textual process
-descriptions are sentences that describe a short sequence of actions. Ordering and existence of actions depend on
-constraints between them. Below you find further details about actions and constraints:
+van_der_aa_prompt = """Your task is to extract declarative process models from natural language process descriptions. 
+The process descriptions consist of a series of actions, each described by a predicate and an object. 
+Your goal is to identify constraints between these actions, which dictate the ordering and existence of actions within
+the process. Constraints can be one of the following types:
 
-- action: predicate and object describing a task. Predicate is usually a verb, and object is 
-          some physical or digital object on which is being acted on. 
+init: Marks an action as the start of the entire process. It has no target action.
+end: Marks an action as the end of the whole process. It has no target action.
+precedence: Specifies that the tail action can only be executed if the head action was already executed before.
+response: Requires that if the head action was executed, the tail action must also be executed.
+succession: Specifies that if the head action is executed, the tail action needs to be executed as well, and vice versa.
 
-- constraint: defines if and how actions can be executed. Always has a source / head 
-              action and sometimes a target / tail action, depending on the type. All 
-              constraints are one of the following types:
-    - init: marks an action as the start of an entire process. This action is the source / head action of the init 
-    constraint. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is started 
-    for an init constraint to apply. Signal words alone are not sufficient here.  
-    - end: marks an action as the end of the whole process. The action is the source / head action. There is no
-            no target / tail action. 
-    - precedence: The tail action can only be executed, if the head was already executed
-                  before. the head may be executed without the tail being executed. tail is the 
-    - response: if the head action was executed, the tail action also has to be executed later, too
-    - succession: this means if the head activity is executed, the tail activity needs to be
-          executed as well and at the same time, the tail activity requires prior execution of the head activity. 
+Additionally, you may encounter negations of constraints, indicated by statements like "do not" or "must not."
 
-Additionally you can determine if the given document describes a negation of constraints, 
-e.g., "when something happens, then we DO something" describes a positive constraint,
-while "when something happens, then we DON'T DO something" describes a negation.
+Please ensure the correct identification and formatting of constraints in the given text. Output one constraint 
+per line, including whether the constraint is negated (TRUE or FALSE), the type of constraint, and the extracted 
+head and tail actions separated by tabs. Stick closely to the provided examples and descriptions, and be careful 
+to distinguish between precedence, response, and succession constraints.
 
-Note that constraints having a tail and a head are usually formulated like condition-consequence pairs. They restrict 
-different situations in the execution of process by describing the situation in the form of a condition and the
-consequence as kind of an implication. Constraints are ALWAYS described explicitly. Please do NEVER try to guess 
-the valid constraints from the context and your own interpretation of the process. Stick closely to what is written in
-the process description. Further note that response, precedence and succession are easy to be mixed up. Here 
-          are two examples that are not a succession constraint:
-          1. After doing A, you have to do B. (response)
-          2. After doing A, B can be done, too. (precedence)
-It is easy to disambiguate them if you carefully consider the modality if something means a precondition to be able to
-do something else (precedence), requires that something else must be done (response) or if both holds (succession).
-
-Please extract all constraints in the given raw text in the following format:
-Print one constraint per line, where you separate if the constraint is negative (TRUE if 
-the document describes a negation, else it reads FALSE), the type of the constraint, and the 
-extracted actions by tabs in the following form (<...> are placeholders): 
-<TRUE or FALSE>\t<constraint type>\t<head action>\t<tail action>. Examples for the 
-format would be:
-
-FALSE\tsuccession\teat apple\tthrow ball
-TRUE\tprecedence\tplay game\twrite message
-TRUE\tresponse\treceive file\tsend results
-
-Actions should be made up of predicate and object, where the predicate is a verb in infinitive and the object
-is usually a noun or a pronoun. Determiners are usually NOT part of an action.
+Here are some examples for both input and expected output (separated by the following symbol: |):
+    - Example 1: The process begins when the author submits the paper.|FALSE\tinit\tsubmit paper
+    - Example 2: After signing the contract, the product can be advertised.|FALSE\tprecedence\tsign contract\tadvertise product
+    - Example 3: After signing the contract, the product is advertised but never before.|FALSE\tsuccession\tsign contract\tadvertise product
+    - Example 4: When the manager is called, the request needs to be forwarded to the secretary, too.|FALSE\tresponse\tcall manager\tforward request
+    - Example 5: The process is completed as soon as the proposal is archived|FALSE\tend\tarchive proposal
+    - Example 6: After notifying the manager, the request must not be rejected.|TRUE\tresponse\tnofify manager\treject request 
 
 Please return raw text, do not use any formatting.
 """

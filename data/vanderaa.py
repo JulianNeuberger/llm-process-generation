@@ -111,7 +111,7 @@ class VanDerAaConstraint:
         return res
 
 
-class VanDerAaImporter(base.BaseImporter[pet.PetDocument]):
+class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
     def __init__(self, path_to_collection: str):
         self._file_path = path_to_collection
 
