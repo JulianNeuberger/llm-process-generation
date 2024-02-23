@@ -220,17 +220,20 @@ def constraint_slot_filling_stats(
         stats_by_tag[t.type].num_gold += t.num_slots
 
     for p in pred:
+        if p in best_matches:
+            continue
         if p.type not in stats_by_tag:
             stats_by_tag[p.type] = Stats(0, 0, 0)
         stats_by_tag[p.type].num_pred += p.num_slots
 
     for p in best_matches:
         t = best_matches[p]
-        if p.type not in stats_by_tag:
+        if t.type not in stats_by_tag:
             stats_by_tag[t.type] = Stats(0, 0, 0)
         num_correct_slots = p.correct_slots(t)
-        assert num_correct_slots <= 4
+        assert num_correct_slots <= t.num_slots
         stats_by_tag[t.type].num_ok += num_correct_slots
+        stats_by_tag[t.type].num_pred += p.num_slots
     for _, s in stats_by_tag.items():
         assert s.num_ok <= s.num_gold
 
