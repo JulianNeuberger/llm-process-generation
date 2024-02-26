@@ -94,7 +94,7 @@ class PetTagFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument]):
                 # start new mention
                 ner_tag = self.tag_to_ner(token)
                 assert current_mention is None
-                current_mention = data.PetMention(ner_tag=ner_tag)
+                current_mention = data.PetMention(type=ner_tag)
                 continue
 
             if closing_tag_regex.match(token):
