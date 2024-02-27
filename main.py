@@ -19,13 +19,13 @@ if __name__ == "__main__":
         storage = f"res/answers/quishpi-re/{date_formatted}.json"
         # storage = "res/answers/pet/2024-02-20_13-04-48.json"
 
-        num_shots = 0
+        num_shots = 1
         model_name = "gpt-4-0125-preview"
 
         formatter = format.QuishpiREListingFormattingStrategy(steps=["constraints"])
         importer = data.VanDerAaImporter("res/data/quishpi/")
 
-        folds = [{"train": [], "test": [d.id for d in importer.do_import()[1:21]]}]
+        folds = [{"train": [], "test": [d.id for d in importer.do_import()[1:5]]}]
 
         # # formatter = format.QuishpiListingFormattingStrategy(["mentions"])
         # # importer = data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"])

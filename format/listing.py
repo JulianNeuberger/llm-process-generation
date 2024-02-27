@@ -252,7 +252,7 @@ class QuishpiREListingFormattingStrategy(
         constraints = []
         for constraint in document.constraints:
             constraints.append(
-                f"{constraint.type}\t{constraint.head}\t{constraint.tail}"
+                f"{'TRUE' if constraint.negative else 'FALSE'}\t{constraint.type}\t{constraint.head}\t{constraint.tail}"
             )
         return "\n".join(constraints)
 
