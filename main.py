@@ -1,10 +1,24 @@
 import datetime
+import typing
 
 import nltk
 
 import data
 import experiments
 import format
+from data import base
+
+
+def select_documents(src: typing.List[base.DocumentBase], indexes: typing.List[int]) -> typing.List[
+    base.DocumentBase]:
+    if len(indexes) == 0:
+        return src
+
+    result = []
+    for idx in indexes:
+        result.append(src[idx])
+    return result
+
 
 if __name__ == "__main__":
 
@@ -42,5 +56,6 @@ if __name__ == "__main__":
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
+
 
     main()

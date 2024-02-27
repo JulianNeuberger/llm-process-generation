@@ -184,7 +184,7 @@ constraints between actions in textual process descriptions. Processes consist o
 descriptions are sentences that describe a short sequence of actions. Ordering and existence of actions depend on
 constraints between them. Below you find further details about actions and constraints:
 
-- action: predicate and object describing a task. Predicate is usually a verb, and object is 
+- action: predicate and object describing a task. Predicate is usually a transitive verb, and object is 
           some physical or digital object on which is being acted on. 
 
 - constraint: defines if and how actions can be executed. Always has a source / head 
@@ -212,21 +212,6 @@ constraints between them. Below you find further details about actions and const
 Additionally you can determine if the given document describes a negation of constraints, 
 e.g., "when something happens, then we DO something" describes a positive constraint,
 while "when something happens, then we DON'T DO something" describes a negation.
-
-Note that constraints having a tail and a head are usually formulated like condition-consequence pairs. They restrict 
-different situations in the execution of process by describing the situation in the form of a condition and the
-consequence as kind of an implication. Constraints are ALWAYS described explicitly. Please do NEVER try to guess 
-the valid constraints from the context and your own interpretation of the process. Stick closely to what is written in
-the process description. Further note that response, precedence, existence and succession are easy to be mixed up. 
-However, it is easy to disambiguate response, precedence and succession if you carefully consider the modality if 
-an action is a precondition for another action (precedence), requires that something else must be done because of the 
-action (response) or if it means both (succession). Here are some examples that are NOT a succession constraint:
-          1. After doing A, you have to do B. (response)
-          2. After doing A, B can be done, too. (precedence)
-          3. Action B must be carried out at some point in between. (existence)
-
-Actions should be made up of predicate and object, where the predicate is a verb in infinitive and the object
-is usually a noun or a pronoun. Determiners are usually NOT part of an action.
 
 Please extract all constraints in the given raw text in the following format:
 Print one constraint per line, where you separate if the constraint is negative (TRUE if 

@@ -20,14 +20,14 @@ if __name__ == "__main__":
         storage = f"res/answers/quishpi-re/{date_formatted}.json"
         # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
 
-        num_shots = 1
+        num_shots = 2
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         # formatter = format.PetTagFormattingStrategy()
         formatter = format.QuishpiREListingFormattingStrategy(steps=["constraints"])
         importer = data.VanDerAaImporter("res/data/quishpi/")
-        folds = sampling.generate_folds(importer.do_import()[1:11], num_shots)
+        folds = sampling.generate_folds(importer.do_import()[1:101], num_shots)
         print("Using folds:")
         print("------------")
         for fold in folds:

@@ -6,6 +6,7 @@ res/answers/*
 # ignore van der aa data, no license, has to be loaded manually!
 res/data/van-der-aa
 res/data/quishpi
+res/data/quishpi_existence_tests
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

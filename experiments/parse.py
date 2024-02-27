@@ -215,7 +215,7 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        "res/answers/quishpi/2024-02-21_16-48-44.json",
+        "res/answers/quishpi-re/2024-02-27_16-57-16.json",
         data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
         verbose=True,
     )
