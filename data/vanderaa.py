@@ -101,7 +101,7 @@ class VanDerAaConstraint:
         return res
 
 
-class VanDerAaImporter(base.BaseImporter[pet.PetDocument]):
+class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
     def __init__(self, path_to_collection: str):
         self._file_path = path_to_collection
 
@@ -127,7 +127,7 @@ class VanDerAaImporter(base.BaseImporter[pet.PetDocument]):
                             id=doc_id, text=text, name=doc_name, constraints=constraints
                         )
                     )
-            return documents
+        return documents
 
     @staticmethod
     def parse_constraints(
