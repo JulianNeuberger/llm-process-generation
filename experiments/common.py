@@ -81,9 +81,9 @@ class ExperimentResult:
 
 
 def get_prompt(
-    input_document: TDocument,
-    formatter: format.BaseFormattingStrategy[TDocument],
-    example_docs: typing.Iterable[TDocument],
+        input_document: TDocument,
+        formatter: format.BaseFormattingStrategy[TDocument],
+        example_docs: typing.Iterable[TDocument],
 ) -> str:
     examples = [
         {"input": formatter.input(d), "steps": formatter.steps, "output": formatter.output(d)}
@@ -126,12 +126,12 @@ def get_prompt(
 
 
 def run_single_document_prompt(
-    input_document: TDocument,
-    formatter: format.BaseFormattingStrategy[TDocument],
-    example_docs: typing.List[TDocument],
-    model: langchain_openai.ChatOpenAI,
-    dry_run: bool,
-    num_shots: int,
+        input_document: TDocument,
+        formatter: format.BaseFormattingStrategy[TDocument],
+        example_docs: typing.List[TDocument],
+        model: langchain_openai.ChatOpenAI,
+        dry_run: bool,
+        num_shots: int,
 ) -> PromptResult:
     print(f"Running prompt for {input_document.id} ...")
 
@@ -172,12 +172,12 @@ def run_single_document_prompt(
 
 
 def run_multiple_document_prompts(
-    input_documents: typing.List[TDocument],
-    formatter: format.BaseFormattingStrategy[TDocument],
-    example_docs: typing.List[TDocument],
-    model: langchain_openai.ChatOpenAI,
-    dry_run: bool,
-    num_shots: int,
+        input_documents: typing.List[TDocument],
+        formatter: format.BaseFormattingStrategy[TDocument],
+        example_docs: typing.List[TDocument],
+        model: langchain_openai.ChatOpenAI,
+        dry_run: bool,
+        num_shots: int,
 ) -> typing.Generator[PromptResult, None, None]:
     for d in input_documents:
         yield run_single_document_prompt(
@@ -186,14 +186,14 @@ def run_multiple_document_prompts(
 
 
 def experiment(
-    importer: base.BaseImporter[TDocument],
-    formatter: format.BaseFormattingStrategy[TDocument],
-    *,
-    model_name: str,
-    storage: str,
-    num_shots: int,
-    dry_run: bool,
-    folds: typing.List[typing.Dict[str, typing.List[str]]] = None,
+        importer: base.BaseImporter[TDocument],
+        formatter: format.BaseFormattingStrategy[TDocument],
+        *,
+        model_name: str,
+        storage: str,
+        num_shots: int,
+        dry_run: bool,
+        folds: typing.List[typing.Dict[str, typing.List[str]]] = None,
 ):
     documents = importer.do_import()
     model: langchain_openai.ChatOpenAI = langchain_openai.ChatOpenAI(
@@ -253,13 +253,13 @@ def experiment(
 
 
 def run_fold(
-    fold_index: int,
-    formatter: format.BaseFormattingStrategy,
-    model_name: str,
-    saved_results: typing.Dict,
-    num_shots: int = -1,
-    num_docs: int = -1,
-    dry_run: bool = False,
+        fold_index: int,
+        formatter: format.BaseFormattingStrategy,
+        model_name: str,
+        saved_results: typing.Dict,
+        num_shots: int = -1,
+        num_docs: int = -1,
+        dry_run: bool = False,
 ):
     if dry_run:
         print("Running in DRY RUN mode, will not make calls to OpenAI.")
@@ -294,31 +294,32 @@ def run_fold(
 
         if dry_run:
             prompt_text = get_prompt(input_document, formatter, example_docs)
-            yield RunResult(
+            yield ExperimentResult(
                 meta=RunMeta(
                     formatter=formatter.__class__.__name__,
                     num_shots=len(example_docs),
                     model=model_name,
+                    steps=formatter.steps
                 ),
-                result=PromptResult(
+                results=[PromptResult(
                     prompt=prompt_text,
                     answer="dry run",
                     original_id=input_document_id,
                     input_tokens=0,
                     output_tokens=0,
                     total_costs=0.0,
-                ),
+                )],
             )
-        yield run_single_document_prompt(input_document, formatter, example_docs, model)
+        yield run_single_document_prompt(input_document, formatter, example_docs, model, dry_run, num_shots)
 
 
 def run_folds(
-    model_name: str,
-    formatter: format.BaseFormattingStrategy,
-    storage: str,
-    *,
-    num_shots: int,
-    num_folds: int,
+        model_name: str,
+        formatter: format.BaseFormattingStrategy,
+        storage: str,
+        *,
+        num_shots: int,
+        num_folds: int,
 ):
     for i in tqdm.tqdm(list(range(num_folds))):
         if not os.path.isfile(storage):
@@ -340,13 +341,13 @@ def run_folds(
         fold: typing.Dict = folds[i]
 
         for result in run_fold(
-            fold_index=i,
-            formatter=formatter,
-            model_name=model_name,
-            saved_results=fold,
-            num_shots=num_shots,
-            num_docs=-1,
-            dry_run=False,
+                fold_index=i,
+                formatter=formatter,
+                model_name=model_name,
+                saved_results=fold,
+                num_shots=num_shots,
+                num_docs=-1,
+                dry_run=False,
         ):
             if fold["formatter"] != result.meta.formatter:
                 print(
@@ -358,19 +359,20 @@ def run_folds(
                     "Number of shots changed during fold! "
                     "This should not happen, still recording, so run is not lost."
                 )
-            fold["results"].append(result.result.to_dict())
+            fold["results"].append(result.to_dict())
             with open(storage, "w", encoding="utf8") as f:
                 json.dump(folds, f)
 
 
 def run_single_document(
-    model_name: str,
-    input_document_id: str,
-    formatter: format.BaseFormattingStrategy,
-    storage: str,
-    *,
-    num_shots: int,
-    fold_index: int,
+        model_name: str,
+        input_document_id: str,
+        formatter: format.BaseFormattingStrategy,
+        storage: str,
+        *,
+        num_shots: int,
+        fold_index: int,
+        dry_run: bool
 ):
     model: langchain_openai.ChatOpenAI = langchain_openai.ChatOpenAI(
         model_name=model_name
@@ -397,17 +399,19 @@ def run_single_document(
         formatter=formatter,
         model=model,
         example_docs=example_docs,
+        dry_run=dry_run,
+        num_shots=num_shots
     )
 
     result_dict = {
         "results": [
             {
-                "prompt": result.result.prompt,
-                "answer": result.result.answer,
-                "original": result.result.original_id,
-                "input_tokens": result.result.input_tokens,
-                "output_tokens": result.result.output_tokens,
-                "total_costs": result.result.total_costs,
+                "prompt": result.prompt,
+                "answer": result.answer,
+                "original": result.original_id,
+                "input_tokens": result.input_tokens,
+                "output_tokens": result.output_tokens,
+                "total_costs": result.total_costs,
             }
         ],
         "shots": num_shots,
