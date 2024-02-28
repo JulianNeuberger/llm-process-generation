@@ -27,7 +27,9 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
     @staticmethod
     def load_mention(raw: typing.Dict) -> data.PetMention:
         indices = [int(s) for s in raw["indices"].split(" ")]
-        return data.PetMention(type=raw["tag"], token_document_indices=indices)
+        return data.PetMention(
+            type=raw["tag"].strip().lower(), token_document_indices=tuple(indices)
+        )
 
     @staticmethod
     def dump_relation(relation: data.PetRelation) -> typing.Dict:
@@ -40,7 +42,7 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
     @staticmethod
     def load_relation(raw: typing.Dict) -> data.PetRelation:
         return data.PetRelation(
-            type=raw["tag"],
+            type=raw["tag"].lower().strip(),
             head_mention_index=raw["headIndex"],
             tail_mention_index=raw["tailIndex"],
         )

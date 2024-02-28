@@ -196,14 +196,23 @@ def constraint_slot_filling_stats(
     ok = [m for m in best_matches.values()]
     missing = [t for t in true if t not in best_matches.values()]
 
+    by_correct_slots = {}
+    for p, t in best_matches.items():
+        num_correct_slots = f"{p.correct_slots(t)} correct slots"
+        if num_correct_slots not in by_correct_slots:
+            by_correct_slots[num_correct_slots] = []
+        by_correct_slots[num_correct_slots].append(p)
+
     if verbose:
         print_sets(
             document,
-            true,
-            pred,
-            ok,
-            non_ok,
-            missing,
+            {
+                "true": true,
+                "pred": pred,
+                **by_correct_slots,
+                "non-ok": non_ok,
+                "missing": missing,
+            },
         )
     stats_by_tag = {}
 
@@ -278,7 +287,6 @@ def _f1_stats(
     for p, t in zip(predicted_documents, ground_truth_documents):
         true_attribute = getattr(t, attribute)
         pred_attribute = getattr(p, attribute)
-
         true = set(true_attribute)
         pred = set(pred_attribute)
         ok = true.intersection(pred)
@@ -323,11 +331,13 @@ def _f1_stats(
         if verbose:
             print_sets(
                 t,
-                true,
-                pred,
-                ok,
-                non_ok,
-                missing,
+                {
+                    "true": true,
+                    "pred": pred,
+                    "ok": ok,
+                    "non-ok": non_ok,
+                    "missing": missing,
+                },
             )
 
     return {
@@ -338,33 +348,17 @@ def _f1_stats(
 
 def print_sets(
     document: data.DocumentBase,
-    true: typing.List[data.SupportsPrettyDump],
-    pred: typing.List[data.SupportsPrettyDump],
-    ok: typing.List[data.SupportsPrettyDump],
-    non_ok: typing.List[data.SupportsPrettyDump],
-    missing: typing.List[data.SupportsPrettyDump],
+    sets: typing.Dict[str, typing.List[data.SupportsPrettyDump]],
 ):
     print(f"=== {document.id} " + "=" * 150)
     print(document.text)
     print("-" * 100)
-    print(f"{len(true)} x true")
-    print("\n".join([e.pretty_dump(document) for e in true]))
-    print("-" * 100)
-    print()
-    print(f"{len(pred)} x pred")
-    print("\n".join([e.pretty_dump(document) for e in pred]))
-    print("-" * 100)
-    print()
-    print(f"{len(ok)} x ok")
-    print("\n".join([e.pretty_dump(document) for e in ok]))
-    print("-" * 100)
-    print()
-    print(f"{len(non_ok)} x non ok")
-    print("\n".join([e.pretty_dump(document) for e in non_ok]))
-    print("-" * 100)
-    print()
-    print(f"{len(missing)} x missing")
-    print("\n".join([e.pretty_dump(document) for e in missing]))
-    print()
+
+    for set_name, values in sets.items():
+        print(f"{len(values)} x {set_name}")
+        print("\n".join([e.pretty_dump(document) for e in values]))
+        print("-" * 100)
+        print()
+
     print("=" * 150)
     print()

@@ -26,7 +26,7 @@ if __name__ == "__main__":
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         # formatter = format.PetTagFormattingStrategy()
         formatter = format.QuishpiREListingFormattingStrategy(steps=["constraints"])
-        importer = data.VanDerAaImporter("res/data/quishpi/")
+        importer = data.VanDerAaImporter("res/data/quishpi/csv")
         folds = sampling.generate_folds(importer.do_import()[1:101], num_shots)
         print("Using folds:")
         print("------------")
@@ -45,6 +45,5 @@ if __name__ == "__main__":
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
-
 
     main()

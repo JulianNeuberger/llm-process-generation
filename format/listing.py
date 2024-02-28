@@ -55,7 +55,7 @@ class VanDerAaListingFormattingStrategy(
         return document.text
 
     def parse(
-            self, document: data.VanDerAaDocument, string: str
+        self, document: data.VanDerAaDocument, string: str
     ) -> data.VanDerAaDocument:
         lines = string.splitlines(keepends=False)
         constraints = []
@@ -76,7 +76,7 @@ class VanDerAaListingFormattingStrategy(
                 print(f"Predicted empty type in {line}")
             constraints.append(
                 data.VanDerAaConstraint(
-                    type=c_type.lower(),
+                    type=c_type.strip().lower(),
                     head=c_head,
                     tail=c_tail,
                     negative=negative.lower() == "true",
@@ -143,7 +143,7 @@ class QuishpiListingFormattingStrategy(
         return document.text
 
     def parse(
-            self, document: data.QuishpiDocument, string: str
+        self, document: data.QuishpiDocument, string: str
     ) -> data.QuishpiDocument:
         mentions: typing.List[data.QuishpiMention] = []
 
@@ -155,7 +155,9 @@ class QuishpiListingFormattingStrategy(
                 )
                 continue
             mention_type, mention_text = split_line
-            mention = data.QuishpiMention(type=mention_type, text=mention_text)
+            mention = data.QuishpiMention(
+                type=mention_type.strip().lower(), text=mention_text
+            )
             mentions.append(mention)
 
         return data.QuishpiDocument(
@@ -275,8 +277,9 @@ class PetMentionListingFormattingStrategy(
     def output(self, document: data.PetDocument) -> str:
         formatted_mentions = []
         for m in document.mentions:
+            first_token = document.tokens[m.token_document_indices[0]]
             formatted_mentions.append(
-                f"{m.text(document)}\t{m.type}\t{document.tokens[m.token_document_indices[0]].sentence_index}"
+                f"{m.text(document)}\t{m.type}\t{first_token.sentence_index}"
             )
         return "\n".join(formatted_mentions)
 
@@ -313,9 +316,9 @@ class PetMentionListingFormattingStrategy(
                     continue
                 parsed_mentions.append(
                     data.PetMention(
-                        token_document_indices=[
+                        token_document_indices=tuple(
                             c.index_in_document for c in candidates
-                        ],
+                        ),
                         type=mention_type.lower().strip(),
                     )
                 )
@@ -416,7 +419,7 @@ class QuishpiREListingFormattingStrategy(
         return document.text
 
     def parse(
-            self, document: data.VanDerAaDocument, string: str
+        self, document: data.VanDerAaDocument, string: str
     ) -> data.VanDerAaDocument:
         lines = string.splitlines(keepends=False)
         constraints = []
@@ -437,7 +440,7 @@ class QuishpiREListingFormattingStrategy(
                 print(f"Predicted empty type in {line}")
             constraints.append(
                 data.VanDerAaConstraint(
-                    type=c_type.lower(),
+                    type=c_type.strip().lower(),
                     head=c_head,
                     tail=c_tail,
                     negative=negative.lower() == "true",

@@ -78,7 +78,9 @@ class QuishpiImporter(base.BaseImporter[QuishpiDocument]):
                 mention_id = mention_id[1:]
                 mention_id = int(mention_id)
                 old_mention = mentions[mention_id]
-                new_mention = QuishpiMention(text=old_mention.text, type=event_type)
+                new_mention = QuishpiMention(
+                    text=old_mention.text, type=event_type.strip().lower()
+                )
                 mentions[mention_id] = new_mention
 
             documents.append(
@@ -118,7 +120,7 @@ class QuishpiImporter(base.BaseImporter[QuishpiDocument]):
         mention_id = int(split_line[0][1:])
         mention_type, _, _ = split_line[1].split(" ")
         text = split_line[2]
-        return mention_id, QuishpiMention(text=text, type=mention_type)
+        return mention_id, QuishpiMention(text=text, type=mention_type.strip().lower())
 
 
 if __name__ == "__main__":

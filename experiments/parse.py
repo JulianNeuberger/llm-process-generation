@@ -78,8 +78,6 @@ def parse_experiment(
 
     documents = importer.do_import()
     documents_by_id = {d.id: d for d in documents}
-    print(len(documents_by_id))
-    print(documents_by_id.keys())
 
     for result in experiment_result.results:
         answer = result.answer
@@ -220,10 +218,12 @@ def print_experiment_results(
     if len(num_shots):
         num_shots = list(num_shots)[0]
     print(f"Experiment used {num_shots} shots")
+    unique_doc_ids = set()
+    for e in experiment_results:
+        for r in e.results:
+            unique_doc_ids.add(r.original_id)
     print(
-        "Experimented on",
-        sum([len([r.original_id for r in e.results]) for e in experiment_results]),
-        "documents",
+        f"Experimented on {len(unique_doc_ids)} unique documents, dataset has {len(importer.do_import())}."
     )
 
     scores = get_scores(experiment_stats)
@@ -232,8 +232,8 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        "res/answers/quishpi/2024-02-21_16-48-44.json",
-        data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
+        "res/answers/quishpi-re/2024-02-28_10-13-12.json",
+        data.VanDerAaImporter("res/data/quishpi/csv"),
         verbose=True,
     )
 

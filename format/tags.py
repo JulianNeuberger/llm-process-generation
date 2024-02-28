@@ -122,32 +122,41 @@ class PetTagFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument]):
 
         tokens = [t for t in tokens if t != ""]
         mentions: typing.List[data.PetMention] = []
-        current_mention: typing.Optional[data.PetMention] = None
+        current_mention_indices: typing.Optional[typing.List[int]] = None
+        current_mention_type: typing.Optional[str] = None
         index_in_document = 0
         for token in tokens:
             if opening_tag_regex.match(token):
                 # start new mention
                 ner_tag = self.tag_to_ner(token)
                 assert (
-                    current_mention is None
-                ), f"Unclosed mention with type {current_mention.type} in doc {document.id} at '{token}'"
-                current_mention = data.PetMention(type=ner_tag)
+                    current_mention_type is None
+                ), f"Unclosed mention with type {current_mention_type} in doc {document.id} at '{token}'"
+                current_mention_type = ner_tag
+                current_mention_indices = []
                 continue
 
             if closing_tag_regex.match(token):
                 # finish mentions
-                assert current_mention is not None
-                assert len(current_mention.token_document_indices) > 0
-                mentions.append(current_mention)
-                current_mention = None
+                assert current_mention_type is not None
+                assert current_mention_indices is not None
+                assert len(current_mention_indices) > 0
+                mentions.append(
+                    data.PetMention(
+                        type=current_mention_type.lower().strip(),
+                        token_document_indices=tuple(current_mention_indices),
+                    )
+                )
+                current_mention_type = None
+                current_mention_indices = None
                 continue
 
             original_token_text = document.tokens[index_in_document].text
             assert (
                 original_token_text == token
             ), f"Read token '{token}', but expected '{original_token_text}', the LLM seems to have altered the text."
-            if current_mention is not None:
-                current_mention.token_document_indices.append(index_in_document)
+            if current_mention_indices is not None:
+                current_mention_indices.append(index_in_document)
             index_in_document += 1
 
         document.mentions = mentions
