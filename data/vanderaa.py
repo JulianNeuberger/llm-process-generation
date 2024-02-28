@@ -5,7 +5,7 @@ import typing
 
 import nltk
 
-from data import base, pet
+from data import base
 
 
 def excel_col_to_index(col: str):
@@ -31,16 +31,13 @@ class VanDerAaDocument(base.DocumentBase):
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
-class VanDerAaConstraint:
+class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
     type: str
     head: str
     tail: typing.Optional[str]
     negative: bool
 
-    def to_tuple(self) -> typing.Tuple:
-        return self.type, self.head, self.tail, self.negative
-
-    def pretty_string(self) -> str:
+    def pretty_dump(self, document: VanDerAaDocument) -> str:
         return f"'{self.head}' -{self.negative}-{self.type}-> '{self.tail}'"
 
     @property

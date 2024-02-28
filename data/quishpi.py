@@ -6,22 +6,21 @@ from data import base
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
-class QuishpiMention:
+class QuishpiMention(base.SupportsPrettyDump["QuishpiDocument"], base.HasType):
     text: str
-    type: str
 
-    def to_tuple(self) -> typing.Tuple:
-        return self.type.lower(), self.text.lower()
+    def pretty_dump(self, document: "QuishpiDocument") -> str:
+        return f"{self.text} ({self.type})"
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
-class QuishpiRelation:
+class QuishpiRelation(base.SupportsPrettyDump["QuishpiDocument"]):
     head: QuishpiMention
     tail: QuishpiMention
     type: str
 
-    def to_tuple(self) -> typing.Tuple:
-        return self.type.lower(), self.head.to_tuple(), self.tail.to_tuple()
+    def pretty_dump(self, document: "QuishpiDocument") -> str:
+        return f"{self.head.pretty_dump(document)} -{self.type}-> {self.tail.pretty_dump(document)}"
 
 
 @dataclasses.dataclass

@@ -11,7 +11,7 @@ from data.pet import (
     PetJsonExporter as PetJsonExporter,
 )
 from data.vanderaa import VanDerAaDocument, VanDerAaConstraint, VanDerAaImporter
-from data.base import BaseImporter, DocumentBase
+from data.base import BaseImporter, DocumentBase, SupportsPrettyDump, HasType
 from data.quishpi import (
     QuishpiMention,
     QuishpiRelation,

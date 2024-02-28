@@ -216,14 +216,24 @@ def print_experiment_results(
     costs = parse_costs_from_experiments(experiment_results)
     print_experiment_costs(costs)
 
+    num_shots = set([e.meta.num_shots for e in experiment_results])
+    if len(num_shots):
+        num_shots = list(num_shots)[0]
+    print(f"Experiment used {num_shots} shots")
+    print(
+        "Experimented on",
+        sum([len([r.original_id for r in e.results]) for e in experiment_results]),
+        "documents",
+    )
+
     scores = get_scores(experiment_stats)
     print_scores_by_step(scores)
 
 
 def main():
     print_experiment_results(
-        "res/answers/quishpi/2024-02-27_22-54-38.json",
-        data.VanDerAaImporter("res/data/quishpi/csv"),
+        "res/answers/quishpi/2024-02-21_16-48-44.json",
+        data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
         verbose=True,
     )
 

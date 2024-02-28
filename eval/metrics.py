@@ -170,20 +170,6 @@ def _add_to_stats_by_tag(
     return stats_by_tag
 
 
-def _get_ner_tag_for_tuple(
-    element_type: str, element: typing.Tuple, document: data.DocumentBase
-) -> str:
-    assert element_type in ["mentions", "relations", "entities", "constraints"]
-    assert type(element) == tuple
-    if element_type == "entities":
-        assert (
-            type(document) == data.PetDocument
-        ), "Mentions currently only supported for PET documents."
-        mentions = [document.mentions[i] for i in element]
-        return mentions[0].type
-    return element[0]
-
-
 def constraint_slot_filling_stats(
     document: data.VanDerAaDocument,
     *,
@@ -206,16 +192,15 @@ def constraint_slot_filling_stats(
                 best_matches[p] = t
                 break
 
-    non_ok = [p.pretty_string() for p in pred if p not in best_matches.keys()]
-    ok = [m.pretty_string() for m in best_matches.values()]
-    missing = [t.pretty_string() for t in true if t not in best_matches.values()]
+    non_ok = [p for p in pred if p not in best_matches.keys()]
+    ok = [m for m in best_matches.values()]
+    missing = [t for t in true if t not in best_matches.values()]
 
     if verbose:
         print_sets(
-            document.id,
-            document.text,
-            [t.pretty_string() for t in true],
-            [p.pretty_string() for p in pred],
+            document,
+            true,
+            pred,
             ok,
             non_ok,
             missing,
@@ -260,31 +245,22 @@ def constraint_slot_filling_stats(
     return stats_by_tag
 
 
-def pretty_print_tuple(
-    document: data.DocumentBase, element_as_tuple: typing.Tuple, attribute: str
-):
-    if attribute == "mentions":
-        mention = data.PetMention(
-            type=element_as_tuple[0], token_document_indices=list(element_as_tuple[1:])
-        )
-        return f"({mention.type}, {mention.text(document)}, {mention.token_document_indices})"
-    if attribute == "entities":
-        entity = data.PetEntity(mention_indices=list(element_as_tuple))
-        return [
-            f"({document.mentions[i].type}, {document.mentions[i].text(document)}, {document.mentions[i].token_document_indices})"
-            for i in entity.mention_indices
-        ]
-    if attribute == "relations":
-        relation = data.PetRelation(
-            type=element_as_tuple[0],
-            head_mention_index=element_as_tuple[1],
-            tail_mention_index=element_as_tuple[2],
-        )
-        head = document.mentions[relation.head_mention_index]
-        tail = document.mentions[relation.tail_mention_index]
-
-        return f"{head.text(document)} -{relation.type}> {tail.text(document)}"
-    raise AssertionError()
+def _tag(
+    document: data.DocumentBase,
+    e: typing.Union[
+        data.PetMention,
+        data.PetEntity,
+        data.PetRelation,
+        data.VanDerAaConstraint,
+        data.QuishpiMention,
+    ],
+) -> str:
+    if isinstance(e, data.HasType):
+        return e.type
+    if type(e) == data.PetEntity:
+        assert type(document) == data.PetDocument
+        return e.get_tag(document)
+    raise AssertionError(f"Unknown type {type(e)}")
 
 
 def _f1_stats(
@@ -303,17 +279,17 @@ def _f1_stats(
         true_attribute = getattr(t, attribute)
         pred_attribute = getattr(p, attribute)
 
-        true = set([e.to_tuple() for e in true_attribute])
-        pred = set([e.to_tuple() for e in pred_attribute])
+        true = set(true_attribute)
+        pred = set(pred_attribute)
         ok = true.intersection(pred)
         non_ok = pred.difference(true)
         missing = true.difference(pred)
 
         if len(true) != len(true_attribute):
             # contains identical values, need to use lists
-            true = [e.to_tuple() for e in true_attribute]
-            pred = [e.to_tuple() for e in pred_attribute]
-            true_candidates = [t for t in true]
+            true = list(true_attribute)
+            pred = list(pred_attribute)
+            true_candidates = list(true_attribute)
             ok = []
             non_ok = []
             for cur in pred:
@@ -326,33 +302,32 @@ def _f1_stats(
 
         _add_to_stats_by_tag(
             stats_by_tag,
-            lambda e: _get_ner_tag_for_tuple(attribute, e, t),
+            lambda e: _tag(t, e),
             true,
             "gold",
         )
         _add_to_stats_by_tag(
             stats_by_tag,
-            lambda e: _get_ner_tag_for_tuple(attribute, e, p),
+            lambda e: _tag(t, e),
             pred,
             "pred",
         )
 
         _add_to_stats_by_tag(
             stats_by_tag,
-            lambda e: _get_ner_tag_for_tuple(attribute, e, p),
+            lambda e: _tag(t, e),
             ok,
             "ok",
         )
 
         if verbose:
             print_sets(
-                p.id,
-                p.text,
-                [pretty_print_tuple(p, t, attribute) for t in true],
-                [pretty_print_tuple(p, t, attribute) for t in pred],
-                [pretty_print_tuple(p, t, attribute) for t in ok],
-                [pretty_print_tuple(p, t, attribute) for t in non_ok],
-                [pretty_print_tuple(p, t, attribute) for t in missing],
+                t,
+                true,
+                pred,
+                ok,
+                non_ok,
+                missing,
             )
 
     return {
@@ -362,35 +337,34 @@ def _f1_stats(
 
 
 def print_sets(
-    document_id: str,
-    document_text: str,
-    true: typing.List[str],
-    pred: typing.List[str],
-    ok: typing.List[str],
-    non_ok: typing.List[str],
-    missing: typing.List[str],
+    document: data.DocumentBase,
+    true: typing.List[data.SupportsPrettyDump],
+    pred: typing.List[data.SupportsPrettyDump],
+    ok: typing.List[data.SupportsPrettyDump],
+    non_ok: typing.List[data.SupportsPrettyDump],
+    missing: typing.List[data.SupportsPrettyDump],
 ):
-    print(f"=== {document_id} " + "=" * 150)
-    print(document_text)
+    print(f"=== {document.id} " + "=" * 150)
+    print(document.text)
     print("-" * 100)
     print(f"{len(true)} x true")
-    print("\n".join(true))
+    print("\n".join([e.pretty_dump(document) for e in true]))
     print("-" * 100)
     print()
     print(f"{len(pred)} x pred")
-    print("\n".join(pred))
+    print("\n".join([e.pretty_dump(document) for e in pred]))
     print("-" * 100)
     print()
     print(f"{len(ok)} x ok")
-    print("\n".join(ok))
+    print("\n".join([e.pretty_dump(document) for e in ok]))
     print("-" * 100)
     print()
     print(f"{len(non_ok)} x non ok")
-    print("\n".join(non_ok))
+    print("\n".join([e.pretty_dump(document) for e in non_ok]))
     print("-" * 100)
     print()
     print(f"{len(missing)} x missing")
-    print("\n".join(missing))
+    print("\n".join([e.pretty_dump(document) for e in missing]))
     print()
     print("=" * 150)
     print()
