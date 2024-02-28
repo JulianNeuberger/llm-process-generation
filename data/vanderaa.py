@@ -40,6 +40,9 @@ class VanDerAaConstraint:
     def to_tuple(self) -> typing.Tuple:
         return self.type, self.head, self.tail, self.negative
 
+    def pretty_string(self) -> str:
+        return f"'{self.head}' -{self.negative}-{self.type}-> '{self.tail}'"
+
     @property
     def num_slots(self):
         slots = 2

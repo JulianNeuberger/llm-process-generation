@@ -78,6 +78,8 @@ def parse_experiment(
 
     documents = importer.do_import()
     documents_by_id = {d.id: d for d in documents}
+    print(len(documents_by_id))
+    print(documents_by_id.keys())
 
     for result in experiment_result.results:
         answer = result.answer
@@ -135,24 +137,29 @@ def parse_experiments(
 def get_scores(
     experiment_stats: typing.List[ExperimentStats],
 ) -> typing.Dict[str, PrintableScores]:
-    scores_by_step: typing.Dict[str, PrintableScores] = {}
+    total_stats_by_step: typing.Dict[str, typing.Dict[str, eval.Stats]] = {}
     for stats_by_step in experiment_stats:
         for step, stats in stats_by_step.items():
-            f1_scores = eval.stats_to_scores(stats)
-            micro_scores = eval.average_scores(stats, strategy="micro")
-            macro_scores = eval.average_scores(stats, strategy="macro")
+            if step not in total_stats_by_step:
+                total_stats_by_step[step] = {}
+            total_stats = total_stats_by_step[step]
 
-            printable_scores = PrintableScores(
-                scores_by_tag=f1_scores,
-                micro_averaged_scores=micro_scores,
-                macro_averaged_scores=macro_scores,
-            )
+            for tag, s in stats.items():
+                if tag not in total_stats:
+                    total_stats[tag] = eval.Stats(0, 0, 0)
+                total_stats[tag] += s
 
-            if step not in scores_by_step:
-                scores_by_step[step] = printable_scores
-            else:
-                scores_by_step[step] += printable_scores
-    return {k: s / len(experiment_stats) for k, s in scores_by_step.items()}
+    scores_by_step = {}
+    for step, stats in total_stats_by_step.items():
+        f1_scores = eval.stats_to_scores(stats)
+        micro_scores = eval.average_scores(stats, strategy="micro")
+        macro_scores = eval.average_scores(stats, strategy="macro")
+        scores_by_step[step] = PrintableScores(
+            scores_by_tag=f1_scores,
+            micro_averaged_scores=micro_scores,
+            macro_averaged_scores=macro_scores,
+        )
+    return scores_by_step
 
 
 def print_scores(scores: PrintableScores):
@@ -215,8 +222,8 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        "res/answers/quishpi-re/2024-02-27_16-57-16.json",
-        data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
+        "res/answers/quishpi/2024-02-27_22-54-38.json",
+        data.VanDerAaImporter("res/data/quishpi/csv"),
         verbose=True,
     )
 

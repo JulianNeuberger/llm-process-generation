@@ -206,12 +206,20 @@ def constraint_slot_filling_stats(
                 best_matches[p] = t
                 break
 
-    non_ok = [p for p in pred if p not in best_matches.keys()]
-    ok = list(best_matches.values())
-    missing = [t for t in true if t not in best_matches.values()]
+    non_ok = [p.pretty_string() for p in pred if p not in best_matches.keys()]
+    ok = [m.pretty_string() for m in best_matches.values()]
+    missing = [t.pretty_string() for t in true if t not in best_matches.values()]
 
     if verbose:
-        print_sets(document.id, document.text, true, pred, ok, non_ok, missing)
+        print_sets(
+            document.id,
+            document.text,
+            [t.pretty_string() for t in true],
+            [p.pretty_string() for p in pred],
+            ok,
+            non_ok,
+            missing,
+        )
     stats_by_tag = {}
 
     for t in true:
