@@ -127,7 +127,7 @@ class VanDerAaImporter(base.BaseImporter[pet.PetDocument]):
                             id=doc_id, text=text, name=doc_name, constraints=constraints
                         )
                     )
-            return documents
+        return documents
 
     @staticmethod
     def parse_constraints(
@@ -160,3 +160,13 @@ class VanDerAaImporter(base.BaseImporter[pet.PetDocument]):
                 )
             )
         return constraints
+
+
+if __name__ == "__main__":
+    documents = VanDerAaImporter(
+        "../res/data/van-der-aa/datacollection.csv"
+    ).do_import()
+    print(len(documents))
+
+    documents = VanDerAaImporter("../res/data/quishpi/csv").do_import()
+    print(len(documents))

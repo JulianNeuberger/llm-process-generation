@@ -22,7 +22,7 @@ if __name__ == "__main__":
         num_shots = 0
         model_name = "gpt-4-0125-preview"
 
-        formatter = format.VanDerAaListingFormattingStrategy(steps=["constraints"])
+        formatter = format.PetTagFormattingStrategy()
         importer = data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv")
         folds = [{"train": [], "test": [d.id for d in importer.do_import()[1:2]]}]
 

@@ -86,7 +86,7 @@ def get_prompt(
     example_docs: typing.Iterable[TDocument],
 ) -> str:
     examples = [
-        {"input": formatter.input(d), "output": formatter.output(d)}
+        {"input": formatter.input(d), "output": formatter.output(d), "steps": formatter.steps}
         for d in example_docs
     ]
 
@@ -103,11 +103,12 @@ def get_prompt(
 
     system_message = formatter.description()
 
-    user_prompt = """User: Please retrieve all {steps} from the following text: 
-        Text: {input}
-        Elements: {steps}
-
-        AI:"""
+    user_prompt = (
+        "User: Please retrieve all {steps} from the following text: \n"
+        "Text: {input}\n"
+        "Elements: {steps}\n"
+        "AI:"
+    )
 
     few_shot_prompt = prompts.FewShotPromptTemplate(
         input_variables=["input", "steps"],

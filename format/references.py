@@ -31,18 +31,11 @@ information are the following elements:
             similar texts. Examples for entities are "student", "he"; or "machine part", "it", "part".
 
 - relations: semantic relations among mentions. You are able to extract the following relations:
-    - uses: links elements of type "activity data" to those of type "activity", when the former is used
-            during execution of the latter.
-    - flow: connects behavioural elements of the process, i.e., activities, and-gateways, and or-gateways. It 
-            defines the process logic, and how the execution unfolds over time. Also connects elements of type
-            "condition specification" to gateways and activities. The direction of the relation determines
-            the temporal ordering of elements, i.e., the relation's head is visited before the relation's tail.
-    - actor performer: links the actor element to the activity that they execute
+    - uses: links elements of type "activity data" to those of type "activity", when the former is used during execution of the latter.
+    - flow: links elements of type "activity", "condition specification", "xor gateway", "and gateway", if they are executed in order in the process. 
     - actor recipient: defines the actor that receives the result of some activity execution
-    - same gateway: textual descriptions of gateways are often spread over several phrases, especially
-                    the different outgoing paths, this relation links these disjointed descriptions together.
-    - further specification: links additional important information (mentions of type further specification) 
-                             about an activity element.
+    - same gateway: links elements of type "xor gateway" and "and gateway", if they describe the same textual descriptions of gateways are often spread over several phrases, especially the different outgoing paths, this relation links these disjointed descriptions together.
+    - further specification: links additional important information (mentions of type further specification) about an activity element.
 
 You are given a text with xml style tags that mark mentions of process relevant elements. 
 These tags include the element's type and an identifier, which you can use to refer to it. 
@@ -89,4 +82,6 @@ class PetReferencesFormattingStrategy(format.BaseFormattingStrategy[data.PetDocu
         return self._input_formatter.output(document)
 
     def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
+        document = document.copy(clear_relations=True)
+        assert len(document.relations) == 0
         return self._output_formatter.parse(document, string)
