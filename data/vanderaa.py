@@ -5,7 +5,7 @@ import typing
 
 import nltk
 
-from data import base, pet
+from data import base
 
 
 def excel_col_to_index(col: str):
@@ -31,14 +31,14 @@ class VanDerAaDocument(base.DocumentBase):
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
-class VanDerAaConstraint:
+class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
     type: str
     head: str
     tail: typing.Optional[str]
     negative: bool
 
-    def to_tuple(self) -> typing.Tuple:
-        return self.type, self.head, self.tail, self.negative
+    def pretty_dump(self, document: VanDerAaDocument) -> str:
+        return f"'{self.head}' -{self.negative}-{self.type}-> '{self.tail}'"
 
     @property
     def num_slots(self):
@@ -118,7 +118,9 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                 reader = csv.reader(f, delimiter=";")
                 _ = next(reader)
                 for row in reader:
-                    doc_id = str(row[ID_COL])
+                    file_name = os.path.basename(file_path)
+                    file_name, _ = os.path.splitext(file_name)
+                    doc_id = f"{file_name}-{row[ID_COL]}"
                     doc_name = row[NAME_COL]
                     text = row[TEXT_COL]
                     constraints = self.parse_constraints(row)
@@ -153,7 +155,7 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                 constraint_tail = None
             constraints.append(
                 VanDerAaConstraint(
-                    type=constraint_type.lower(),
+                    type=constraint_type.strip().lower(),
                     head=constraint_head,
                     tail=constraint_tail,
                     negative=constraint_negative,

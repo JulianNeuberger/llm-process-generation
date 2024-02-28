@@ -17,7 +17,7 @@ class BaseImporter(abc.ABC, typing.Generic[TDocument]):
         raise NotImplementedError()
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, eq=True)
 class HasType(abc.ABC):
     type: str
 
@@ -36,3 +36,8 @@ TRelation = typing.TypeVar("TRelation", bound=HasType)
 @dataclasses.dataclass
 class HasRelations(abc.ABC, typing.Generic[TRelation]):
     relations: typing.List[TRelation]
+
+
+class SupportsPrettyDump(abc.ABC, typing.Generic[TDocument]):
+    def pretty_dump(self, document: TDocument) -> str:
+        raise NotImplementedError()

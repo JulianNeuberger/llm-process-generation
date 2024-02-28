@@ -45,32 +45,29 @@ class PetDocument(
         )
 
 
-@dataclasses.dataclass
-class PetMention(base.HasType):
-    token_document_indices: typing.List[int] = dataclasses.field(default_factory=list)
+@dataclasses.dataclass(frozen=True, eq=True)
+class PetMention(base.HasType, base.SupportsPrettyDump[PetDocument]):
+    token_document_indices: typing.Tuple[int]
 
     def copy(self) -> "PetMention":
         return PetMention(
-            type=self.type,
-            token_document_indices=[i for i in self.token_document_indices],
+            type=self.type.strip().lower(),
+            token_document_indices=tuple(i for i in self.token_document_indices),
         )
 
     def text(self, document: "PetDocument") -> str:
         return " ".join([document.tokens[i].text for i in self.token_document_indices])
 
-    def to_tuple(self):
-        return (self.type.lower(),) + tuple(sorted(self.token_document_indices))
+    def pretty_dump(self, document: "PetDocument") -> str:
+        return f"{self.type}, '{self.text(document)}', {self.token_document_indices}"
 
 
-@dataclasses.dataclass
-class PetEntity:
+@dataclasses.dataclass(frozen=True, eq=True)
+class PetEntity(base.SupportsPrettyDump[PetDocument]):
     mention_indices: typing.List[int] = dataclasses.field(default_factory=list)
 
     def copy(self) -> "PetEntity":
         return PetEntity(mention_indices=[i for i in self.mention_indices])
-
-    def to_tuple(self):
-        return tuple(sorted(self.mention_indices))
 
     def get_tag(self, document: "PetDocument") -> str:
         tags = set(document.mentions[i].type for i in self.mention_indices)
@@ -78,9 +75,14 @@ class PetEntity:
             print(f"Entity has mentions of mixed ner tags: {tags}")
         return list(tags)[0]
 
+    def pretty_dump(self, document: PetDocument) -> str:
+        return "\n".join(
+            [document.mentions[i].pretty_dump(document) for i in self.mention_indices]
+        )
 
-@dataclasses.dataclass
-class PetRelation(base.HasType):
+
+@dataclasses.dataclass(frozen=True, eq=True)
+class PetRelation(base.HasType, base.SupportsPrettyDump[PetDocument]):
     head_mention_index: int
     tail_mention_index: int
 
@@ -88,11 +90,13 @@ class PetRelation(base.HasType):
         return PetRelation(
             head_mention_index=self.head_mention_index,
             tail_mention_index=self.tail_mention_index,
-            type=self.type,
+            type=self.type.lower().strip(),
         )
 
-    def to_tuple(self):
-        return self.type.lower(), self.head_mention_index, self.tail_mention_index
+    def pretty_dump(self, document: PetDocument) -> str:
+        head = document.mentions[self.head_mention_index].pretty_dump(document)
+        tail = document.mentions[self.tail_mention_index].pretty_dump(document)
+        return f"{head} -{self.type}-> {tail}"
 
 
 @dataclasses.dataclass
@@ -157,7 +161,7 @@ class PetDictExporter:
     def export_mention(self, mention: PetMention) -> typing.Dict:
         return {
             "type": mention.type,
-            "tokenDocumentIndices": mention.token_document_indices,
+            "tokenDocumentIndices": list(mention.token_document_indices),
         }
 
     def export_relation(self, relation: PetRelation) -> typing.Dict:
@@ -284,8 +288,8 @@ class OldPetFormatImporter(base.BaseImporter[PetDocument]):
         ]
 
         return PetMention(
-            type=json_mention["ner"],
-            token_document_indices=document_level_token_indices,
+            type=json_mention["ner"].lower().strip(),
+            token_document_indices=tuple(document_level_token_indices),
         )
 
     def _read_entity_from_json(self, json_entity: typing.Dict) -> PetEntity:
@@ -337,7 +341,7 @@ class OldPetFormatImporter(base.BaseImporter[PetDocument]):
             relation = PetRelation(
                 head_mention_index=head_mention_index,
                 tail_mention_index=tail_mention_index,
-                type=tag,
+                type=tag.strip().lower(),
             )
             relations.append(relation)
         return relations
@@ -388,8 +392,8 @@ class NewPetFormatImporter(base.BaseImporter[PetDocument]):
         @staticmethod
         def read_mention_from_dict(json_mention: typing.Dict) -> PetMention:
             return PetMention(
-                type=json_mention["type"],
-                token_document_indices=json_mention["tokenDocumentIndices"],
+                type=json_mention["type"].lower().strip(),
+                token_document_indices=tuple(json_mention["tokenDocumentIndices"]),
             )
 
         @staticmethod
@@ -416,7 +420,7 @@ class NewPetFormatImporter(base.BaseImporter[PetDocument]):
             return PetRelation(
                 head_mention_index=head_mention_index,
                 tail_mention_index=tail_mention_index,
-                type=relation_dict["type"],
+                type=relation_dict["type"].lower().strip(),
             )
 
     def __init__(self, file_path: str):

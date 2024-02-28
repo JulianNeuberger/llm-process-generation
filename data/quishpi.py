@@ -2,26 +2,26 @@ import dataclasses
 import os
 import typing
 
+import data
 from data import base
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
-class QuishpiMention:
+class QuishpiMention(base.SupportsPrettyDump["QuishpiDocument"], base.HasType):
     text: str
-    type: str
 
-    def to_tuple(self) -> typing.Tuple:
-        return self.type.lower(), self.text.lower()
+    def pretty_dump(self, document: "QuishpiDocument") -> str:
+        return f"{self.text} ({self.type})"
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
-class QuishpiRelation:
+class QuishpiRelation(base.SupportsPrettyDump["QuishpiDocument"]):
     head: QuishpiMention
     tail: QuishpiMention
     type: str
 
-    def to_tuple(self) -> typing.Tuple:
-        return self.type.lower(), self.head.to_tuple(), self.tail.to_tuple()
+    def pretty_dump(self, document: "QuishpiDocument") -> str:
+        return f"{self.head.pretty_dump(document)} -{self.type}-> {self.tail.pretty_dump(document)}"
 
 
 @dataclasses.dataclass
@@ -79,7 +79,9 @@ class QuishpiImporter(base.BaseImporter[QuishpiDocument]):
                 mention_id = mention_id[1:]
                 mention_id = int(mention_id)
                 old_mention = mentions[mention_id]
-                new_mention = QuishpiMention(text=old_mention.text, type=event_type)
+                new_mention = QuishpiMention(
+                    text=old_mention.text, type=event_type.strip().lower()
+                )
                 mentions[mention_id] = new_mention
 
             documents.append(
@@ -119,7 +121,7 @@ class QuishpiImporter(base.BaseImporter[QuishpiDocument]):
         mention_id = int(split_line[0][1:])
         mention_type, _, _ = split_line[1].split(" ")
         text = split_line[2]
-        return mention_id, QuishpiMention(text=text, type=mention_type)
+        return mention_id, QuishpiMention(text=text, type=mention_type.strip().lower())
 
 
 if __name__ == "__main__":
@@ -132,5 +134,16 @@ if __name__ == "__main__":
                 fragment_types.add(m.type)
         print("Fragment types: ")
         print("\n".join([t for t in fragment_types]))
+        print()
+
+        documents = data.VanDerAaImporter("../res/data/quishpi/csv").do_import()
+        fragment_types = {}
+        for d in documents:
+            for m in d.constraints:
+                if m.type not in fragment_types:
+                    fragment_types[m.type] = 0
+                fragment_types[m.type] += 1
+        print("Constraint types: ")
+        print("\n".join([f"{t}: {c}" for t, c in fragment_types.items()]))
 
     main()

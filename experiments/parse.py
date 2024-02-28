@@ -132,27 +132,46 @@ def parse_experiments(
     return fold_stats
 
 
-def get_scores(
+def sum_stats(
     experiment_stats: typing.List[ExperimentStats],
-) -> typing.Dict[str, PrintableScores]:
-    scores_by_step: typing.Dict[str, PrintableScores] = {}
+) -> typing.Dict[str, typing.Dict[str, eval.Stats]]:
+    total_stats_by_step: typing.Dict[str, typing.Dict[str, eval.Stats]] = {}
     for stats_by_step in experiment_stats:
         for step, stats in stats_by_step.items():
-            f1_scores = eval.stats_to_scores(stats)
-            micro_scores = eval.average_scores(stats, strategy="micro")
-            macro_scores = eval.average_scores(stats, strategy="macro")
+            if step not in total_stats_by_step:
+                total_stats_by_step[step] = {}
+            total_stats = total_stats_by_step[step]
 
-            printable_scores = PrintableScores(
-                scores_by_tag=f1_scores,
-                micro_averaged_scores=micro_scores,
-                macro_averaged_scores=macro_scores,
-            )
+            for tag, s in stats.items():
+                if tag not in total_stats:
+                    total_stats[tag] = eval.Stats(0, 0, 0)
+                total_stats[tag] += s
+    return total_stats_by_step
 
-            if step not in scores_by_step:
-                scores_by_step[step] = printable_scores
-            else:
-                scores_by_step[step] += printable_scores
-    return {k: s / len(experiment_stats) for k, s in scores_by_step.items()}
+
+def get_scores(
+    experiment_stats: typing.List[ExperimentStats], verbose: bool
+) -> typing.Dict[str, PrintableScores]:
+    total_stats_by_step = sum_stats(experiment_stats)
+    if verbose:
+        for step, step_stats in total_stats_by_step.items():
+            print()
+            print("---------------")
+            print(step)
+            print("---------------")
+            for tag, stats in step_stats.items():
+                print(f"{tag} | {stats}")
+    scores_by_step = {}
+    for step, stats in total_stats_by_step.items():
+        f1_scores = eval.stats_to_scores(stats)
+        micro_scores = eval.average_scores(stats, strategy="micro")
+        macro_scores = eval.average_scores(stats, strategy="macro")
+        scores_by_step[step] = PrintableScores(
+            scores_by_tag=f1_scores,
+            micro_averaged_scores=micro_scores,
+            macro_averaged_scores=macro_scores,
+        )
+    return scores_by_step
 
 
 def print_scores(scores: PrintableScores):
@@ -209,14 +228,26 @@ def print_experiment_results(
     costs = parse_costs_from_experiments(experiment_results)
     print_experiment_costs(costs)
 
-    scores = get_scores(experiment_stats)
+    num_shots = set([e.meta.num_shots for e in experiment_results])
+    if len(num_shots):
+        num_shots = list(num_shots)[0]
+    print(f"Experiment used {num_shots} shots")
+    unique_doc_ids = set()
+    for e in experiment_results:
+        for r in e.results:
+            unique_doc_ids.add(r.original_id)
+    print(
+        f"Experimented on {len(unique_doc_ids)} unique documents, dataset has {len(importer.do_import())}."
+    )
+
+    scores = get_scores(experiment_stats, verbose)
     print_scores_by_step(scores)
 
 
 def main():
     print_experiment_results(
-        "res/answers/quishpi-re/2024-02-27_16-57-16.json",
-        data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
+        "res/answers/quishpi-re/2024-02-28_10-13-12.json",
+        data.VanDerAaImporter("res/data/quishpi/csv"),
         verbose=True,
     )
 
