@@ -2,6 +2,7 @@ import dataclasses
 import os
 import typing
 
+import data
 from data import base
 
 
@@ -133,5 +134,16 @@ if __name__ == "__main__":
                 fragment_types.add(m.type)
         print("Fragment types: ")
         print("\n".join([t for t in fragment_types]))
+        print()
+
+        documents = data.VanDerAaImporter("../res/data/quishpi/csv").do_import()
+        fragment_types = {}
+        for d in documents:
+            for m in d.constraints:
+                if m.type not in fragment_types:
+                    fragment_types[m.type] = 0
+                fragment_types[m.type] += 1
+        print("Constraint types: ")
+        print("\n".join([f"{t}: {c}" for t, c in fragment_types.items()]))
 
     main()

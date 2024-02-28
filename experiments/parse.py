@@ -132,9 +132,9 @@ def parse_experiments(
     return fold_stats
 
 
-def get_scores(
+def sum_stats(
     experiment_stats: typing.List[ExperimentStats],
-) -> typing.Dict[str, PrintableScores]:
+) -> typing.Dict[str, typing.Dict[str, eval.Stats]]:
     total_stats_by_step: typing.Dict[str, typing.Dict[str, eval.Stats]] = {}
     for stats_by_step in experiment_stats:
         for step, stats in stats_by_step.items():
@@ -146,7 +146,21 @@ def get_scores(
                 if tag not in total_stats:
                     total_stats[tag] = eval.Stats(0, 0, 0)
                 total_stats[tag] += s
+    return total_stats_by_step
 
+
+def get_scores(
+    experiment_stats: typing.List[ExperimentStats], verbose: bool
+) -> typing.Dict[str, PrintableScores]:
+    total_stats_by_step = sum_stats(experiment_stats)
+    if verbose:
+        for step, step_stats in total_stats_by_step.items():
+            print()
+            print("---------------")
+            print(step)
+            print("---------------")
+            for tag, stats in step_stats.items():
+                print(f"{tag} | {stats}")
     scores_by_step = {}
     for step, stats in total_stats_by_step.items():
         f1_scores = eval.stats_to_scores(stats)
@@ -226,7 +240,7 @@ def print_experiment_results(
         f"Experimented on {len(unique_doc_ids)} unique documents, dataset has {len(importer.do_import())}."
     )
 
-    scores = get_scores(experiment_stats)
+    scores = get_scores(experiment_stats, verbose)
     print_scores_by_step(scores)
 
 
