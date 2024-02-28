@@ -37,9 +37,8 @@ if __name__ == "__main__":
         num_shots = 1
         model_name = "gpt-4-0125-preview"
 
-        formatter = format.QuishpiREListingFormattingStrategy(steps=["constraints"])
-        importer = data.VanDerAaImporter("res/data/quishpi/")
-
+        formatter = format.PetTagFormattingStrategy()
+        importer = data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv")
         folds = [{"train": [], "test": [d.id for d in importer.do_import()[1:5]]}]
 
         # # formatter = format.QuishpiListingFormattingStrategy(["mentions"])

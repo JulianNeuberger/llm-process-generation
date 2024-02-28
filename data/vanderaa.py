@@ -160,3 +160,13 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                 )
             )
         return constraints
+
+
+if __name__ == "__main__":
+    documents = VanDerAaImporter(
+        "../res/data/van-der-aa/datacollection.csv"
+    ).do_import()
+    print(len(documents))
+
+    documents = VanDerAaImporter("../res/data/quishpi/csv").do_import()
+    print(len(documents))

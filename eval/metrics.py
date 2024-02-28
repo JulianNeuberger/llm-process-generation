@@ -252,6 +252,33 @@ def constraint_slot_filling_stats(
     return stats_by_tag
 
 
+def pretty_print_tuple(
+    document: data.DocumentBase, element_as_tuple: typing.Tuple, attribute: str
+):
+    if attribute == "mentions":
+        mention = data.PetMention(
+            type=element_as_tuple[0], token_document_indices=list(element_as_tuple[1:])
+        )
+        return f"({mention.type}, {mention.text(document)}, {mention.token_document_indices})"
+    if attribute == "entities":
+        entity = data.PetEntity(mention_indices=list(element_as_tuple))
+        return [
+            f"({document.mentions[i].type}, {document.mentions[i].text(document)}, {document.mentions[i].token_document_indices})"
+            for i in entity.mention_indices
+        ]
+    if attribute == "relations":
+        relation = data.PetRelation(
+            type=element_as_tuple[0],
+            head_mention_index=element_as_tuple[1],
+            tail_mention_index=element_as_tuple[2],
+        )
+        head = document.mentions[relation.head_mention_index]
+        tail = document.mentions[relation.tail_mention_index]
+
+        return f"{head.text(document)} -{relation.type}> {tail.text(document)}"
+    raise AssertionError()
+
+
 def _f1_stats(
     *,
     predicted_documents: typing.List[data.DocumentBase],
@@ -309,8 +336,16 @@ def _f1_stats(
             "ok",
         )
 
-        if verbose:  # and len(non_ok) > 0:
-            print_sets(p.id, p.text, true, pred, ok, non_ok, missing)
+        if verbose:
+            print_sets(
+                p.id,
+                p.text,
+                [pretty_print_tuple(p, t, attribute) for t in true],
+                [pretty_print_tuple(p, t, attribute) for t in pred],
+                [pretty_print_tuple(p, t, attribute) for t in ok],
+                [pretty_print_tuple(p, t, attribute) for t in non_ok],
+                [pretty_print_tuple(p, t, attribute) for t in missing],
+            )
 
     return {
         tag: Stats(num_pred=p, num_gold=g, num_ok=o)
@@ -321,33 +356,33 @@ def _f1_stats(
 def print_sets(
     document_id: str,
     document_text: str,
-    true: typing.Collection,
-    pred: typing.Collection,
-    ok: typing.Collection,
-    non_ok: typing.Collection,
-    missing: typing.Collection,
+    true: typing.List[str],
+    pred: typing.List[str],
+    ok: typing.List[str],
+    non_ok: typing.List[str],
+    missing: typing.List[str],
 ):
     print(f"=== {document_id} " + "=" * 150)
     print(document_text)
     print("-" * 100)
     print(f"{len(true)} x true")
-    print([e for e in true])
+    print("\n".join(true))
     print("-" * 100)
     print()
     print(f"{len(pred)} x pred")
-    print([e for e in pred])
+    print("\n".join(pred))
     print("-" * 100)
     print()
     print(f"{len(ok)} x ok")
-    print(ok)
+    print("\n".join(ok))
     print("-" * 100)
     print()
     print(f"{len(non_ok)} x non ok")
-    print(non_ok)
+    print("\n".join(non_ok))
     print("-" * 100)
     print()
     print(f"{len(missing)} x missing")
-    print(missing)
+    print("\n".join(missing))
     print()
     print("=" * 150)
     print()

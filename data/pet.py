@@ -14,9 +14,18 @@ class PetDocument(
     category: str
     name: str
     tokens: typing.List["PetToken"]
-    # mentions: typing.List["PetMention"] = dataclasses.field(default_factory=list)
     entities: typing.List["PetEntity"]
-    # relations: typing.List["PetRelation"] = dataclasses.field(default_factory=list)
+
+    @property
+    def sentences(self) -> typing.List[typing.List["PetToken"]]:
+        ret = []
+        last_id = None
+        for token in self.tokens:
+            if token.sentence_index != last_id:
+                last_id = token.sentence_index
+                ret.append([])
+            ret[-1].append(token)
+        return ret
 
     def copy(
         self,
@@ -92,6 +101,14 @@ class PetToken:
     index_in_document: int
     pos_tag: str
     sentence_index: int
+
+    def char_indices(self, document: PetDocument) -> typing.Tuple[int, int]:
+        start = 0
+        for i, other in enumerate(document.tokens):
+            if other == self:
+                return start, start + len(self.text)
+            start += len(other.text) + 1
+        raise AssertionError("Token text not found in document")
 
     def copy(self) -> "PetToken":
         return PetToken(

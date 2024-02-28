@@ -163,18 +163,18 @@ def print_scores(scores: PrintableScores):
     macro_scores = scores.macro_averaged_scores
 
     print(f"+-{'-' * longest_tag_length}-+-{'-' * 4}-+-{'-' * 4}-+-{'-' * 4}-+")
-    print(f"| Tag{' ' * (longest_tag_length - 3)} | F1   | R    | P    |")
+    print(f"| Tag{' ' * (longest_tag_length - 3)} | P    | R    | F1   |")
     print(f"+-{'-' * longest_tag_length}-+-{'-' * 4}-+-{'-' * 4}-+-{'-' * 4}-+")
     for tag, scores in scores.scores_by_tag.items():
         print(
-            f"| {tag}{' ' * (longest_tag_length - len(tag))} | {scores.f1:.2f} | {scores.r:.2f} | {scores.p:.2f} |"
+            f"| {tag}{' ' * (longest_tag_length - len(tag))} | {scores.p:.2f} | {scores.r:.2f} | {scores.f1:.2f} |"
         )
     print(f"+-{'-' * longest_tag_length}-+-{'-' * 4}-+-{'-' * 4}-+-{'-' * 4}-+")
     print(
-        f"| Overall (micro){' ' * (longest_tag_length - 15)} | {micro_scores.f1:.2f} | {micro_scores.r:.2f} | {micro_scores.p:.2f} |"
+        f"| Overall (micro){' ' * (longest_tag_length - 15)} | {micro_scores.p:.2f} | {micro_scores.r:.2f} | {micro_scores.f1:.2f} |"
     )
     print(
-        f"| Overall (macro){' ' * (longest_tag_length - 15)} | {macro_scores.f1:.2f} | {macro_scores.r:.2f} | {macro_scores.p:.2f} |"
+        f"| Overall (macro){' ' * (longest_tag_length - 15)} | {macro_scores.p:.2f} | {macro_scores.r:.2f} | {macro_scores.f1:.2f} |"
     )
     print(f"+-{'-' * longest_tag_length}-+-{'-' * 4}-+-{'-' * 4}-+-{'-' * 4}-+")
 

@@ -27,7 +27,7 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
     @staticmethod
     def load_mention(raw: typing.Dict) -> data.PetMention:
         indices = [int(s) for s in raw["indices"].split(" ")]
-        return data.PetMention(ner_tag=raw["tag"], token_document_indices=indices)
+        return data.PetMention(type=raw["tag"], token_document_indices=indices)
 
     @staticmethod
     def dump_relation(relation: data.PetRelation) -> typing.Dict:
@@ -40,7 +40,7 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
     @staticmethod
     def load_relation(raw: typing.Dict) -> data.PetRelation:
         return data.PetRelation(
-            tag=raw["tag"],
+            type=raw["tag"],
             head_mention_index=raw["headIndex"],
             tail_mention_index=raw["tailIndex"],
         )
@@ -64,13 +64,13 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
     def output(self, document: data.PetDocument) -> str:
         content = {}
 
-        if "md" in self._steps:
+        if "mentions" in self._steps:
             content["mentions"] = [self.dump_mention(m) for m in document.mentions]
-        if "er" in self._steps:
+        if "entities" in self._steps:
             entities = [self.dump_entity(e) for e in document.entities]
             entities = [e for e in entities if e is not None]
             content["entities"] = entities
-        if "re" in self._steps:
+        if "relations" in self._steps:
             content["relations"] = [self.dump_relation(r) for r in document.relations]
 
         return yaml.safe_dump(content)
@@ -78,9 +78,9 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
     def input(self, document: data.PetDocument) -> str:
         content = {"tokens": " ".join([t.text for t in document.tokens])}
 
-        if "md" not in self._steps:
+        if "mentions" not in self._steps:
             content["mentions"] = [self.dump_mention(m) for m in document.mentions]
-        if "er" not in self._steps and "re" in self._steps:
+        if "entities" not in self._steps and "re" in self._steps:
             entities = [self.dump_entity(e) for e in document.entities]
             entities = [e for e in entities if e is not None]
             content["entities"] = entities
@@ -89,19 +89,19 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
 
     def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
         document = document.copy(
-            clear_mentions="md" in self._steps,
-            clear_entities="er" in self._steps,
-            clear_relations="re" in self._steps,
+            clear_mentions="mentions" in self._steps,
+            clear_entities="entities" in self._steps,
+            clear_relations="relations" in self._steps,
         )
 
         content = yaml.safe_load(string)
 
-        if "md" in self._steps:
+        if "mentions" in self._steps:
             raw = content["mentions"]
             mentions = [PetYamlFormattingStrategy.load_mention(m) for m in raw]
             document.mentions = mentions
 
-        if "er" in self._steps:
+        if "entities" in self._steps:
             raw = content["entities"]
             entities = [PetYamlFormattingStrategy.load_entity(e) for e in raw]
             # create single mention entities
@@ -115,7 +115,7 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
                     entities.append(data.PetEntity(mention_indices=[i]))
             document.entities = entities
 
-        if "re" in self._steps:
+        if "relations" in self._steps:
             raw = content["relations"]
             relations = [PetYamlFormattingStrategy.load_relation(r) for r in raw]
             document.relations = relations
