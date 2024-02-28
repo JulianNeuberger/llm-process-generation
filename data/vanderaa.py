@@ -127,7 +127,7 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                             id=doc_id, text=text, name=doc_name, constraints=constraints
                         )
                     )
-            return documents
+        return documents
 
     @staticmethod
     def parse_constraints(

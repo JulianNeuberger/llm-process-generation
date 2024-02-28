@@ -1,25 +1,11 @@
 import datetime
-import typing
 
 import nltk
 
 import data
 import experiments
 import format
-from data import base
-
-
-def select_documents(
-        src: typing.List[base.DocumentBase], indexes: typing.List[int]
-) -> typing.List[base.DocumentBase]:
-    if len(indexes) == 0:
-        return src
-
-    result = []
-    for idx in indexes:
-        result.append(src[idx])
-    return result
-
+from experiments import sampling
 
 if __name__ == "__main__":
 
@@ -32,19 +18,21 @@ if __name__ == "__main__":
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/quishpi-re/{date_formatted}.json"
-        # storage = "res/answers/pet/2024-02-20_13-04-48.json"
+        # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
 
-        num_shots = 1
+        num_shots = 2
         model_name = "gpt-4-0125-preview"
 
+        # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
+        # formatter = format.PetTagFormattingStrategy()
         formatter = format.QuishpiREListingFormattingStrategy(steps=["constraints"])
         importer = data.VanDerAaImporter("res/data/quishpi/")
-
-        folds = [{"train": [], "test": [d.id for d in importer.do_import()[1:5]]}]
-
-        # # formatter = format.QuishpiListingFormattingStrategy(["mentions"])
-        # # importer = data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"])
-        # # folds = [{"train": [], "test": ["7-1_calling_leads"]}]
+        folds = sampling.generate_folds(importer.do_import()[1:101], num_shots)
+        print("Using folds:")
+        print("------------")
+        for fold in folds:
+            print(fold)
+        print("------------")
 
         experiments.experiment(
             importer=importer,

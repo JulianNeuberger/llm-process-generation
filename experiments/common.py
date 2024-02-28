@@ -86,7 +86,7 @@ def get_prompt(
     example_docs: typing.Iterable[TDocument],
 ) -> str:
     examples = [
-        {"input": formatter.input(d), "output": formatter.output(d)}
+        {"input": formatter.input(d), "steps": formatter.steps, "output": formatter.output(d)}
         for d in example_docs
     ]
 
