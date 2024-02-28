@@ -9,8 +9,9 @@ import format
 from data import base
 
 
-def select_documents(src: typing.List[base.DocumentBase], indexes: typing.List[int]) -> typing.List[
-    base.DocumentBase]:
+def select_documents(
+        src: typing.List[base.DocumentBase], indexes: typing.List[int]
+) -> typing.List[base.DocumentBase]:
     if len(indexes) == 0:
         return src
 

@@ -3,47 +3,31 @@ import typing
 import data
 from format import base
 
-van_der_aa_prompt = """You are a business process modelling expert, tasked with identifying
-constraints between actions in textual process descriptions. Textual process
-descriptions are sentences that describe a short sequence of actions and execution 
-constraints between them. Below you find a short description of relevant
-elements:
+van_der_aa_prompt = """Your task is to extract declarative process models from natural language process descriptions. 
+The process descriptions consist of a series of actions, each described by a predicate and an object. 
+Your goal is to identify constraints between these actions, which dictate the ordering and existence of actions within
+the process. Constraints can be one of the following types:
 
-- action: predicate and object describing a task. Predicate is usually a verb in 
-          infinitive, and object is some physical or digital object on which is
-          being acted on.
-          
-- constraint: defines if and how actions can be executed. Always has a source / head 
-              action and sometimes a target / tail action, depending on the type. All 
-              constraints are one of the following types:
-    - init: this constraint marks a single action as the start of a work process. It has 
-            no target / tail action, only a source / head.  
-    - end: this constraint marks a single action as the end of a work process. It has 
-           no target / tail action, only a source / head.
-    - precedence: marks the source / head action as a requirement for the target / tail 
-                  action. The tail action can only be executed, if the head was executed
-                  first. the head may be executed without the tail being executed.
-    - response: if the head action was executed, the tail action also has to be executed,
-                but the tail can also be executed independently of head.
-    - succession: if the head action was executed, the tail is also executed, neither of
-                  them are executed in isolation, i.e., tail is always executed after head,
-                  or none of them are executed at all.
-                  
-Additionally you can determine if the given document describes a negation of constraints, 
-e.g., "when something happens, then we do something" describes a positive constraint,
-while "if something does not happen, then we do something" describes a negation.
+init: Marks an action as the start of the entire process. It has no target action.
+end: Marks an action as the end of the whole process. It has no target action.
+precedence: Specifies that the tail action can only be executed if the head action was already executed before.
+response: Requires that if the head action was executed, the tail action must also be executed.
+succession: Specifies that if the head action is executed, the tail action needs to be executed as well, and vice versa.
 
-Please extract all constraints in the given raw text in the following format:
-Print one constraint per line, where you separate if the constraint is negative (TRUE if 
-the document describes a negation, else it reads FALSE), the type of the constraint, and the 
-extracted actions by tabs, e.g. "TRUE\tsuccession\tdo something\tdo thing". An example for the 
-format would be:
+Additionally, you may encounter negations of constraints, indicated by statements like "do not" or "must not."
 
-FALSE\tsuccession\tdo something\tdo thing
-TRUE\tprecedence\tdo thing\treact to thing
-TRUE\tresponse\treceive ok\tsend something
+Please ensure the correct identification and formatting of constraints in the given text. Output one constraint 
+per line, including whether the constraint is negated (TRUE or FALSE), the type of constraint, and the extracted 
+head and tail actions separated by tabs. Stick closely to the provided examples and descriptions, and be careful 
+to distinguish between precedence, response, and succession constraints.
 
-Actions should be made up of predicate and object, where the predicate is a verb in infinitive. 
+Here are some examples for both input and expected output (separated by the following symbol: |):
+    - Example 1: The process begins when the author submits the paper.|FALSE\tinit\tsubmit paper
+    - Example 2: After signing the contract, the product can be advertised.|FALSE\tprecedence\tsign contract\tadvertise product
+    - Example 3: After signing the contract, the product is advertised but never before.|FALSE\tsuccession\tsign contract\tadvertise product
+    - Example 4: When the manager is called, the request needs to be forwarded to the secretary, too.|FALSE\tresponse\tcall manager\tforward request
+    - Example 5: The process is completed as soon as the proposal is archived|FALSE\tend\tarchive proposal
+    - Example 6: After notifying the manager, the request must not be rejected.|TRUE\tresponse\tnofify manager\treject request 
 
 Please return raw text, do not use any formatting.
 """
@@ -71,7 +55,7 @@ class VanDerAaListingFormattingStrategy(
         return document.text
 
     def parse(
-        self, document: data.VanDerAaDocument, string: str
+            self, document: data.VanDerAaDocument, string: str
     ) -> data.VanDerAaDocument:
         lines = string.splitlines(keepends=False)
         constraints = []
@@ -159,7 +143,7 @@ class QuishpiListingFormattingStrategy(
         return document.text
 
     def parse(
-        self, document: data.QuishpiDocument, string: str
+            self, document: data.QuishpiDocument, string: str
     ) -> data.QuishpiDocument:
         mentions: typing.List[data.QuishpiMention] = []
 
