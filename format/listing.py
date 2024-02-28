@@ -353,47 +353,48 @@ if __name__ == "__main__":
     main()
 
 
-quishpi_re_prompt = """You are a business process modelling expert, tasked with identifying
-constraints between actions in textual process descriptions. Processes consist of actions and, thus, textual process
-descriptions are sentences that describe a short sequence of actions. Ordering and existence of actions depend on
-constraints between them. Below you find further details about actions and constraints:
+quishpi_re_prompt = """As a business process modelling expert, your task involves analyzing textual descriptions of 
+business processes to identify key actions and the constraints that govern the order and execution of these actions. 
+The goal is to clearly extract and categorize the actions and constraints to aid in the modeling of these processes. 
+Please follow the guidelines below to ensure accurate and comprehensive extraction:
 
-- action: predicate and object describing a task. Predicate is usually a transitive verb, and object is 
-          some physical or digital object on which is being acted on. 
+1. **Identifying Actions:**
+   - An action consists of a predicate (usually a transitive verb) and an object (the entity being acted upon, which can 
+   be physical or digital).
+   - Look for explicit mentions of tasks or operations being performed as indicators of actions within the text.
 
-- constraint: defines if and how actions can be executed. Always has a source / head 
-              action and sometimes a target / tail action, depending on the type. All 
-              constraints are one of the following types:
-    - init: marks an action as the start of an entire process. This action is the source / head action of the init 
-    constraint. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is started 
-    for an init constraint to apply. Signal words alone are not sufficient here.  
-    - end: marks an action as the end of the whole process. The action is the source / head action. There is no
-            no target / tail action. Note that it must be explicitly stated that the PROCESS is ended 
-    for an end constraint to apply. Signal words alone are not sufficient here. 
-    - precedence: The tail action can only be executed, if the head was already executed
-                  before. the head may be executed without the tail being executed.
-    - response: if the head action was executed, the tail action has to be executed, too.
-    - succession: this means if the head activity is executed, the tail activity needs to be
-          executed as well and at the same time, the tail activity requires prior execution of the head activity. 
-    - existence: requires that an action is executed at some point in the process; the execution is not dependent on 
-        any other explicitly mentioned action; there is only a head action but no tail action.
-    - absence: requires that an action is NOT executed at any time in the process; the absence is not dependent on 
-        any other action but other circumstances (e.g., information from the process context); there is only a head 
-        action but no tail action; Note: negated absence constraint is semantically equivalent to an existence 
-        constraint.
-    - noncooccurrence: requires the head action is not executed if the tail action is executed and vice versa.
+2. **Understanding and Extracting Constraints:**
+   - Constraints dictate the execution order or the existence of actions within a process. Each constraint has a type 
+   and is defined by its relationship between actions (head action/source and tail action/target).
+   - The types of constraints are as follows:
+     - **Init:** Marks the beginning of a process. Requires explicit mention of the process starting.
+     - **End:** Indicates the end of a process. Requires explicit mention of the process ending.
+     - **Precedence:** The tail action occurs only if the head action has already been executed.
+     - **Response:** Execution of the head action necessitates the execution of the tail action.
+     - **Succession:** The head and tail actions are executed in sequence, with the head action preceding the tail.
+     - **Existence:** An action must occur at some point in the process without dependency on another action.
+     - **Absence:** An action must not occur throughout the process, independent of other actions' execution.
+     - **Noncooccurrence:** The head and tail actions cannot occur together in the process.
 
-Additionally you can determine if the given document describes a negation of constraints, 
-e.g., "when something happens, then we DO something" describes a positive constraint,
-while "when something happens, then we DON'T DO something" describes a negation.
+3. **Handling Negations:**
+   - Pay special attention to negations which reverse the implied constraint (e.g., "if action A happens, action B does 
+   NOT happen" indicates a negation of a normal constraint).
+   - Mark these negations clearly as they significantly impact the process flow and constraint relationships.
 
-Please extract all constraints in the given raw text in the following format:
-Print one constraint per line, where you separate if the constraint is negative (TRUE if 
-the document describes a negation, else it reads FALSE), the type of the constraint, and the 
-extracted actions by tabs in the following form (<...> are placeholders): 
-<TRUE or FALSE>\t<constraint type>\t<head action>\t<tail action>. 
+4. **Format for Extraction:**
+   - For each identified constraint, format your extraction as follows: 
+     `<NEGATION (TRUE/FALSE)>	<CONSTRAINT TYPE>	<HEAD ACTION>	<TAIL ACTION (if applicable)>`.
+   - If a constraint does not involve a tail action (e.g., init, end, existence, absence), omit the tail action from the 
+   format.
 
-Please return raw text, do not use any formatting.
+5. **Handling Ambiguities:**
+   - In cases where the action or constraint type is not clear, use your best judgment based on the context provided in 
+   the text. If still uncertain, note the ambiguity for further review.
+
+**Note:** Your analysis plays a crucial role in transforming textual descriptions into structured process models. 
+Accuracy in identifying actions and constraints is paramount.
+
+Please proceed with analyzing the given document according to these guidelines.
 """
 
 

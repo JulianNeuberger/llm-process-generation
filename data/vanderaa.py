@@ -38,7 +38,10 @@ class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
     negative: bool
 
     def pretty_dump(self, document: VanDerAaDocument) -> str:
-        return f"'{self.head}' -{self.negative}-{self.type}-> '{self.tail}'"
+        pretty = f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head}'
+        if self.tail:
+            pretty = f'{pretty}\t{self.tail}'
+        return pretty
 
     @property
     def num_slots(self):
@@ -133,7 +136,7 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
 
     @staticmethod
     def parse_constraints(
-        row: typing.List,
+            row: typing.List,
     ) -> typing.List[VanDerAaConstraint]:
         num_constraints = int(row[NUM_CONSTRAINTS_COL])
         base_index = CONSTRAINT_1_COL
