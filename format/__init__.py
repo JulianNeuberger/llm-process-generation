@@ -6,4 +6,5 @@ from format.listing import (
     VanDerAaListingFormattingStrategy,
     QuishpiListingFormattingStrategy,
     PetMentionListingFormattingStrategy,
+    QuishpiREListingFormattingStrategy,
 )
