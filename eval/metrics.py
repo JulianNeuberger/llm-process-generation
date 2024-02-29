@@ -193,7 +193,6 @@ def constraint_slot_filling_stats(
                 break
 
     non_ok = [p for p in pred if p not in best_matches.keys()]
-    ok = [m for m in best_matches.values()]
     missing = [t for t in true if t not in best_matches.values()]
 
     by_correct_slots = {}
