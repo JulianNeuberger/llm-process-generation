@@ -178,6 +178,48 @@ class PetMentionListingFormattingStrategy(
         )
 
 
+class PetActivityListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/activities.txt")
+
+
+class PetActorListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/actors.txt")
+
+
+class PetAndListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/and.txt")
+
+
+class PetConditionListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/condition.txt")
+
+
+class PetDataListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/data.txt")
+
+
+class PetFurtherListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/further.txt")
+
+
+class PetXorListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/xor.txt")
+
+
 if __name__ == "__main__":
 
     def main():
