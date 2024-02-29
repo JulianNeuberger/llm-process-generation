@@ -3,8 +3,6 @@ import typing
 import data
 from format import base, common
 
-van_der_aa_prompt = common.load_prompt_from_file("van-der-aa/")
-
 
 class VanDerAaListingFormattingStrategy(
     base.BaseFormattingStrategy[data.VanDerAaDocument]
@@ -14,7 +12,7 @@ class VanDerAaListingFormattingStrategy(
 
     @staticmethod
     def description() -> str:
-        return van_der_aa_prompt
+        return common.load_prompt_from_file("van-der-aa/re/long.txt")
 
     def output(self, document: data.VanDerAaDocument) -> str:
         constraints = []
@@ -64,9 +62,6 @@ class VanDerAaListingFormattingStrategy(
         )
 
 
-quishpi_prompt = common.load_prompt_from_file("quishpi/md/long.txt")
-
-
 class QuishpiListingFormattingStrategy(
     base.BaseFormattingStrategy[data.QuishpiDocument]
 ):
@@ -75,7 +70,7 @@ class QuishpiListingFormattingStrategy(
 
     @staticmethod
     def description() -> str:
-        return quishpi_prompt
+        return common.load_prompt_from_file("quishpi/md/long.txt")
 
     def output(self, document: data.QuishpiDocument) -> str:
         mentions = []
@@ -109,17 +104,12 @@ class QuishpiListingFormattingStrategy(
         )
 
 
-generated_pet_prompt = common.load_prompt_from_file("pet/md/generated_prompt.txt")
-pet_prompt = common.load_prompt_from_file("pet/md/long_prompt.txt")
-short_pet_prompt = common.load_prompt_from_file("pet/md/short_prompt.tx")
-
-
 class PetMentionListingFormattingStrategy(
     base.BaseFormattingStrategy[data.PetDocument]
 ):
     @staticmethod
     def description() -> str:
-        return short_pet_prompt
+        return common.load_prompt_from_file("pet/md/short_prompt.tx")
 
     def output(self, document: data.PetDocument) -> str:
         formatted_mentions = []
