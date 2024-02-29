@@ -217,14 +217,36 @@ def print_scores_by_step(printable_scores_by_step: typing.Dict[str, PrintableSco
         print_scores(scores)
 
 
-def print_experiment_results(
-    result_file: str, importer: data.BaseImporter[TDocument], verbose: bool = False
-):
+def parse_file(
+    result_file: str,
+    importer: data.BaseImporter[TDocument],
+    only_document_ids: typing.List[str] = None,
+    verbose: bool = False,
+) -> typing.List[experiments.ExperimentResult]:
     with open(result_file, "r", encoding="utf8") as f:
         contents = json.load(f)
     experiment_results = [experiments.ExperimentResult.from_dict(r) for r in contents]
-    experiment_stats = parse_experiments(experiment_results, importer, verbose)
+    if only_document_ids is not None:
+        tmp: typing.List[experiments.ExperimentResult] = []
+        for e in experiment_results:
+            filtered_e = experiments.ExperimentResult(e.meta, [])
+            for r in e.results:
+                if r.original_id in only_document_ids:
+                    filtered_e.results.append(r)
+            if len(filtered_e.results) > 0:
+                tmp.append(filtered_e)
+        experiment_results = tmp
+    return experiment_results
 
+
+def print_experiment_results(
+    result_file: str,
+    importer: data.BaseImporter[TDocument],
+    only_document_ids: typing.List[str] = None,
+    verbose: bool = False,
+):
+    experiment_results = parse_file(result_file, importer, only_document_ids, verbose)
+    experiment_stats = parse_experiments(experiment_results, importer, verbose)
     costs = parse_costs_from_experiments(experiment_results)
     print_experiment_costs(costs)
 
@@ -246,10 +268,16 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        "res/answers/quishpi-re/2024-02-28_10-13-12.json",
-        data.VanDerAaImporter("res/data/quishpi/csv"),
+        f"res/answers/pet/2024-02-28_16-57-34.json",
+        data.PetImporter("res/data/pet/all.new.jsonl"),
+        # only_document_ids=["doc-6.1"],
         verbose=True,
     )
+    print()
+    print("*******************************************************")
+    print("*******************************************************")
+    print("*******************************************************")
+    print()
 
 
 if __name__ == "__main__":
