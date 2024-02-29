@@ -20,14 +20,15 @@ if __name__ == "__main__":
         storage = f"res/answers/pet/{date_formatted}.json"
         # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
 
-        num_shots = 0
+        num_shots = 15
         model_name = "gpt-4-0125-preview"
 
-        # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
-        # formatter = format.PetTagFormattingStrategy()
-        formatter = format.PetReferencesFormattingStrategy(["relations"])
+        formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         importer = data.PetImporter("res/data/pet/all.new.jsonl")
-        folds = sampling.generate_folds(importer.do_import(), num_shots)
+        train_docs = [d.id for d in importer.do_import() if d.id != "doc-6.1"]
+        folds = [{"train": train_docs, "test": ["doc-6.1"]}]
+        # folds = sampling.generate_folds(importer.do_import(), num_shots)
+
         print("Using folds:")
         print("------------")
         for fold in folds:
