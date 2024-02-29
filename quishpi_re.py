@@ -1,4 +1,5 @@
 import datetime
+import random
 
 import nltk
 
@@ -20,14 +21,18 @@ if __name__ == "__main__":
         storage = f"res/answers/quishpi-re/{date_formatted}.json"
         # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
 
-        num_shots = -1
+        num_shots = 0
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         # formatter = format.PetTagFormattingStrategy()
         formatter = format.QuishpiREListingFormattingStrategy(steps=["constraints"])
         importer = data.VanDerAaImporter("res/data/quishpi/csv")
-        folds = sampling.generate_folds(importer.do_import()[1:101], num_shots)
+
+        loaded_data = importer.do_import()
+        random.Random(42).shuffle(loaded_data)
+        loaded_data = loaded_data[1:31]
+        folds = sampling.generate_folds(loaded_data, num_shots)
         print("Using folds:")
         print("------------")
         for fold in folds:
@@ -45,5 +50,6 @@ if __name__ == "__main__":
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
+
 
     main()

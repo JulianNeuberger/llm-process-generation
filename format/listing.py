@@ -3,34 +3,7 @@ import typing
 import data
 from format import base
 
-van_der_aa_prompt = """Your task is to extract declarative process models from natural language process descriptions. 
-The process descriptions consist of a series of actions, each described by a predicate and an object. 
-Your goal is to identify constraints between these actions, which dictate the ordering and existence of actions within
-the process. Constraints can be one of the following types:
-
-init: Marks an action as the start of the entire process. It has no target action.
-end: Marks an action as the end of the whole process. It has no target action.
-precedence: Specifies that the tail action can only be executed if the head action was already executed before.
-response: Requires that if the head action was executed, the tail action must also be executed.
-succession: Specifies that if the head action is executed, the tail action needs to be executed as well, and vice versa.
-
-Additionally, you may encounter negations of constraints, indicated by statements like "do not" or "must not."
-
-Please ensure the correct identification and formatting of constraints in the given text. Output one constraint 
-per line, including whether the constraint is negated (TRUE or FALSE), the type of constraint, and the extracted 
-head and tail actions separated by tabs. Stick closely to the provided examples and descriptions, and be careful 
-to distinguish between precedence, response, and succession constraints.
-
-Here are some examples for both input and expected output (separated by the following symbol: |):
-    - Example 1: The process begins when the author submits the paper.|FALSE\tinit\tsubmit paper
-    - Example 2: After signing the contract, the product can be advertised.|FALSE\tprecedence\tsign contract\tadvertise product
-    - Example 3: After signing the contract, the product is advertised but never before.|FALSE\tsuccession\tsign contract\tadvertise product
-    - Example 4: When the manager is called, the request needs to be forwarded to the secretary, too.|FALSE\tresponse\tcall manager\tforward request
-    - Example 5: The process is completed as soon as the proposal is archived|FALSE\tend\tarchive proposal
-    - Example 6: After notifying the manager, the request must not be rejected.|TRUE\tresponse\tnofify manager\treject request 
-
-Please return raw text, do not use any formatting.
-"""
+from format.prompts import quishpi_re_prompt, vanderaa_prompt
 
 
 class VanDerAaListingFormattingStrategy(
@@ -41,7 +14,7 @@ class VanDerAaListingFormattingStrategy(
 
     @staticmethod
     def description() -> str:
-        return van_der_aa_prompt
+        return vanderaa_prompt.VAN_DER_AA_PROMPT
 
     def output(self, document: data.VanDerAaDocument) -> str:
         constraints = []
@@ -55,8 +28,126 @@ class VanDerAaListingFormattingStrategy(
         return document.text
 
     def parse(
-        self, document: data.VanDerAaDocument, string: str
+            self, document: data.VanDerAaDocument, string: str
     ) -> data.VanDerAaDocument:
+        if '#-#-#RESULT#-#-#' in string:
+            string = string.split('#-#-#RESULT#-#-#')[1].strip()
+        lines = string.splitlines(keepends=False)
+        constraints = []
+        for line in lines:
+            split_line = line.strip().split("\t")
+            if len(split_line) == 4:
+                negative, c_type, c_head, c_tail = split_line
+            elif len(split_line) == 3:
+                negative, c_type, c_head = split_line
+                c_tail = None
+            else:
+                print(
+                    f'Expected 2-3 tab separated values in line "{line}", got {len(split_line)}, skipping line.'
+                )
+                continue
+
+            if c_type.strip() == "":
+                print(f"Predicted empty type in {line}")
+            constraints.append(
+                data.VanDerAaConstraint(
+                    type=c_type.strip().lower(),
+                    head=c_head,
+                    tail=c_tail,
+                    negative=negative.lower() == "true",
+                )
+            )
+        return data.VanDerAaDocument(
+            id=document.id,
+            name=document.name,
+            text=document.text,
+            constraints=constraints,
+        )
+
+
+class VanDerAaStepwiseListingFormattingStrategy(
+    base.BaseFormattingStrategy[data.VanDerAaDocument]
+):
+    def __init__(self, steps: typing.List[typing.Literal["constraints"]]):
+        super().__init__(steps)
+
+    @staticmethod
+    def description() -> str:
+        return vanderaa_prompt.VAN_DER_AA_PROMPT_STEPWISE
+
+    def output(self, document: data.VanDerAaDocument) -> str:
+        constraints = []
+        for constraint in document.constraints:
+            constraints.append(
+                f"{constraint.type}\t{constraint.head}\t{constraint.tail}"
+            )
+        return "\n".join(constraints)
+
+    def input(self, document: data.VanDerAaDocument) -> str:
+        return document.text
+
+    def parse(
+            self, document: data.VanDerAaDocument, string: str
+    ) -> data.VanDerAaDocument:
+        lines = string.splitlines(keepends=False)
+        constraints = []
+        for line in lines:
+            split_line = line.strip().split("\t")
+            if len(split_line) == 4:
+                negative, c_type, c_head, c_tail = split_line
+            elif len(split_line) == 3:
+                negative, c_type, c_head = split_line
+                c_tail = None
+            else:
+                print(
+                    f'Expected 2-3 tab separated values in line "{line}", got {len(split_line)}, skipping line.'
+                )
+                continue
+
+            if c_type.strip() == "":
+                print(f"Predicted empty type in {line}")
+            constraints.append(
+                data.VanDerAaConstraint(
+                    type=c_type.strip().lower(),
+                    head=c_head,
+                    tail=c_tail,
+                    negative=negative.lower() == "true",
+                )
+            )
+        return data.VanDerAaDocument(
+            id=document.id,
+            name=document.name,
+            text=document.text,
+            constraints=constraints,
+        )
+
+
+class QuishpiREListingFormattingStrategy(
+    base.BaseFormattingStrategy[data.VanDerAaDocument]
+):
+    def __init__(self, steps: typing.List[typing.Literal["constraints"]]):
+        super().__init__(steps)
+
+    @staticmethod
+    def description() -> str:
+        return quishpi_re_prompt.QUISHPI_RE_PROMPT_HANDCRAFTED_TASK_SEPARATION
+
+    def output(self, document: data.VanDerAaDocument) -> str:
+        constraints = []
+        for constraint in document.constraints:
+            constraints.append(
+                f"{'TRUE' if constraint.negative else 'FALSE'}\t{constraint.type}\t{constraint.head}\t{constraint.tail}"
+            )
+        return "\n".join(constraints)
+
+    def input(self, document: data.VanDerAaDocument) -> str:
+        return document.text
+
+    def parse(
+            self, document: data.VanDerAaDocument, string: str
+    ) -> data.VanDerAaDocument:
+        if '#-#-#RESULT#-#-#' in string:
+            string = string.split('#-#-#RESULT#-#-#')[1].strip()
         lines = string.splitlines(keepends=False)
         constraints = []
         for line in lines:
@@ -143,7 +234,7 @@ class QuishpiListingFormattingStrategy(
         return document.text
 
     def parse(
-        self, document: data.QuishpiDocument, string: str
+            self, document: data.QuishpiDocument, string: str
     ) -> data.QuishpiDocument:
         mentions: typing.List[data.QuishpiMention] = []
 
@@ -309,7 +400,7 @@ class PetMentionListingFormattingStrategy(
             sentence = sentences[sentence_id]
             mention_tokens = mention_text.split(" ")
             for i, token in enumerate(sentence):
-                candidates = sentence[i : i + len(mention_tokens)]
+                candidates = sentence[i: i + len(mention_tokens)]
                 candidate_text = " ".join(c.text for c in candidates)
 
                 if candidate_text != mention_text:
@@ -350,106 +441,5 @@ if __name__ == "__main__":
             print()
             formatter.parse(d, formatter.output(d))
 
+
     main()
-
-
-quishpi_re_prompt = """As a business process modelling expert, your task involves analyzing textual descriptions of 
-business processes to identify key actions and the constraints that govern the order and execution of these actions. 
-The goal is to clearly extract and categorize the actions and constraints to aid in the modeling of these processes. 
-Please follow the guidelines below to ensure accurate and comprehensive extraction:
-
-1. **Identifying Actions:**
-   - An action consists of a predicate (usually a transitive verb) and an object (the entity being acted upon, which can 
-   be physical or digital).
-   - Look for explicit mentions of tasks or operations being performed as indicators of actions within the text.
-
-2. **Understanding and Extracting Constraints:**
-   - Constraints dictate the execution order or the existence of actions within a process. Each constraint has a type 
-   and is defined by its relationship between actions (head action/source and tail action/target).
-   - The types of constraints are as follows:
-     - **Init:** Marks the beginning of a process. Requires explicit mention of the process starting.
-     - **End:** Indicates the end of a process. Requires explicit mention of the process ending.
-     - **Precedence:** The tail action occurs only if the head action has already been executed.
-     - **Response:** Execution of the head action necessitates the execution of the tail action.
-     - **Succession:** The head and tail actions are executed in sequence, with the head action preceding the tail.
-     - **Existence:** An action must occur at some point in the process without dependency on another action.
-     - **Absence:** An action must not occur throughout the process, independent of other actions' execution.
-     - **Noncooccurrence:** The head and tail actions cannot occur together in the process.
-
-3. **Handling Negations:**
-   - Pay special attention to negations which reverse the implied constraint (e.g., "if action A happens, action B does 
-   NOT happen" indicates a negation of a normal constraint).
-   - Mark these negations clearly as they significantly impact the process flow and constraint relationships.
-
-4. **Format for Extraction:**
-   - For each identified constraint, format your extraction as follows: 
-     `<NEGATION (TRUE/FALSE)>	<CONSTRAINT TYPE>	<HEAD ACTION>	<TAIL ACTION (if applicable)>`.
-   - If a constraint does not involve a tail action (e.g., init, end, existence, absence), omit the tail action from the 
-   format.
-
-5. **Handling Ambiguities:**
-   - In cases where the action or constraint type is not clear, use your best judgment based on the context provided in 
-   the text. If still uncertain, note the ambiguity for further review.
-
-**Note:** Your analysis plays a crucial role in transforming textual descriptions into structured process models. 
-Accuracy in identifying actions and constraints is paramount.
-
-Please proceed with analyzing the given document according to these guidelines.
-"""
-
-
-class QuishpiREListingFormattingStrategy(
-    base.BaseFormattingStrategy[data.VanDerAaDocument]
-):
-    def __init__(self, steps: typing.List[typing.Literal["constraints"]]):
-        super().__init__(steps)
-
-    @staticmethod
-    def description() -> str:
-        return quishpi_re_prompt
-
-    def output(self, document: data.VanDerAaDocument) -> str:
-        constraints = []
-        for constraint in document.constraints:
-            constraints.append(
-                f"{'TRUE' if constraint.negative else 'FALSE'}\t{constraint.type}\t{constraint.head}\t{constraint.tail}"
-            )
-        return "\n".join(constraints)
-
-    def input(self, document: data.VanDerAaDocument) -> str:
-        return document.text
-
-    def parse(
-        self, document: data.VanDerAaDocument, string: str
-    ) -> data.VanDerAaDocument:
-        lines = string.splitlines(keepends=False)
-        constraints = []
-        for line in lines:
-            split_line = line.strip().split("\t")
-            if len(split_line) == 4:
-                negative, c_type, c_head, c_tail = split_line
-            elif len(split_line) == 3:
-                negative, c_type, c_head = split_line
-                c_tail = None
-            else:
-                print(
-                    f'Expected 2-3 tab separated values in line "{line}", got {len(split_line)}, skipping line.'
-                )
-                continue
-
-            if c_type.strip() == "":
-                print(f"Predicted empty type in {line}")
-            constraints.append(
-                data.VanDerAaConstraint(
-                    type=c_type.strip().lower(),
-                    head=c_head,
-                    tail=c_tail,
-                    negative=negative.lower() == "true",
-                )
-            )
-        return data.VanDerAaDocument(
-            id=document.id,
-            name=document.name,
-            text=document.text,
-            constraints=constraints,
-        )

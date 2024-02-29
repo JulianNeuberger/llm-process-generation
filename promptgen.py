@@ -181,7 +181,7 @@ and reflect on the reasons for the changes you then made.
 """
 
 improvement_prompt_focus_extension_template = """
-Especially focus on the following information types, since they are currently the driving factors for the rather low
+Especially focus on the following aspects, since they are currently the driving factors for the rather low
 performance:
 {main_painpoints}
 """
@@ -539,7 +539,11 @@ if __name__ == '__main__':
             given_original_prompt=original_prompt,
             given_inputs=inputs_as_string,
             gold=gold_as_string,
-            predictions=pred_as_string
+            predictions=pred_as_string,
+            main_painpoints="""
+                - The Existence constraint must be recognized much better.\n
+                - The discriminatory power of the constraint descriptions must become clearer, because the constrains are confused far too often.\n
+            """
         )
 
         print(improvement_message.to_string())

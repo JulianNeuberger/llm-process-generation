@@ -18,16 +18,16 @@ if __name__ == "__main__":
             nltk.download("punkt")
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/quishpi-re/{date_formatted}.json"
+        storage = f"res/answers/vanderaa/{date_formatted}.json"
         # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
-
+        random.seed(42)
         num_shots = 0
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         # formatter = format.PetTagFormattingStrategy()
-        formatter = format.QuishpiREListingFormattingStrategy(steps=["constraints"])
-        importer = data.VanDerAaImporter("res/data/quishpi/csv")
+        formatter = format.VanDerAaStepwiseListingFormattingStrategy(steps=["constraints"])
+        importer = data.VanDerAaImporter("res/data/van-der-aa/")
 
         loaded_data = importer.do_import()
         random.Random(42).shuffle(loaded_data)
