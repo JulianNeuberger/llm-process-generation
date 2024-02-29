@@ -68,32 +68,45 @@ def parse_experiment(
     importer: data.BaseImporter[TDocument],
     verbose: bool,
 ) -> ExperimentStats:
-    formatter_class: typing.Type[format.BaseFormattingStrategy] = getattr(
-        format, experiment_result.meta.formatter
-    )
-    steps = experiment_result.meta.steps
-
     preds: typing.List[TDocument] = []
     truths: typing.List[TDocument] = []
 
     documents = importer.do_import()
     documents_by_id = {d.id: d for d in documents}
 
+    overall_steps: typing.Optional[typing.List[str]] = None
     for result in experiment_result.results:
-        answer = result.answer
-        formatter = formatter_class(steps)
+        predicted_doc: typing.Optional[data.DocumentBase] = None
         input_doc = documents_by_id[result.original_id]
-        predicted_doc = formatter.parse(input_doc, answer)
+
+        for formatter_class_name, steps, answer, prompt in zip(
+            result.formatters, result.steps, result.answers, result.prompts
+        ):
+            if overall_steps is None:
+                overall_steps = steps
+            assert overall_steps == steps
+            formatter_class: typing.Type[format.BaseFormattingStrategy] = getattr(
+                format, formatter_class_name
+            )
+            formatter = formatter_class(steps)
+            partial_predicted_doc = formatter.parse(input_doc, answer)
+            if predicted_doc is None:
+                predicted_doc = partial_predicted_doc
+            else:
+                predicted_doc = predicted_doc + partial_predicted_doc
+
         preds.append(predicted_doc)
         truths.append(input_doc)
 
+    assert overall_steps is not None
+
     stats = {}
-    if "mentions" in steps:
+    if "mentions" in overall_steps:
         stats_by_tag = eval.mentions_f1_stats(
             predicted_documents=preds, ground_truth_documents=truths, verbose=verbose
         )
         stats["mentions"] = stats_by_tag
-    if "entities" in steps:
+    if "entities" in overall_steps:
         stats_by_tag = eval.entity_f1_stats(
             predicted_documents=preds,
             ground_truth_documents=truths,
@@ -101,12 +114,12 @@ def parse_experiment(
             only_tags=["Actor", "Activity Data"],
         )
         stats["entities"] = stats_by_tag
-    if "relations" in steps:
+    if "relations" in overall_steps:
         stats_by_tag = eval.relation_f1_stats(
             predicted_documents=preds, ground_truth_documents=truths, verbose=verbose
         )
         stats["relations"] = stats_by_tag
-    if "constraints" in steps:
+    if "constraints" in overall_steps:
         stats_by_tag = eval.constraint_f1_stats(
             predicted_documents=preds, ground_truth_documents=truths, verbose=verbose
         )

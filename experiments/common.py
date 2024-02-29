@@ -19,6 +19,8 @@ TDocument = typing.TypeVar("TDocument", bound=base.DocumentBase)
 @dataclasses.dataclass
 class PromptResult:
     prompts: typing.List[str]
+    steps: typing.List[typing.List[str]]
+    formatters: typing.List[str]
     input_tokens: int
     output_tokens: int
     total_costs: float
@@ -29,15 +31,25 @@ class PromptResult:
         return self.__dict__
 
     @staticmethod
-    def from_dict(dic: typing.Dict):
+    def from_dict(dic: typing.Dict, meta_dic: typing.Dict):
         prompt = dic["prompt"]
         answer = dic["answer"]
+        formatters = meta_dic["formatter"]
+        steps = meta_dic["steps"]
 
         if type(prompt) != list:
             prompt = [prompt]
 
         if type(answer) != list:
             answer = [answer]
+
+        if type(formatters) != list:
+            formatters = [formatters]
+
+        if len(steps) > 0:
+            if type(steps[0]) != list:
+                steps[0] = [steps[0]]
+
         return PromptResult(
             prompts=prompt,
             input_tokens=dic["input_tokens"],
@@ -45,6 +57,8 @@ class PromptResult:
             total_costs=dic["total_costs"],
             answers=answer,
             original_id=dic["original_id"],
+            formatters=formatters,
+            steps=steps,
         )
 
     def __add__(self, other):
@@ -57,16 +71,16 @@ class PromptResult:
             total_costs=self.total_costs + other.total_costs,
             answers=self.answers + other.answers,
             original_id=self.original_id,
+            steps=self.steps + other.steps,
+            formatters=self.formatters + other.formatters,
         )
 
 
 @dataclasses.dataclass
 class RunMeta:
     num_shots: int
-    formatter: str
     model: str
     temperature: float
-    steps: typing.List[str]
 
     def to_dict(self):
         return self.__dict__
@@ -76,9 +90,7 @@ class RunMeta:
         chat_open_ai_default_temperature = 0.7
         return RunMeta(
             num_shots=dic["num_shots"],
-            formatter=dic["formatter"],
             model=dic["model"],
-            steps=dic["steps"],
             temperature=dic.get("temperature", chat_open_ai_default_temperature),
         )
 
@@ -98,7 +110,7 @@ class ExperimentResult:
     def from_dict(dic: typing.Dict):
         return ExperimentResult(
             meta=RunMeta.from_dict(dic["meta"]),
-            results=[PromptResult.from_dict(r) for r in dic["results"]],
+            results=[PromptResult.from_dict(r, dic["meta"]) for r in dic["results"]],
         )
 
 
@@ -190,6 +202,8 @@ def run_single_document_prompt(
     return PromptResult(
         prompts=[prompt_text],
         answers=[answer],
+        formatters=[formatter.__class__.__name__],
+        steps=[formatter.steps],
         original_id=input_document.id,
         input_tokens=num_input_tokens,
         output_tokens=num_output_tokens,
@@ -247,8 +261,6 @@ def experiment(
                     meta=RunMeta(
                         num_shots=num_shots,
                         model=model_name,
-                        formatter=formatter.__class__.__name__,
-                        steps=formatter.steps,
                         temperature=model.temperature,
                     ),
                     results=[],
