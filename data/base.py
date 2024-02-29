@@ -8,6 +8,9 @@ class DocumentBase:
     id: str
     text: str
 
+    def __add__(self, other):
+        raise NotImplementedError()
+
 
 TDocument = typing.TypeVar("TDocument", bound=DocumentBase)
 

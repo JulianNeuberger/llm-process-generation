@@ -28,6 +28,14 @@ class QuishpiRelation(base.SupportsPrettyDump["QuishpiDocument"]):
 class QuishpiDocument(base.DocumentBase):
     mentions: typing.List[QuishpiMention]
 
+    def __add__(self, other: "QuishpiDocument"):
+        assert self.id == other.id
+
+        new_mentions = [m for m in other.mentions if m not in self.mentions]
+        return QuishpiDocument(
+            id=self.id, text=self.text, mentions=self.mentions + new_mentions
+        )
+
 
 class QuishpiImporter(base.BaseImporter[QuishpiDocument]):
     def __init__(self, base_dir_path: str, exclude_tags: typing.List[str]):

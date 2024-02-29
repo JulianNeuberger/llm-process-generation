@@ -44,10 +44,54 @@ class PetDocument(
             entities=[] if clear_entities else [e.copy() for e in self.entities],
         )
 
+    def __add__(self, other: "PetDocument"):
+        assert self.id == other.id
+        assert self.tokens == other.tokens
+
+        new_mentions = self.mentions
+        new_mention_ids = {}
+        for i, mention in enumerate(other.mentions):
+            if mention not in new_mentions:
+                new_mention_ids[i] = len(new_mentions)
+                new_mentions.append(mention)
+            else:
+                new_mention_ids[i] = new_mentions.index(mention)
+
+        new_entities = self.entities
+        for entity in other.entities:
+            new_entity = PetEntity(
+                mention_indices=tuple(
+                    new_mention_ids[i] for i in entity.mention_indices
+                )
+            )
+            if new_entity not in new_entities:
+                new_entities.append(new_entity)
+
+        new_relations = self.relations
+        for relation in other.relations:
+            new_relation = PetRelation(
+                type=relation.type,
+                head_mention_index=new_mention_ids[relation.head_mention_index],
+                tail_mention_index=new_mention_ids[relation.tail_mention_index],
+            )
+            if new_relation not in new_relations:
+                new_relations.append(new_relation)
+
+        return PetDocument(
+            name=self.name,
+            text=self.text,
+            id=self.id,
+            category=self.category,
+            tokens=self.tokens,
+            mentions=new_mentions,
+            entities=new_entities,
+            relations=new_relations,
+        )
+
 
 @dataclasses.dataclass(frozen=True, eq=True)
 class PetMention(base.HasType, base.SupportsPrettyDump[PetDocument]):
-    token_document_indices: typing.Tuple[int]
+    token_document_indices: typing.Tuple[int, ...]
 
     def copy(self) -> "PetMention":
         return PetMention(
@@ -64,10 +108,10 @@ class PetMention(base.HasType, base.SupportsPrettyDump[PetDocument]):
 
 @dataclasses.dataclass(frozen=True, eq=True)
 class PetEntity(base.SupportsPrettyDump[PetDocument]):
-    mention_indices: typing.List[int] = dataclasses.field(default_factory=list)
+    mention_indices: typing.Tuple[int, ...]
 
     def copy(self) -> "PetEntity":
-        return PetEntity(mention_indices=[i for i in self.mention_indices])
+        return PetEntity(mention_indices=tuple(i for i in self.mention_indices))
 
     def get_tag(self, document: "PetDocument") -> str:
         tags = set(document.mentions[i].type for i in self.mention_indices)

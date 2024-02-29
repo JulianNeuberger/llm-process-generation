@@ -29,6 +29,16 @@ class VanDerAaDocument(base.DocumentBase):
     name: str
     constraints: typing.List["VanDerAaConstraint"]
 
+    def __add__(self, other: "VanDerAaDocument"):
+        assert self.id == other.id
+        new_constraints = [c for c in other.constraints if c not in self.constraints]
+        return VanDerAaDocument(
+            id=self.id,
+            text=self.text,
+            name=self.name,
+            constraints=self.constraints + new_constraints,
+        )
+
 
 @dataclasses.dataclass(eq=True, frozen=True)
 class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
