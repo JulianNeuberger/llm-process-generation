@@ -4,7 +4,6 @@ import typing
 
 import data
 import experiments
-from experiments import common
 import format
 import eval
 
@@ -64,7 +63,7 @@ def parse_costs_from_experiments(
 
 
 def parse_experiment(
-    experiment_result: common.ExperimentResult,
+    experiment_result: experiments.ExperimentResult,
     importer: data.BaseImporter[TDocument],
     verbose: bool,
 ) -> ExperimentStats:
@@ -128,7 +127,7 @@ def parse_experiment(
 
 
 def parse_experiments(
-    experiment_results: typing.List[common.ExperimentResult],
+    experiment_results: typing.List[experiments.ExperimentResult],
     importer: data.BaseImporter[TDocument],
     verbose: bool,
 ) -> typing.List[ExperimentStats]:
@@ -281,16 +280,11 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        f"res/answers/pet/2024-02-28_16-57-34.json",
+        f"res/answers/pet/2024-02-27_14-48-34.json",
         data.PetImporter("res/data/pet/all.new.jsonl"),
         # only_document_ids=["doc-6.1"],
         verbose=True,
     )
-    print()
-    print("*******************************************************")
-    print("*******************************************************")
-    print("*******************************************************")
-    print()
 
 
 if __name__ == "__main__":
