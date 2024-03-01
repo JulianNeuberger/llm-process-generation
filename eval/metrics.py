@@ -117,7 +117,6 @@ def mentions_f1_stats(
     print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
-    predicted_documents = [d.copy([]) for d in predicted_documents]
     return _f1_stats(
         predicted_documents=predicted_documents,
         ground_truth_documents=ground_truth_documents,
@@ -136,7 +135,6 @@ def entity_f1_stats(
     print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
-    predicted_documents = [d.copy() for d in predicted_documents]
     for d in predicted_documents:
         d.entities = [
             e
@@ -145,7 +143,7 @@ def entity_f1_stats(
             and e.get_tag(d) in calculate_only_tags
         ]
 
-    ground_truth_documents = [d.copy() for d in ground_truth_documents]
+    ground_truth_documents = [d.copy([]) for d in ground_truth_documents]
     for d in ground_truth_documents:
         d.entities = [
             e

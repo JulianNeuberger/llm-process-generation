@@ -11,19 +11,15 @@ You are a business process modelling expert, tasked with finding actions and con
 ** Format **
 
 Please extract all mentions in the given raw text in the following format:
-Print one mention per line, where you separate the mentions type, its text, and a short explanation why you extracted it, by tabs, e.g. "action	do something	this is an active task in the process".
+Print one mention per line, where you separate the mentions type, and its text by tabs, e.g. "action	do something".
 
-<type>	<text>	<explanation>
+<type>	<text>
 
 ** Format Example **
 
-The LLM annotates a span of natural language text, if it is a relevant element, or skips it. then it returns it, after it formatted it correctly.
-
-action	annotates	action a process participant (the LLM) executes, which is process relevant, as it describes a task
-condition	it is a relevant element	this statement follows a conditional "if" and explains the condition
-condition	skips	this is not an action, as it is mutually exclusive with the previous condition "it is a relevant element", there for it is a condition as well
-action	returns	action a process participant (the LLM) does, relevant to the process
-action	formatted	action a process participant (the LLM) did, which is still relevant to the process, as it was done after "annotates" and before "returns"
+action	annotate
+condition	it is a relevant element
+action	formatted
 
 ** Notes **
 

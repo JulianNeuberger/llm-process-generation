@@ -115,9 +115,7 @@ class PetTagFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument]):
         return " ".join(token_texts)
 
     def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
-        document = document.copy(
-            clear_mentions=True, clear_entities=True, clear_relations=True
-        )
+        document = document.copy(clear=["mentions", "entities", "relations"])
 
         tokens = string.split(" ")
         opening_tag_regex = re.compile(r"<([^/>]+)>")

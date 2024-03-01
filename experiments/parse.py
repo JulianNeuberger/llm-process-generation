@@ -295,11 +295,11 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        f"res/answers/pet/2024-02-29_16-41-29.json",
+        f"res/answers/quishpi-md/2024-03-01_08-53-09.json",
         # f"res/answers/pet/2024-02-29_15-11-39.json",
-        data.PetImporter("res/data/pet/all.new.jsonl"),
+        data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
         # only_document_ids=["doc-6.1"],
-        print_only_tags=["activity data", "actor", "activity"],
+        # print_only_tags=["activity data", "actor", "activity"],
         verbose=True,
     )
 

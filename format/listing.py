@@ -70,7 +70,7 @@ class QuishpiListingFormattingStrategy(
 
     @staticmethod
     def description() -> str:
-        return common.load_prompt_from_file("quishpi/md/long.txt")
+        return common.load_prompt_from_file("quishpi/md/long-no-explain.txt")
 
     def output(self, document: data.QuishpiDocument) -> str:
         mentions = []
@@ -87,13 +87,25 @@ class QuishpiListingFormattingStrategy(
         mentions: typing.List[data.QuishpiMention] = []
 
         for line in string.splitlines(keepends=False):
+            if "\t" not in line:
+                print(f"Skipping non-tab-separated line '{line}'.")
+                continue
+
             split_line = line.split("\t")
-            if len(split_line) != 2:
+            assert 2 <= len(split_line) <= 3, split_line
+            if 3 < len(split_line) < 2:
                 print(
-                    f"Expected two tab-separated values, got {len(split_line)} in '{line}' from LLM."
+                    f"Expected two or three tab-separated values, "
+                    f"got {len(split_line)} in '{line}' from LLM. Skipping."
                 )
                 continue
-            mention_type, mention_text = split_line
+
+            if len(split_line) == 3:
+                mention_type, mention_text, explanation = split_line
+                print(f"Explanation for {mention_text} ({mention_type}): {explanation}")
+            else:
+                mention_type, mention_text = split_line
+
             mention = data.QuishpiMention(
                 type=mention_type.strip().lower(), text=mention_text
             )
