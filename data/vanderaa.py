@@ -39,6 +39,14 @@ class VanDerAaDocument(base.DocumentBase):
             constraints=self.constraints + new_constraints,
         )
 
+    def copy(self, clear: typing.List[str]):
+        constraints = []
+        if "constraints" not in clear:
+            constraints = [c.copy() for c in self.constraints]
+        return VanDerAaDocument(
+            id=self.id, text=self.text, name=self.name, constraints=constraints
+        )
+
 
 @dataclasses.dataclass(eq=True, frozen=True)
 class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
@@ -49,6 +57,11 @@ class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
 
     def pretty_dump(self, document: VanDerAaDocument) -> str:
         return f"'{self.head}' -{self.negative}-{self.type}-> '{self.tail}'"
+
+    def copy(self):
+        return VanDerAaConstraint(
+            type=self.type, negative=self.negative, head=self.head, tail=self.tail
+        )
 
     @property
     def num_slots(self):

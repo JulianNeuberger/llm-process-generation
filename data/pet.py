@@ -27,21 +27,18 @@ class PetDocument(
             ret[-1].append(token)
         return ret
 
-    def copy(
-        self,
-        clear_mentions: bool = False,
-        clear_relations: bool = False,
-        clear_entities: bool = False,
-    ) -> "PetDocument":
+    def copy(self, clear: typing.List[str]) -> "PetDocument":
         return PetDocument(
             name=self.name,
             text=self.text,
             id=self.id,
             category=self.category,
             tokens=[t.copy() for t in self.tokens],
-            mentions=[] if clear_mentions else [m.copy() for m in self.mentions],
-            relations=[] if clear_relations else [r.copy() for r in self.relations],
-            entities=[] if clear_entities else [e.copy() for e in self.entities],
+            mentions=[] if "mentions" in clear else [m.copy() for m in self.mentions],
+            relations=(
+                [] if "relations" in clear else [r.copy() for r in self.relations]
+            ),
+            entities=[] if "entities" in clear else [e.copy() for e in self.entities],
         )
 
     def __add__(self, other: "PetDocument"):

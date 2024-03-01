@@ -11,6 +11,9 @@ class DocumentBase:
     def __add__(self, other):
         raise NotImplementedError()
 
+    def copy(self, clear: typing.List[str]):
+        raise NotImplementedError()
+
 
 TDocument = typing.TypeVar("TDocument", bound=DocumentBase)
 
