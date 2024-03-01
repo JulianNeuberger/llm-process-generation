@@ -74,6 +74,10 @@ class PetReferencesFormattingStrategy(format.BaseFormattingStrategy[data.PetDocu
     def description(self) -> str:
         return prompt
 
+    @property
+    def args(self):
+        return {}
+
     def output(self, document: data.PetDocument) -> str:
         return self._output_formatter.output(document)
 

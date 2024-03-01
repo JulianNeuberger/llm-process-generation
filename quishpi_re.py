@@ -1,5 +1,4 @@
 import datetime
-import random
 
 import nltk
 
@@ -26,13 +25,17 @@ if __name__ == "__main__":
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         # formatter = format.PetTagFormattingStrategy()
-        formatter = format.QuishpiREListingFormattingStrategy(steps=["constraints"])
+        formatter = format.VanDerAaRelationListingFormattingStrategy(
+            steps=["constraints"],
+            separate_tasks=True,
+            prompt_path="van-der-aa/re/step-wise.txt",
+        )
         importer = data.VanDerAaImporter("res/data/quishpi/csv")
 
-        loaded_data = importer.do_import()
-        random.Random(42).shuffle(loaded_data)
-        loaded_data = loaded_data[1:31]
-        folds = sampling.generate_folds(loaded_data, num_shots)
+        documents = importer.do_import()
+        print(f"Dataset consists of {len(documents)} documents.")
+        folds = sampling.generate_folds(documents, num_shots)[0:1]
+
         print("Using folds:")
         print("------------")
         for fold in folds:
@@ -50,6 +53,5 @@ if __name__ == "__main__":
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
-
 
     main()

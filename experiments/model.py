@@ -6,6 +6,7 @@ import typing
 class PromptResult:
     prompts: typing.List[str]
     steps: typing.List[typing.List[str]]
+    formatter_args: typing.List[typing.Dict[str, typing.Any]]
     formatters: typing.List[str]
     input_tokens: int
     output_tokens: int
@@ -34,6 +35,10 @@ class PromptResult:
         if steps is None:
             steps = [meta_dic["steps"]]
 
+        formatter_args = dic.get("formatter_args", None)
+        if formatter_args is None:
+            formatter_args = [{}] * len(answers)
+
         return PromptResult(
             prompts=prompts,
             input_tokens=dic["input_tokens"],
@@ -42,10 +47,13 @@ class PromptResult:
             answers=answers,
             original_id=dic["original_id"],
             formatters=formatters,
+            formatter_args=formatter_args,
             steps=steps,
         )
 
     def __add__(self, other):
+        if not isinstance(other, PromptResult):
+            raise ValueError()
         if self.original_id != other.original_id:
             print("WARNING: Adding PromptResults run on different documents!")
         return PromptResult(
@@ -57,6 +65,7 @@ class PromptResult:
             original_id=self.original_id,
             steps=self.steps + other.steps,
             formatters=self.formatters + other.formatters,
+            formatter_args=self.formatter_args + other.formatter_args,
         )
 
 

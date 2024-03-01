@@ -123,15 +123,11 @@ def test_van_der_aa():
             data.VanDerAaConstraint(
                 "X", "arg99", "arg89", negative=False, sentence_id=1
             ),
-            data.VanDerAaConstraint("A", "arg3", "arg2", negative=False, sentence_id=2),
         ],
-        sentences=["C", "D", "E"],
+        sentences=["A", "B"],
     )
 
     added = doc1 + doc2
 
-    assert len(added.constraints) == 7
-    assert len(added.sentences) == 5
-    assert added.constraints[3].sentence_id == 2
-    assert added.constraints[4].sentence_id == 3
-    assert added.constraints[6].sentence_id == 4
+    assert len(added.constraints) == 6
+    assert len(added.sentences) == 2

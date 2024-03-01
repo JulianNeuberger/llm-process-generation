@@ -32,32 +32,17 @@ class VanDerAaDocument(base.DocumentBase):
 
     def __add__(self, other: "VanDerAaDocument"):
         assert self.id == other.id
-        new_sentences = self.sentences
-        new_sentence_ids = {}
-        for i, sentence in enumerate(other.sentences):
-            if sentence not in new_sentences:
-                new_sentence_ids[i] = len(new_sentences)
-                new_sentences.append(sentence)
-            else:
-                new_sentence_ids[i] = new_sentences.index(sentence)
-        new_constraints = self.constraints
-        for c in other.constraints:
-            if c not in new_constraints:
-                c = VanDerAaConstraint(
-                    type=c.type,
-                    head=c.head,
-                    tail=c.tail,
-                    negative=c.negative,
-                    sentence_id=new_sentence_ids[c.sentence_id],
-                )
-                new_constraints.append(c)
+        assert len(self.sentences) == len(other.sentences)
+        assert self.sentences == other.sentences
+
+        new_constraints = [c for c in other.constraints if c not in self.constraints]
 
         return VanDerAaDocument(
             id=self.id,
             text=self.text,
             name=self.name,
-            sentences=new_sentences,
-            constraints=new_constraints,
+            sentences=self.sentences,
+            constraints=self.constraints + new_constraints,
         )
 
     def copy(self, clear: typing.List[str]):
@@ -85,7 +70,7 @@ class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
         pretty = f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head}'
         if self.tail:
             pretty = f"{pretty}\t{self.tail}"
-        return pretty
+        return f"s: {self.sentence_id}\t{pretty}"
 
     def copy(self):
         return VanDerAaConstraint(
@@ -178,25 +163,28 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                 for row in reader:
                     file_name = os.path.basename(file_path)
                     file_name, _ = os.path.splitext(file_name)
-                    doc_id = f"{file_name}-{row[ID_COL]}"
-                    doc_name = row[NAME_COL]
+                    doc_id = row[NAME_COL]
                     text = row[TEXT_COL]
 
-                    if doc_name not in documents:
-                        documents[doc_name] = VanDerAaDocument(
+                    # quishpi uses 1 for all rows and files, this would not be unique...
+                    doc_id = f"{file_name}-{doc_id}"
+
+                    if doc_id not in documents:
+                        documents[doc_id] = VanDerAaDocument(
                             id=doc_id,
-                            text=text,
-                            name=doc_name,
+                            text="",
+                            name=doc_id,
                             constraints=[],
                             sentences=[],
                         )
-                    document = documents[doc_name]
+                    document = documents[doc_id]
 
                     sentence_index = len(document.sentences)
                     constraints = self.parse_constraints(row, sentence_index)
 
                     document.sentences.append(text)
                     document.constraints.extend(constraints)
+                    document.text += f"\n{text}"
 
         return list(documents.values())
 

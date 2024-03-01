@@ -11,6 +11,7 @@ from langchain_core import prompts
 import format
 from data import base
 from experiments import usage, iterative, model
+from format.common import load_prompt_from_file
 
 TDocument = typing.TypeVar("TDocument", bound=base.DocumentBase)
 
@@ -29,11 +30,7 @@ def get_prompt(
         for d in example_docs
     ]
 
-    example_template = """User: Please retrieve all {steps} from the following text: 
-        Text: {input}
-        Elements: {steps}
-
-        AI: {output}"""
+    example_template = load_prompt_from_file("example-template.txt")
 
     example_prompt = prompts.PromptTemplate(
         input_variables=["input", "output", "steps"],
@@ -42,12 +39,7 @@ def get_prompt(
 
     system_message = formatter.description()
 
-    user_prompt = (
-        "User: Please retrieve all {steps} from the following text: \n"
-        "Text: {input}\n"
-        "Elements: {steps}\n"
-        "AI:"
-    )
+    user_prompt = load_prompt_from_file("user-prompt.txt")
 
     few_shot_prompt = prompts.FewShotPromptTemplate(
         input_variables=["input", "steps"],
@@ -110,6 +102,7 @@ def run_single_document_prompt(
         input_tokens=num_input_tokens,
         output_tokens=num_output_tokens,
         total_costs=total_costs,
+        formatter_args=[formatter.args],
     )
 
 

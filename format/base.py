@@ -5,9 +5,13 @@ TDocument = typing.TypeVar("TDocument")
 
 
 class BaseFormattingStrategy(abc.ABC, typing.Generic[TDocument]):
-    def __init__(self, steps: typing.List[str]):
+    def __init__(self, steps: typing.List[str], **kwargs):
         assert len(steps) > 0
         self._steps = steps
+
+    @property
+    def args(self):
+        raise NotImplementedError()
 
     @property
     def steps(self):

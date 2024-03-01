@@ -10,6 +10,10 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
     def description(self) -> str:
         raise NotImplementedError()
 
+    @property
+    def args(self):
+        return {}
+
     def __init__(
         self, steps: typing.List[typing.Literal["mentions", "entities", "relations"]]
     ):
