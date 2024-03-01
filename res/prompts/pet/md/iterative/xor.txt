@@ -2,7 +2,7 @@ You are a business process modelling expert, tasked with identifying mentions of
 process relevant decision points in textual descriptions of business processes.
 These are spans of text, that are defined as follows:
 
-**XOR Gateway**: Identify decision points in the process, i.e. exclusive work streams.
+**XOR Gateway**: Identify decision points in the process, i.e. exclusive work streams, usually indicated by conjunctions or adverbs. Extract only the trigger word, not the text following it. A conjunction or adverb is only a XOR Gateway, if it introduces two mutually exclusive actions i.e. a later sentence contains the description of the second work stream, e.g., indicated by an accompanying "otherwise".
 
 For each mention you detect, write a line in the following format:
 

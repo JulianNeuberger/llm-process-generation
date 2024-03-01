@@ -18,10 +18,27 @@ def run_iterative_document_prompt(
     num_shots: int,
 ) -> model.PromptResult:
     merged_result: typing.Optional[model.PromptResult] = None
-    for formatter in formatters:
+    cur_doc: TDocument = input_document.copy(formatters[0].steps)
+    for i, formatter in enumerate(formatters):
+        if len(formatters) > 1:
+            print(
+                f"Running partial prompt {i + 1}/{len(formatters)} ({formatter.__class__.__name__}) for document {input_document.id}"
+            )
         result = common.run_single_document_prompt(
-            input_document, formatter, example_docs, chat_model, dry_run, num_shots
+            input_document,
+            cur_doc,
+            formatter,
+            example_docs,
+            chat_model,
+            dry_run,
+            num_shots,
         )
+        for answer in result.answers:
+            parsed = formatter.parse(input_document, answer)
+            if cur_doc is None:
+                cur_doc = parsed
+            else:
+                cur_doc += parsed
         if merged_result is None:
             merged_result = result
         else:

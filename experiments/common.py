@@ -66,6 +66,7 @@ def get_prompt(
 
 def run_single_document_prompt(
     input_document: TDocument,
+    current_prediction: TDocument,
     formatter: format.BaseFormattingStrategy[TDocument],
     example_docs: typing.List[TDocument],
     chat_model: langchain_openai.ChatOpenAI,
@@ -78,7 +79,7 @@ def run_single_document_prompt(
         assert num_shots <= len(example_docs)
         example_docs = random.sample(example_docs, num_shots)
 
-    prompt_text = get_prompt(input_document, formatter, example_docs)
+    prompt_text = get_prompt(current_prediction, formatter, example_docs)
     num_input_tokens = chat_model.get_num_tokens(prompt_text)
 
     if dry_run:
@@ -121,8 +122,9 @@ def run_multiple_document_prompts(
     num_shots: int,
 ) -> typing.Generator[model.PromptResult, None, None]:
     for d in input_documents:
+        cur_pred = d.copy(clear=formatter.steps)
         yield run_single_document_prompt(
-            d, formatter, example_docs, chat_model, dry_run, num_shots
+            d, cur_pred, formatter, example_docs, chat_model, dry_run, num_shots
         )
 
 
@@ -188,7 +190,6 @@ def experiment(
         )
 
         for result in result_iterator:
-            print(result.to_dict().keys())
             current_save_fold.results.append(result)
             os.makedirs(os.path.dirname(storage), exist_ok=True)
             with open(storage, "w", encoding="utf8") as f:

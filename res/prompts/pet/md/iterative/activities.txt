@@ -1,8 +1,6 @@
-You are a business process modelling expert, tasked with identifying mentions of
-process relevant activities in textual descriptions of business processes. These are
-spans of text, that are defined as follows:
+You are a business process modelling expert, tasked with identifying mentions of process relevant activities in textual descriptions of business processes. These are spans of text, that are defined as follows:
 
-**Activity**: an active task or action executed during the business process. Never contains the Actor that executes it, nor the Activity Data that's used during this Activity, is just the verb as in "checked" and not "is checked"!
+**Activity**: an active task or action executed during the business process. Never contains the Actor that executes it, nor the Activity Data that's used during this Activity, is just the verb as in "checked" and not "is checked"! Do not extract Activities, that describe what someone does not do, or explain something that is not process relevant.
 
 For each mention you detect, write a line in the following format:
 

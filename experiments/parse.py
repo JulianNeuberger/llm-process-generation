@@ -65,6 +65,7 @@ def parse_costs_from_experiments(
 def parse_experiment(
     experiment_result: experiments.ExperimentResult,
     importer: data.BaseImporter[TDocument],
+    print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool,
 ) -> ExperimentStats:
     preds: typing.List[TDocument] = []
@@ -102,7 +103,10 @@ def parse_experiment(
     stats = {}
     if "mentions" in overall_steps:
         stats_by_tag = eval.mentions_f1_stats(
-            predicted_documents=preds, ground_truth_documents=truths, verbose=verbose
+            predicted_documents=preds,
+            ground_truth_documents=truths,
+            verbose=verbose,
+            print_only_tags=print_only_tags,
         )
         stats["mentions"] = stats_by_tag
     if "entities" in overall_steps:
@@ -110,17 +114,24 @@ def parse_experiment(
             predicted_documents=preds,
             ground_truth_documents=truths,
             verbose=verbose,
-            only_tags=["Actor", "Activity Data"],
+            calculate_only_tags=["Actor", "Acitvity Data"],
+            print_only_tags=print_only_tags,
         )
         stats["entities"] = stats_by_tag
     if "relations" in overall_steps:
         stats_by_tag = eval.relation_f1_stats(
-            predicted_documents=preds, ground_truth_documents=truths, verbose=verbose
+            predicted_documents=preds,
+            ground_truth_documents=truths,
+            verbose=verbose,
+            print_only_tags=print_only_tags,
         )
         stats["relations"] = stats_by_tag
     if "constraints" in overall_steps:
         stats_by_tag = eval.constraint_f1_stats(
-            predicted_documents=preds, ground_truth_documents=truths, verbose=verbose
+            predicted_documents=preds,
+            ground_truth_documents=truths,
+            verbose=verbose,
+            print_only_tags=print_only_tags,
         )
         stats["constraints"] = stats_by_tag
     return stats
@@ -129,6 +140,7 @@ def parse_experiment(
 def parse_experiments(
     experiment_results: typing.List[experiments.ExperimentResult],
     importer: data.BaseImporter[TDocument],
+    print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool,
 ) -> typing.List[ExperimentStats]:
     model_name = experiment_results[0].meta.model
@@ -138,7 +150,7 @@ def parse_experiments(
     fold_stats: typing.List[ExperimentStats] = []
 
     for experiment in experiment_results:
-        stats = parse_experiment(experiment, importer, verbose)
+        stats = parse_experiment(experiment, importer, print_only_tags, verbose)
         fold_stats.append(stats)
 
     return fold_stats
@@ -231,9 +243,7 @@ def print_scores_by_step(printable_scores_by_step: typing.Dict[str, PrintableSco
 
 def parse_file(
     result_file: str,
-    importer: data.BaseImporter[TDocument],
     only_document_ids: typing.List[str] = None,
-    verbose: bool = False,
 ) -> typing.List[experiments.ExperimentResult]:
     with open(result_file, "r", encoding="utf8") as f:
         contents = json.load(f)
@@ -255,10 +265,15 @@ def print_experiment_results(
     result_file: str,
     importer: data.BaseImporter[TDocument],
     only_document_ids: typing.List[str] = None,
+    print_only_tags: typing.List[str] = None,
     verbose: bool = False,
 ):
-    experiment_results = parse_file(result_file, importer, only_document_ids, verbose)
-    experiment_stats = parse_experiments(experiment_results, importer, verbose)
+    if print_only_tags is not None:
+        print_only_tags = [t.lower() for t in print_only_tags]
+    experiment_results = parse_file(result_file, only_document_ids)
+    experiment_stats = parse_experiments(
+        experiment_results, importer, print_only_tags, verbose
+    )
     costs = parse_costs_from_experiments(experiment_results)
     print_experiment_costs(costs)
 
@@ -280,9 +295,11 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        f"res/answers/pet/2024-02-27_14-48-34.json",
+        f"res/answers/pet/2024-02-29_16-41-29.json",
+        # f"res/answers/pet/2024-02-29_15-11-39.json",
         data.PetImporter("res/data/pet/all.new.jsonl"),
         # only_document_ids=["doc-6.1"],
+        print_only_tags=["activity data", "actor", "activity"],
         verbose=True,
     )
 
