@@ -27,16 +27,37 @@ CONSTRAINT_3_COL = excel_col_to_index("O")
 @dataclasses.dataclass
 class VanDerAaDocument(base.DocumentBase):
     name: str
+    sentences: typing.List[str]
     constraints: typing.List["VanDerAaConstraint"]
 
     def __add__(self, other: "VanDerAaDocument"):
         assert self.id == other.id
-        new_constraints = [c for c in other.constraints if c not in self.constraints]
+        new_sentences = self.sentences
+        new_sentence_ids = {}
+        for i, sentence in enumerate(other.sentences):
+            if sentence not in new_sentences:
+                new_sentence_ids[i] = len(new_sentences)
+                new_sentences.append(sentence)
+            else:
+                new_sentence_ids[i] = new_sentences.index(sentence)
+        new_constraints = self.constraints
+        for c in other.constraints:
+            if c not in new_constraints:
+                c = VanDerAaConstraint(
+                    type=c.type,
+                    head=c.head,
+                    tail=c.tail,
+                    negative=c.negative,
+                    sentence_id=new_sentence_ids[c.sentence_id],
+                )
+                new_constraints.append(c)
+
         return VanDerAaDocument(
             id=self.id,
             text=self.text,
             name=self.name,
-            constraints=self.constraints + new_constraints,
+            sentences=new_sentences,
+            constraints=new_constraints,
         )
 
     def copy(self, clear: typing.List[str]):
@@ -44,7 +65,11 @@ class VanDerAaDocument(base.DocumentBase):
         if "constraints" not in clear:
             constraints = [c.copy() for c in self.constraints]
         return VanDerAaDocument(
-            id=self.id, text=self.text, name=self.name, constraints=constraints
+            id=self.id,
+            text=self.text,
+            name=self.name,
+            constraints=constraints,
+            sentences=self.sentences,
         )
 
 
@@ -54,16 +79,21 @@ class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
     head: str
     tail: typing.Optional[str]
     negative: bool
+    sentence_id: int
 
     def pretty_dump(self, document: VanDerAaDocument) -> str:
         pretty = f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head}'
         if self.tail:
-            pretty = f'{pretty}\t{self.tail}'
+            pretty = f"{pretty}\t{self.tail}"
         return pretty
 
     def copy(self):
         return VanDerAaConstraint(
-            type=self.type, negative=self.negative, head=self.head, tail=self.tail
+            type=self.type,
+            negative=self.negative,
+            head=self.head,
+            tail=self.tail,
+            sentence_id=self.sentence_id,
         )
 
     @property
@@ -132,7 +162,7 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
         self._file_path = path_to_collection
 
     def do_import(self) -> typing.List[VanDerAaDocument]:
-        documents: typing.List[VanDerAaDocument] = []
+        documents: typing.Dict[str, VanDerAaDocument] = {}
 
         file_paths = [self._file_path]
         if os.path.isdir(self._file_path):
@@ -142,39 +172,50 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
         for file_path in file_paths:
             with open(file_path, "r", encoding="windows-1252") as f:
                 reader = csv.reader(f, delimiter=";")
+                # strip header
                 _ = next(reader)
+
                 for row in reader:
                     file_name = os.path.basename(file_path)
                     file_name, _ = os.path.splitext(file_name)
                     doc_id = f"{file_name}-{row[ID_COL]}"
                     doc_name = row[NAME_COL]
                     text = row[TEXT_COL]
-                    constraints = self.parse_constraints(row)
-                    documents.append(
-                        VanDerAaDocument(
-                            id=doc_id, text=text, name=doc_name, constraints=constraints
+
+                    if doc_name not in documents:
+                        documents[doc_name] = VanDerAaDocument(
+                            id=doc_id,
+                            text=text,
+                            name=doc_name,
+                            constraints=[],
+                            sentences=[],
                         )
-                    )
-        return documents
+                    document = documents[doc_name]
+
+                    sentence_index = len(document.sentences)
+                    constraints = self.parse_constraints(row, sentence_index)
+
+                    document.sentences.append(text)
+                    document.constraints.extend(constraints)
+
+        return list(documents.values())
 
     @staticmethod
     def parse_constraints(
-            row: typing.List,
+        row: typing.List, sentence_index: int
     ) -> typing.List[VanDerAaConstraint]:
+        max_constraints = 3
         num_constraints = int(row[NUM_CONSTRAINTS_COL])
         base_index = CONSTRAINT_1_COL
         constraints: typing.List[VanDerAaConstraint] = []
-        for i in range(num_constraints):
+        for i in range(max_constraints):
             constraint_type = row[base_index + i * 3 + 0]
             constraint_head = row[base_index + i * 3 + 1]
             constraint_tail = row[base_index + i * 3 + 2]
             constraint_negative = row[NEGATIVE_COL].lower().strip() == "true"
 
             if constraint_type.strip() == "":
-                print(
-                    f"Empty constraint in row with id {row[ID_COL]}! "
-                    f"Skipping this constraint, even though we expected one here!"
-                )
+                # no constraint given
                 continue
 
             if constraint_tail == "":
@@ -185,16 +226,27 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                     head=constraint_head,
                     tail=constraint_tail,
                     negative=constraint_negative,
+                    sentence_id=sentence_index,
                 )
+            )
+        if num_constraints != len(constraints):
+            print(
+                f"Mismatch between the given number of constraints ({num_constraints}) "
+                f"and the actual constraints listed ({len(constraints)}). "
+                f"This is not a problem, but indicates the dataset is inconsistent."
             )
         return constraints
 
 
 if __name__ == "__main__":
-    documents = VanDerAaImporter(
-        "../res/data/van-der-aa/datacollection.csv"
-    ).do_import()
-    print(len(documents))
 
-    documents = VanDerAaImporter("../res/data/quishpi/csv").do_import()
-    print(len(documents))
+    def main():
+        documents = VanDerAaImporter(
+            "../res/data/van-der-aa/datacollection.csv"
+        ).do_import()
+        print(len(documents))
+
+        documents = VanDerAaImporter("../res/data/quishpi/csv").do_import()
+        print(len(documents))
+
+    main()

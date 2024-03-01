@@ -103,10 +103,11 @@ def test_van_der_aa():
         text="",
         name="",
         constraints=[
-            data.VanDerAaConstraint("A", "arg1", "arg2", negative=True),
-            data.VanDerAaConstraint("C", "arg2", "arg3", negative=False),
-            data.VanDerAaConstraint("A", "arg3", "arg2", negative=False),
+            data.VanDerAaConstraint("A", "arg1", "arg2", negative=True, sentence_id=0),
+            data.VanDerAaConstraint("C", "arg2", "arg3", negative=False, sentence_id=1),
+            data.VanDerAaConstraint("A", "arg3", "arg2", negative=False, sentence_id=1),
         ],
+        sentences=["A", "B"],
     )
 
     doc2 = data.VanDerAaDocument(
@@ -115,14 +116,22 @@ def test_van_der_aa():
         name="",
         constraints=[
             # same
-            data.VanDerAaConstraint("A", "arg1", "arg2", negative=True),
+            data.VanDerAaConstraint("A", "arg1", "arg2", negative=True, sentence_id=0),
             # different
-            data.VanDerAaConstraint("C", "arg3", "arg2", negative=False),
-            data.VanDerAaConstraint("Z", "arg3", "arg2", negative=False),
-            data.VanDerAaConstraint("X", "arg99", "arg89", negative=False),
+            data.VanDerAaConstraint("C", "arg3", "arg2", negative=False, sentence_id=0),
+            data.VanDerAaConstraint("Z", "arg3", "arg2", negative=False, sentence_id=1),
+            data.VanDerAaConstraint(
+                "X", "arg99", "arg89", negative=False, sentence_id=1
+            ),
+            data.VanDerAaConstraint("A", "arg3", "arg2", negative=False, sentence_id=2),
         ],
+        sentences=["C", "D", "E"],
     )
 
     added = doc1 + doc2
 
-    assert len(added.constraints) == 6
+    assert len(added.constraints) == 7
+    assert len(added.sentences) == 5
+    assert added.constraints[3].sentence_id == 2
+    assert added.constraints[4].sentence_id == 3
+    assert added.constraints[6].sentence_id == 4

@@ -196,6 +196,9 @@ def constraint_slot_filling_stats(
     for score in range(4, -1, -1):
         for p in pred:
             for t in true:
+                if p.sentence_id != t.sentence_id:
+                    continue
+
                 num_correct_slots = p.correct_slots(t)
                 if num_correct_slots != score:
                     continue
