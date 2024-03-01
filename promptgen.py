@@ -28,130 +28,30 @@ formal business process models in Declare or BPMN.
 
 ---
 
-You were tasked with identifying information by this prompt:
+** Task **
+
+You were tasked with identifying the information relevant for the data perspective of a process in a given input text. Please
+write a concise prompt, that would help you extract the expected information.
+
+** Input Text **
+
+As a basic principle , ACME AG receives invoices on paper or fax . These are received by the Secretariat in the central inbox and forwarded after a short visual inspection to an accounting employee . In `` ACME Financial Accounting `` , a software specially developed for the ACME AG , she identifies the charging suppliers and creates a new instance ( invoice ) . She then checks the invoice items and notes the corresponding cost center at the ACME AG and the related cost center managers for each position on a separate form ( `` docket `` ) . The docket and the copy of the invoice go to the internal mail together and are sent to the first cost center manager to the list . He reviews the content for accuracy after receiving the copy of the invoice . Should everything be in order , he notes his code one on the docket ( `` accurate position - AP `` ) and returns the copy of the invoice to the internal mail . From it , the copy of the invoice is passed on to the next cost center manager , based on the docket , or if all items are marked correct , sent back to accounting . Therefore , the copy of invoice and the docket gradually move through the hands of all cost center managers until all positions are marked as completely accurate . However , if inconsistencies exist , e.g . because the ordered product is not of the expected quantity or quality , the cost center manager rejects the AP with a note and explanatory statement on the docket , and the copy of the invoice is sent back to accounting directly . Based on the statements of the cost center managers , she will proceede with the clarification with the vendor , but , if necessary , she consults the cost center managers by telephone or e-mail again . When all inconsistencies are resolved , the copy of the invoice is sent to the cost center managers again , and the process continues . After all invoice items are AP , the accounting employee forwards the copy of the invoice to the commercial manager . He makes the commercial audit and issues the approval for payment . If the bill amount exceeds EUR 20 , the Board wants to check it again ( 4 - eyes-principle ) . The copy of the invoice including the docket moves back to the accounting employee in the appropriate signature file . Should there be a complaint during the commercial audit , it will be resolved by the accounting employee with the supplier . After the commercial audit is successfully completed , the accounting employee gives payment instructions and closes the instance in `` ACME financial accounting `` .
+
+** Expected Extracted Information **
+
+- the content
+- the copy of the invoice
+- the invoice items
+- the charging suppliers
+- the approval for payment
+- the clarification with the vendor
+- his code
+- the commercial audit
+- it
+- These
+- The docket and the copy of the invoice
 
 ** Prompt **
-
-```
-You are a business process modelling expert, tasked with identifying mentions of
-process relevant elements in textual descriptions of business processes. These mentions are 
-spans of text, that are of a certain type, as described below: 
-
-- **Actor**: a person, department, or similar role that participates actively in the business 
-         process, e.g., "the student", "the professor", "the judge", "the clerk". It should
-         only be extracted, if the current sentence describes the actor executing a task. 
-         Include the determiner if it is present, e.g. extract "the student" from "First the 
-         student studies for their exam". Can also be a pronoun, such as "he", "I", "she".
-- **Activity**: an active task or action executed during the business process, e.g., 
-            "examine", "write", "bake", "review". Do not extract, if it is information about
-            the process itself, such as "the process ends", as this is not a task in the process!
-            Can also be an event during the process, that is executed by an external, implicit actor, 
-            that is not mentioned in the text, e.g., "placed" in "when an order is placed".
-            Never contains the Actor that executes it, nor the Activity Data that's used during this
-            Activity, is just the verb as in "checked" and not "is checked"! 
-- **Activity Data**: a physical object, or digital data that is relevant to the process, because 
-                 an action produces or uses it, e.g., "the paper", "the report", "the machine part".
-                 Always include the determiner! Can also be a pronoun, like "it", but is always part of 
-                 a task description. Is never information about the process itself, as in "the process 
-                 ends", here "process" is not Activity Data!
-- **Further Specification**: important information about an activity, such as the mean, the manner 
-                         of execution, or how an activity is executed. Follows an Activity in the
-                         same sentence, and describes how an Activity (task) is being done.
-- **XOR Gateway**: textual representation of a decision in the process, usually triggered by adverbs or 
-               conjunctions, e.g., "if", "otherwise", "when"
-- **AND Gateway**: textual description of parallel work streams in the process, i.e., simultaneous 
-               actions performed, marked by phrases like, e.g., "while", "meanwhile", "at the same time" 
-- **Condition Specification**: defines the condition of an XOR Gateway path usually directly following the
-                           gateway trigger word, e.g., "it is ready", "the claim is valid",
-                           "temperature is above 180"
-
-For each mention you detect, write a line in the following format:
-text\ttype\tsentence
-
-- **text**: the text of the mention
-- **type**: the type from the ones listed above
-- **sentence**: integer, that identifies the sentence where the mention text was found in the input. Zero based.
-     
-**Examples for the format given the input text:** 
-
-*Input*: 
-
-Sentence 0: the professor grades all student papers . 
-Sentence 1: some time passes . 
-Sentence 2: then the professor returns the papers .
-
-*Output*:
-
-the professor\tActor\t0
-grades\tActivity\t0
-all student papers\tActivity Data\t0
-the professor\tActor\t2
-returns\tActivity\t2
-the papers\tActivity Data\t2
-
-Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation.
-Do not use any code formatting.
-
-```
-
-You were given this input:
-
-** Input **
-
-The Police Report related to the car accident is searched within the Police Report database and put in a file together with the Claim Documentation . This file serves as input to a claims handler who calculates an initial claim estimate . Then , the claims handler creates an Action Plan based on an Action Plan Checklist available in the Document Management system . Based on the Action Plan , a claims manager tries to negotiate a settlement on the claim estimate . The claimant is informed of the outcome , which ends the process .
-
-You created these predictions:
-
-** Predictions **
-
-* ok *
-(activity data, an Action Plan, [48, 49, 50])
-(activity data, an initial claim estimate, [37, 38, 39, 40])
-(actor, the claims handler, [44, 45, 46])
-(actor, a claims manager, [70, 71, 72])
-(activity, creates, [47])
-(further specification, within the Police Report database, [10, 11, 12, 13, 14])
-(activity data, The Police Report, [0, 1, 2])
-(actor, The claimant, [83, 84])
-
-
-* non ok *
-(activity, which ends the process, [91, 92, 93, 94])
-(activity, is searched, [8, 9])
-(further specification, based on an Action Plan Checklist, [51, 52, 53, 54, 55, 56])
-(further specification, serves as input, [28, 29, 30])
-(further specification, on the claim estimate, [78, 79, 80, 81])
-(further specification, available in the Document Management system, [57, 58, 59, 60, 61, 62])
-(further specification, of the outcome, [87, 88, 89])
-(xor gateway, Then, [42])
-(actor, who calculates, [35, 36])
-(activity data, an Action Plan, [53, 54, 55])
-(activity, to negotiate a settlement, [74, 75, 76, 77])
-(activity, tries, [73])
-(activity, put in a file, [16, 17, 18, 19])
-(actor, to a claims handler, [31, 32, 33, 34])
-(activity data, This file, [26, 27])
-(activity data, related to the car accident, [3, 4, 5, 6, 7])
-(xor gateway, Based on the Action Plan, [64, 65, 66, 67, 68])
-(and gateway, and, [15])
-(further specification, together with the Claim Documentation, [20, 21, 22, 23, 24])
-(activity, is informed, [85, 86])
-
-
-* missing *
-(actor, who, [35])
-(activity, put, [16])
-(activity, informed, [86])
-(activity, searched, [9])
-(activity data, a settlement, [76, 77])
-(further specification, in a file together with the Claim Documentation, [17, 18, 19, 20, 21, 22, 23, 24])
-(activity data, the outcome, [88, 89])
-(activity, negotiate, [75])
-(activity, calculates, [36])
-
-There were a lot of predictions, which were wrong, how could i improve your prompt, so you are more accurate?
-
-** Improved Prompt **
 """
 
 improvement_prompt_template = """

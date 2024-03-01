@@ -8,4 +8,11 @@ from format.listing import (
     QuishpiListingFormattingStrategy,
     PetMentionListingFormattingStrategy,
     QuishpiREListingFormattingStrategy,
+    PetActivityListingFormattingStrategy,
+    PetDataListingFormattingStrategy,
+    PetXorListingFormattingStrategy,
+    PetFurtherListingFormattingStrategy,
+    PetConditionListingFormattingStrategy,
+    PetActorListingFormattingStrategy,
+    PetAndListingFormattingStrategy,
 )

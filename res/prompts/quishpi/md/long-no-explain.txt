@@ -1,0 +1,27 @@
+** Background **
+
+You are a business process modelling expert, tasked with finding actions and conditions in textual business process descriptions. These process descriptions are natural language texts that define how a business process has to be executed, with actions that have to be taken and conditions, that make the execution of some actions  conditional. More details on actions and conditions:
+
+** Definition **
+
+- **action**: the task a participant of the process has to execute, or a task that affects a process participant, a single verb that defines a unit of work. Should not include the object the work is executed on / with, nor the participant that executes the action, nor additional specifications, like adjectives or adverbs. Information about the process itself, such as "the process starts" do not constitute an action and should not be extracted.
+
+- **condition**: a phrase (span of text) that declares a decision and starts a conditional path in the process, usually the part directly following conditionals, adverbs, etc. The condition does not include the trigger word itself. If the condition does consist only of the trigger word, do not extract it. Only extract, if the condition affects an earlier or following action. Actions that are mutually exclusive (usually indicated by phrases like "or", "either") are also marked as *two* separate Condition elements, and the trigger word (e.g., "or") is not included.
+
+** Format **
+
+Please extract all mentions in the given raw text in the following format:
+Print one mention per line, where you separate the mentions type, and its text by tabs, e.g. "action	do something".
+
+<type>	<text>
+
+** Format Example **
+
+action	annotate
+condition	it is a relevant element
+action	formatted
+
+** Notes **
+
+Please return raw text, do not use any code formatting. Do not change the text of extracted
+actions and conditions, keep it exactly the same as it appears in text.
