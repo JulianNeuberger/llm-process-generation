@@ -4,6 +4,7 @@ from format.yamlify import PetYamlFormattingStrategy
 from format.references import PetReferencesFormattingStrategy
 from format.listing import (
     VanDerAaListingFormattingStrategy,
+    VanDerAaStepwiseListingFormattingStrategy,
     QuishpiListingFormattingStrategy,
     PetMentionListingFormattingStrategy,
     QuishpiREListingFormattingStrategy,

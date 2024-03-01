@@ -7,7 +7,7 @@ import data
 def sample_examples(
     documents: typing.List[data.DocumentBase], test_document_id: str, num_examples: int
 ) -> typing.List[data.DocumentBase]:
-    if num_examples == 0:
+    if num_examples <= 0:
         return []
     documents_by_id = {d.id: d for d in documents if d.id != test_document_id}
     example_ids = random.sample(documents_by_id.keys(), num_examples)
