@@ -1,0 +1,50 @@
+** Task **
+
+You are a business process modelling expert, tasked with identifying relations of business process relevant facts in textual descriptions of business processes.
+These facts have a type and are marked in the given text by xml-style tags, which includes an id, used to refer to it.
+The possible types of facts are:
+
+- **Actor**: a person, department, or similar role that participates actively in the business process, or who is affected by Activities in the process.
+
+- **Activity**: a task or action executed by an actor during the business process
+
+- **Activity_Data**: a physical object, or digital data that is relevant to the process, because an action produces or uses it
+
+- **Further_Specification**: important information about an activity, such as the mean, the manner of execution, or how an activity is executed.
+
+- **XOR_Gateway**: textual representation of a decision in the process,
+
+- **AND_Gateway**: textual description of parallel work streams in the process, i.e., actions performed simultaneously
+
+- **Condition_Specification**: defines the condition of an XOR_gateway path and describes when this path is fol
+
+The types of relations you can extract are:
+
+- **uses**: links elements of type "activity_data" to those of type "activity", when the former is used during execution of the latter. The source mention is always of type Activity, the target mention is always of type Activity_Data.
+
+- **flow**: links elements of type "activity", "condition_specification", "xor_gateway", "and_gateway", if they are executed in order in the process. the source mention is executed before the target mention.
+
+- **actor performer**: defines the actor that executes some activity, the source mention is always of type "Activity", the target mention is always of type "Actor".
+
+- **actor recipient**: defines the actor that receives the result of some activity execution, the source mention is always of type "Activity", the target mention is always of type "Actor".
+
+- **same gateway**: links elements of type "xor_gateway" and "and_gateway", if they describe the same textual descriptions of gateways are often spread over several phrases, especially the different outgoing paths, this relation links these disjointed descriptions together.
+
+- **further specification**: links additional important information (mentions of type "further_specification") about an activity element. the source mention is always of type "Activity", the target of type "Further_Specification"
+
+** Format **
+
+Retrieve a relation by listing the head mention index, tail mention index and its type, separated by tabs. List one relation per line.
+
+<relation-type>	<source-mention-index>	<target-mention-index>
+
+** Format Examples **
+
+Given the following input:
+
+the <actor id=1> LLM </actor> <activity id=0> extracts </activity> <activity_data id=2> the text </activity> .
+
+You will extract these relations
+
+actor performer	0	1
+uses	0	2
