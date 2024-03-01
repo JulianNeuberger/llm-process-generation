@@ -69,6 +69,7 @@ def constraint_f1_stats(
     *,
     predicted_documents: typing.List[data.VanDerAaDocument],
     ground_truth_documents: typing.List[data.VanDerAaDocument],
+    print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
     ret: typing.Dict[str, Stats] = {}
@@ -77,7 +78,11 @@ def constraint_f1_stats(
         if verbose:
             print(f"--- name: {p.name}, id: {p.id} ------------")
         case_stats = constraint_slot_filling_stats(
-            t, true=t.constraints, pred=p.constraints, verbose=verbose
+            t,
+            true=t.constraints,
+            pred=p.constraints,
+            print_only_tags=print_only_tags,
+            verbose=verbose,
         )
         if verbose:
             print()
@@ -93,12 +98,14 @@ def relation_f1_stats(
     *,
     predicted_documents: typing.List[data.PetDocument],
     ground_truth_documents: typing.List[data.PetDocument],
+    print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
     return _f1_stats(
         predicted_documents=predicted_documents,
         ground_truth_documents=ground_truth_documents,
         attribute="relations",
+        print_only_tags=print_only_tags,
         verbose=verbose,
     )
 
@@ -107,12 +114,15 @@ def mentions_f1_stats(
     *,
     predicted_documents: typing.List[data.PetDocument],
     ground_truth_documents: typing.List[data.PetDocument],
+    print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
+    predicted_documents = [d.copy([]) for d in predicted_documents]
     return _f1_stats(
         predicted_documents=predicted_documents,
         ground_truth_documents=ground_truth_documents,
         attribute="mentions",
+        print_only_tags=print_only_tags,
         verbose=verbose,
     )
 
@@ -121,8 +131,9 @@ def entity_f1_stats(
     *,
     predicted_documents: typing.List[data.PetDocument],
     ground_truth_documents: typing.List[data.PetDocument],
-    only_tags: typing.List[str],
+    calculate_only_tags: typing.List[str],
     min_num_mentions: int = 1,
+    print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
     predicted_documents = [d.copy() for d in predicted_documents]
@@ -130,7 +141,8 @@ def entity_f1_stats(
         d.entities = [
             e
             for e in d.entities
-            if len(e.mention_indices) >= min_num_mentions and e.get_tag(d) in only_tags
+            if len(e.mention_indices) >= min_num_mentions
+            and e.get_tag(d) in calculate_only_tags
         ]
 
     ground_truth_documents = [d.copy() for d in ground_truth_documents]
@@ -138,13 +150,15 @@ def entity_f1_stats(
         d.entities = [
             e
             for e in d.entities
-            if len(e.mention_indices) >= min_num_mentions and e.get_tag(d) in only_tags
+            if len(e.mention_indices) >= min_num_mentions
+            and e.get_tag(d) in calculate_only_tags
         ]
 
     return _f1_stats(
         predicted_documents=predicted_documents,
         ground_truth_documents=ground_truth_documents,
         attribute="entities",
+        print_only_tags=print_only_tags,
         verbose=verbose,
     )
 
@@ -175,6 +189,7 @@ def constraint_slot_filling_stats(
     *,
     true: typing.List[data.VanDerAaConstraint],
     pred: typing.List[data.VanDerAaConstraint],
+    print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool,
 ) -> typing.Dict[str, Stats]:
     best_matches: typing.Dict[data.VanDerAaConstraint, data.VanDerAaConstraint] = {}
@@ -193,7 +208,6 @@ def constraint_slot_filling_stats(
                 break
 
     non_ok = [p for p in pred if p not in best_matches.keys()]
-    ok = [m for m in best_matches.values()]
     missing = [t for t in true if t not in best_matches.values()]
 
     by_correct_slots = {}
@@ -213,6 +227,8 @@ def constraint_slot_filling_stats(
                 "non-ok": non_ok,
                 "missing": missing,
             },
+            lambda c: c.type,
+            print_only_tags,
         )
     stats_by_tag = {}
 
@@ -277,6 +293,7 @@ def _f1_stats(
     predicted_documents: typing.List[data.DocumentBase],
     ground_truth_documents: typing.List[data.DocumentBase],
     attribute: str,
+    print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
     assert attribute in ["mentions", "relations", "entities", "constraints"]
@@ -338,6 +355,8 @@ def _f1_stats(
                     "non-ok": non_ok,
                     "missing": missing,
                 },
+                lambda e: _tag(t, e),
+                print_only_tags,
             )
 
     return {
@@ -349,12 +368,19 @@ def _f1_stats(
 def print_sets(
     document: data.DocumentBase,
     sets: typing.Dict[str, typing.List[data.SupportsPrettyDump]],
+    get_tag: typing.Callable[[typing.Any], str],
+    print_only_tags: typing.Optional[typing.List[str]],
 ):
     print(f"=== {document.id} " + "=" * 150)
     print(document.text)
     print("-" * 100)
 
     for set_name, values in sets.items():
+        values = [
+            e
+            for e in values
+            if print_only_tags is None or get_tag(e) in print_only_tags
+        ]
         print(f"{len(values)} x {set_name}")
         print("\n".join([e.pretty_dump(document) for e in values]))
         print("-" * 100)

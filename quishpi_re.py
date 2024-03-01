@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
         experiments.experiment(
             importer=importer,
-            formatter=formatter,
+            formatters=[formatter],
             model_name=model_name,
             storage=storage,
             num_shots=num_shots,

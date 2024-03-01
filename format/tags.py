@@ -69,9 +69,17 @@ class PetTagFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument]):
     e.g. "<activity> format </activity> the <business_object> text </business_object>"
     """
 
-    def __init__(self, steps: None = None, include_ids: bool = False):
+    def __init__(
+        self,
+        steps: None = None,
+        only_tags: typing.List[str] = None,
+        include_ids: bool = False,
+    ):
         super().__init__(["mentions"])
         self._include_ids = include_ids
+        self._only_tags = only_tags
+        if self._only_tags is not None:
+            self._only_tags = [t.lower() for t in self._only_tags]
 
     @staticmethod
     def supported_steps() -> typing.List[typing.Literal["mentions"]]:
@@ -95,6 +103,8 @@ class PetTagFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument]):
         # insert tags, starting from behind, so we dont have to
         # adjust token indices of mentions...
         for i, mention in mentions:
+            if self._only_tags is not None and mention.type not in self._only_tags:
+                continue
             attributes = {}
             if self._include_ids:
                 attributes["id"] = str(i)

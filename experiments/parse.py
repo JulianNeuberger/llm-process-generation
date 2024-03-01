@@ -4,7 +4,6 @@ import typing
 
 import data
 import experiments
-from experiments import common
 import format
 import eval
 
@@ -64,59 +63,84 @@ def parse_costs_from_experiments(
 
 
 def parse_experiment(
-    experiment_result: common.ExperimentResult,
+    experiment_result: experiments.ExperimentResult,
     importer: data.BaseImporter[TDocument],
+    print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool,
 ) -> ExperimentStats:
-    formatter_class: typing.Type[format.BaseFormattingStrategy] = getattr(
-        format, experiment_result.meta.formatter
-    )
-    steps = experiment_result.meta.steps
-
     preds: typing.List[TDocument] = []
     truths: typing.List[TDocument] = []
 
     documents = importer.do_import()
     documents_by_id = {d.id: d for d in documents}
 
+    overall_steps: typing.Optional[typing.List[str]] = None
     for result in experiment_result.results:
-        answer = result.answer
-        formatter = formatter_class(steps)
+        predicted_doc: typing.Optional[data.DocumentBase] = None
         input_doc = documents_by_id[result.original_id]
-        predicted_doc = formatter.parse(input_doc, answer)
+
+        for formatter_class_name, steps, answer, prompt in zip(
+            result.formatters, result.steps, result.answers, result.prompts
+        ):
+            if overall_steps is None:
+                overall_steps = steps
+            assert overall_steps == steps
+            formatter_class: typing.Type[format.BaseFormattingStrategy] = getattr(
+                format, formatter_class_name
+            )
+            formatter = formatter_class(steps)
+            partial_predicted_doc = formatter.parse(input_doc, answer)
+            if predicted_doc is None:
+                predicted_doc = partial_predicted_doc
+            else:
+                predicted_doc = predicted_doc + partial_predicted_doc
+
         preds.append(predicted_doc)
         truths.append(input_doc)
 
+    assert overall_steps is not None
+
     stats = {}
-    if "mentions" in steps:
+    if "mentions" in overall_steps:
         stats_by_tag = eval.mentions_f1_stats(
-            predicted_documents=preds, ground_truth_documents=truths, verbose=verbose
+            predicted_documents=preds,
+            ground_truth_documents=truths,
+            verbose=verbose,
+            print_only_tags=print_only_tags,
         )
         stats["mentions"] = stats_by_tag
-    if "entities" in steps:
+    if "entities" in overall_steps:
         stats_by_tag = eval.entity_f1_stats(
             predicted_documents=preds,
             ground_truth_documents=truths,
             verbose=verbose,
-            only_tags=["Actor", "Activity Data"],
+            calculate_only_tags=["Actor", "Acitvity Data"],
+            print_only_tags=print_only_tags,
         )
         stats["entities"] = stats_by_tag
-    if "relations" in steps:
+    if "relations" in overall_steps:
         stats_by_tag = eval.relation_f1_stats(
-            predicted_documents=preds, ground_truth_documents=truths, verbose=verbose
+            predicted_documents=preds,
+            ground_truth_documents=truths,
+            verbose=verbose,
+            print_only_tags=print_only_tags,
         )
         stats["relations"] = stats_by_tag
-    if "constraints" in steps:
+    if "constraints" in overall_steps:
         stats_by_tag = eval.constraint_f1_stats(
-            predicted_documents=preds, ground_truth_documents=truths, verbose=verbose
+            predicted_documents=preds,
+            ground_truth_documents=truths,
+            verbose=verbose,
+            print_only_tags=print_only_tags,
         )
         stats["constraints"] = stats_by_tag
     return stats
 
 
 def parse_experiments(
-    experiment_results: typing.List[common.ExperimentResult],
+    experiment_results: typing.List[experiments.ExperimentResult],
     importer: data.BaseImporter[TDocument],
+    print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool,
 ) -> typing.List[ExperimentStats]:
     model_name = experiment_results[0].meta.model
@@ -126,7 +150,7 @@ def parse_experiments(
     fold_stats: typing.List[ExperimentStats] = []
 
     for experiment in experiment_results:
-        stats = parse_experiment(experiment, importer, verbose)
+        stats = parse_experiment(experiment, importer, print_only_tags, verbose)
         fold_stats.append(stats)
 
     return fold_stats
@@ -217,14 +241,39 @@ def print_scores_by_step(printable_scores_by_step: typing.Dict[str, PrintableSco
         print_scores(scores)
 
 
-def print_experiment_results(
-    result_file: str, importer: data.BaseImporter[TDocument], verbose: bool = False
-):
+def parse_file(
+    result_file: str,
+    only_document_ids: typing.List[str] = None,
+) -> typing.List[experiments.ExperimentResult]:
     with open(result_file, "r", encoding="utf8") as f:
         contents = json.load(f)
     experiment_results = [experiments.ExperimentResult.from_dict(r) for r in contents]
-    experiment_stats = parse_experiments(experiment_results, importer, verbose)
+    if only_document_ids is not None:
+        tmp: typing.List[experiments.ExperimentResult] = []
+        for e in experiment_results:
+            filtered_e = experiments.ExperimentResult(e.meta, [])
+            for r in e.results:
+                if r.original_id in only_document_ids:
+                    filtered_e.results.append(r)
+            if len(filtered_e.results) > 0:
+                tmp.append(filtered_e)
+        experiment_results = tmp
+    return experiment_results
 
+
+def print_experiment_results(
+    result_file: str,
+    importer: data.BaseImporter[TDocument],
+    only_document_ids: typing.List[str] = None,
+    print_only_tags: typing.List[str] = None,
+    verbose: bool = False,
+):
+    if print_only_tags is not None:
+        print_only_tags = [t.lower() for t in print_only_tags]
+    experiment_results = parse_file(result_file, only_document_ids)
+    experiment_stats = parse_experiments(
+        experiment_results, importer, print_only_tags, verbose
+    )
     costs = parse_costs_from_experiments(experiment_results)
     print_experiment_costs(costs)
 
@@ -246,8 +295,11 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        "res/answers/quishpi-re/2024-02-28_10-13-12.json",
-        data.VanDerAaImporter("res/data/quishpi/csv"),
+        f"res/answers/pet/2024-02-29_16-41-29.json",
+        # f"res/answers/pet/2024-02-29_15-11-39.json",
+        data.PetImporter("res/data/pet/all.new.jsonl"),
+        # only_document_ids=["doc-6.1"],
+        print_only_tags=["activity data", "actor", "activity"],
         verbose=True,
     )
 

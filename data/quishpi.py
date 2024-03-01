@@ -13,6 +13,9 @@ class QuishpiMention(base.SupportsPrettyDump["QuishpiDocument"], base.HasType):
     def pretty_dump(self, document: "QuishpiDocument") -> str:
         return f"{self.text} ({self.type})"
 
+    def copy(self):
+        return QuishpiMention(type=self.type, text=self.text)
+
 
 @dataclasses.dataclass(frozen=True, eq=True)
 class QuishpiRelation(base.SupportsPrettyDump["QuishpiDocument"]):
@@ -27,6 +30,21 @@ class QuishpiRelation(base.SupportsPrettyDump["QuishpiDocument"]):
 @dataclasses.dataclass
 class QuishpiDocument(base.DocumentBase):
     mentions: typing.List[QuishpiMention]
+
+    def __add__(self, other: "QuishpiDocument"):
+        assert self.id == other.id
+
+        new_mentions = [m for m in other.mentions if m not in self.mentions]
+        return QuishpiDocument(
+            id=self.id, text=self.text, mentions=self.mentions + new_mentions
+        )
+
+    def copy(self, clear: typing.List[str]):
+        if "mentions" in clear:
+            copied_mentions = []
+        else:
+            copied_mentions = [m.copy() for m in self.mentions]
+        return QuishpiDocument(id=self.id, text=self.text, mentions=copied_mentions)
 
 
 class QuishpiImporter(base.BaseImporter[QuishpiDocument]):

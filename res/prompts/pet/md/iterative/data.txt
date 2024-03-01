@@ -1,0 +1,29 @@
+You are a business process modelling expert, tasked with identifying mentions of process relevant objects and data in textual descriptions of business processes. These are spans of text, that are defined below. You are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on), that describes a business process, where some relevant elements are already marked by xml-like tags. You can use those for additional context.
+
+**Activity Data**
+
+Extract Pronouns and Nouns that are relevant to the process, if the text says an Activity uses it. Should not be an Actor! Always include the determiner! Usually mentioned in the same sentence as the relevant Activity. Can also be a list of objects, in which case please extract the entire list, not its components, e.g. from "sends the application and the recommendation" extract "the application and the recommendation".
+
+** Format **
+
+For each mention you detect, write a line in the following format:
+
+<text>	Activity Data	<sentence>	<explanation>
+
+** Placeholders **
+
+- <text>: the text of the mention
+- <sentence>: integer, that identifies the sentence where the mention text was found in the input. Zero based.
+- <explanation>: explanation why this is an Activity Data and why you extracted it
+
+** Format Example **
+
+The first step is to <Activity> complete </Activity> the report . then <Actor> the clerk </Actor> will <Activity> review </Activity> it.
+
+the report	Activity Data	0	"the report" is an object that is created by the activity "completed"
+it	Activity Data	1	"it" is a reference to the Activity Data "the report" and is used by the Actor "the clerk" in the Activity "review".
+
+** Notes **
+
+Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation, or change the case of letters.
+Do not use any code formatting.
