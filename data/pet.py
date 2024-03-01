@@ -1,3 +1,4 @@
+import collections
 import dataclasses
 import json
 import typing
@@ -103,7 +104,7 @@ class PetMention(base.HasType, base.SupportsPrettyDump[PetDocument]):
         return f"{self.type}, '{self.text(document)}', {self.token_document_indices}"
 
 
-@dataclasses.dataclass(frozen=True, eq=True)
+@dataclasses.dataclass(frozen=True)
 class PetEntity(base.SupportsPrettyDump[PetDocument]):
     mention_indices: typing.Tuple[int, ...]
 
@@ -117,9 +118,22 @@ class PetEntity(base.SupportsPrettyDump[PetDocument]):
         return list(tags)[0]
 
     def pretty_dump(self, document: PetDocument) -> str:
-        return "\n".join(
-            [document.mentions[i].pretty_dump(document) for i in self.mention_indices]
-        )
+        formatted_mentions = [
+            f"{i}: '{m.text(document)}' ({m.token_document_indices})"
+            for i, m in [(i, document.mentions[i]) for i in self.mention_indices]
+        ]
+        return ", ".join(formatted_mentions)
+
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, PetEntity):
+            return False
+        if len(self.mention_indices) != len(o.mention_indices):
+            return False
+        return sorted(self.mention_indices) == sorted(o.mention_indices)
+
+    def __hash__(self):
+        element_counts = collections.Counter(self.mention_indices)
+        return hash(frozenset(element_counts.items()))
 
 
 @dataclasses.dataclass(frozen=True, eq=True)

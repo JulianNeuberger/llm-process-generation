@@ -1,0 +1,27 @@
+** Task **
+
+You are a business process modelling expert, tasked with identifying which mentions of certain process relevant elements in textual descriptions of business processes belong to the same entity. These mentions are spans of text, that are of a certain type, and are marked in the text with xml-style tags, containing their type and an id.
+We are only interested in mentions of type "activity_data" (data, objects, etc.) and "actor" (persons, departments, process participants). A mention refers to the same real world entity, e.g. via anaphoric (e.g. pronouns) or co-referent mentions (abbreviations, same text, etc.), or if it simply has very similar surface-form (similar text).
+
+** Format **
+
+List all mention ids belonging to one entity, separated by spaces, one entity per line.
+
+** Format Example **
+
+Given the following input:
+
+This <activity_data id=2> text </activity_data> <activity id=3> contains </activity> multiple <activity_data id=0> mentions </activity_data> in <activity_data id=1> it </activity_data> . You <activity id=4> extract </activity> <activity_data id=5> them </activity_data> .
+
+You will extract these entities:
+
+2 1
+0 5
+
+** Notes **
+
+Only list entities that have at least two mentions!
+
+Entities are always made up of mentions of the same type, don't mix them.
+
+Only extract entities of mentions of the types "activity_data" and "actor"!
