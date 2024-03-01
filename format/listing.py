@@ -2,6 +2,7 @@ import typing
 
 import data
 from format import base, common, tags
+from format.base import TDocument
 
 from format.prompts import quishpi_re_prompt, vanderaa_prompt
 
@@ -234,6 +235,52 @@ class QuishpiListingFormattingStrategy(
         return data.QuishpiDocument(
             id=document.id, text=document.text, mentions=mentions
         )
+
+
+class PetRelationListingFormattingStrategy(
+    base.BaseFormattingStrategy[data.PetDocument]
+):
+    def __init__(self, steps: typing.List[str]):
+        super().__init__(steps)
+        self._input_formatter = tags.PetTagFormattingStrategy(include_ids=True)
+
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/re/long.txt")
+
+    def output(self, document: data.PetDocument) -> str:
+        res = []
+        for r in document.relations:
+            res.append(f"{r.type}\t{r.head_mention_index}\t{r.tail_mention_index}")
+        return "\n".join(res)
+
+    def input(self, document: data.PetDocument) -> str:
+        return self._input_formatter.output(document)
+
+    def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
+        document = document.copy(clear=["relations"])
+        for line in string.splitlines(keepends=False):
+            if "\t" not in line:
+                print(f"Skipping non-tab-separated line {line}.")
+                continue
+            split_line = line.split("\t")
+            if len(split_line) != 3:
+                print(
+                    f"Expected exactly 3 arguments in line {line}, got {len(split_line)}. Skipping."
+                )
+                continue
+            relation_type, head_index, tail_index = split_line
+            relation_type = relation_type.lower().strip()
+            head_index = int(head_index)
+            tail_index = int(tail_index)
+            document.relations.append(
+                data.PetRelation(
+                    type=relation_type,
+                    head_mention_index=head_index,
+                    tail_mention_index=tail_index,
+                )
+            )
+        return document
 
 
 class PetEntityListingFormattingStrategy(base.BaseFormattingStrategy[data.PetDocument]):

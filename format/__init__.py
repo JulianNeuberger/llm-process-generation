@@ -16,4 +16,5 @@ from format.listing import (
     PetActorListingFormattingStrategy,
     PetAndListingFormattingStrategy,
     PetEntityListingFormattingStrategy,
+    PetRelationListingFormattingStrategy,
 )
