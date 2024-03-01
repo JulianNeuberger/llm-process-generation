@@ -1,0 +1,142 @@
+** Task **
+
+Your task is to extract declarative process models from natural language process descriptions.
+The process descriptions consist of a series of actions, each described by a predicate and an object.
+Your goal is to identify constraints between these actions, which dictate the ordering and existence of actions within the process.
+
+** Constraint Types **
+
+- **init**: marks an action as the start of an entire process. This action is the source / head action of the init constraint. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is started for an init constraint to apply. Signal words alone are not sufficient here.
+
+- **end**: marks an action as the end of the whole process. The action is the source / head action. There is no no target / tail action. Note that it must be explicitly stated that the PROCESS is ended for an end constraint to apply. Signal words alone are not sufficient here.
+
+- **precedence**: The tail action can only be executed, if the head was already executed before. the head may be executed without the tail being executed.
+
+- **response**: if the head action was executed, the tail action has to be executed, too.
+
+- **succession**: this means if the head activity is executed, the tail activity needs to be executed as well and at the same time, the tail activity requires prior execution of the head activity.
+
+** Negation **
+
+Additionally, you may encounter negations of constraints, indicated by statements like "do not" or "must not."
+
+** Format **
+
+Please ensure the correct identification and formatting of constraints in the given text. Output one constraint per line, including whether the constraint is negated (TRUE or FALSE), the type of constraint, and the extracted head and tail actions separated by tabs. Stick closely to the provided examples and descriptions, and be careful to distinguish between precedence, response, and succession constraints.
+
+Print one constraint per line, where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the type of the constraint, and the extracted actions by tabs in the following form (<...> are placeholders):
+
+<TRUE or FALSE>	<constraint type>	<head action>	<tail action>
+
+** Procedure **
+
+Let's carry out your task STEPWISE:
+
+- Step 1: First, extract actions contained in the input sentence and list them line by line (a description how you can identify actions is given in ACTIONS (Def.) above).
+
+- Step 2: Insert the following character sequence in the output: '#-#-#RESULT#-#-#'
+
+- Step 3: Generate constraints based on the constraint types above (see ** Constraint Types **). To do this, only use the actions that you defined before the mark ('#-#-#RESULT#-#-#').
+
+
+** Important Restriction **
+
+Make sure that for Step 1 you generate actions in the form of 'predicate object', which usually consists
+of a transitive verb and the corresponding object. It must be really some activity described in the same sentence.
+
+** Example **
+
+Here is an example for input and expected output:
+
+Input:
+Sentence 0: The process begins when the author submits the paper.
+Sentence 1: After signing the contract, the product can be advertised.
+Sentence 2: After signing the contract, the product is advertised but never before.
+Sentence 3: When the manager is called, the request needs to be forwarded to the secretary, too.
+Sentence 4: The process is completed as soon as the proposal is archived
+Sentence 5: After notifying the manager, the request must not be rejected.
+Sentence 6: If it rains, products are covered until they are needed.
+Sentence 7: If it is sunny, products are NOT covered but remain in the yard until they are needed.
+Sentence 8: If the offer is archived, it is not sent and if it is sent, archiving is unnecessary.
+
+Output:
+** Sentence 0 **
+
+Actions:
+submit paper
+
+Constraints:
+FALSE	init	submit paper
+
+** Sentence 1 **
+
+Actions:
+sign contract
+advertise product
+
+Constraints:
+FALSE	precedence	sign contract	advertise product
+
+** Sentence 2 **
+
+Actions:
+sign contract
+advertise product
+
+Constraints:
+FALSE	succession	sign contract	advertise product
+
+** Sentence 3 **
+
+Actions:
+call manager
+forward request
+
+Constraints:
+FALSE	response	call manager	forward request
+
+** Sentence 4 **
+
+Actions:
+archive proposal
+
+Constraints:
+0	FALSE	end	archive proposal
+
+** Sentence 5 **
+
+Actions:
+nofify manager
+reject request
+
+Constraints:
+TRUE	response	nofify manager	reject request
+
+** Sentence 6 **
+
+Actions:
+cover products
+
+Constraints:
+FALSE	existence	cover products
+
+** Sentence 7 **
+
+Actions:
+cover products
+
+Constraints:
+0	FALSE	absence	cover products
+
+** Sentence 8 **
+
+Actions:
+archive offer
+send offer
+
+Constraints:
+FALSE	noncooccurrence	archive offer	send offer
+
+** Notes **
+
+Please return raw text, do not use any formatting.

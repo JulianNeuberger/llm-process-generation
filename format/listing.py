@@ -2,9 +2,7 @@ import typing
 
 import data
 from format import base, common, tags
-from format.base import TDocument
-
-from format.prompts import quishpi_re_prompt, vanderaa_prompt
+from format.prompts import quishpi_re_prompt
 
 
 class VanDerAaListingFormattingStrategy(
@@ -13,15 +11,14 @@ class VanDerAaListingFormattingStrategy(
     def __init__(self, steps: typing.List[typing.Literal["constraints"]]):
         super().__init__(steps)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return vanderaa_prompt.VAN_DER_AA_PROMPT
 
     def output(self, document: data.VanDerAaDocument) -> str:
         constraints = []
         for constraint in document.constraints:
             constraints.append(
-                f"{constraint.type}\t{constraint.head}\t{constraint.tail}"
+                f"{constraint.sentence_id}\t{constraint.type}\t{constraint.head}\t{constraint.tail}"
             )
         return "\n".join(constraints)
 
@@ -72,9 +69,8 @@ class VanDerAaStepwiseListingFormattingStrategy(
     def __init__(self, steps: typing.List[typing.Literal["constraints"]]):
         super().__init__(steps)
 
-    @staticmethod
-    def description() -> str:
-        return vanderaa_prompt.VAN_DER_AA_PROMPT_STEPWISE
+    def description(self) -> str:
+        return common.load_prompt_from_file("van-der-aa/re/step-wise.txt")
 
     def output(self, document: data.VanDerAaDocument) -> str:
         constraints = []
@@ -129,8 +125,7 @@ class QuishpiREListingFormattingStrategy(
     def __init__(self, steps: typing.List[typing.Literal["constraints"]]):
         super().__init__(steps)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return quishpi_re_prompt.QUISHPI_RE_PROMPT_HANDCRAFTED_TASK_SEPARATION
 
     def output(self, document: data.VanDerAaDocument) -> str:
@@ -189,8 +184,7 @@ class QuishpiListingFormattingStrategy(
     def __init__(self, steps: typing.List[typing.Literal["mentions"]]):
         super().__init__(steps)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("quishpi/md/long-no-explain.txt")
 
     def output(self, document: data.QuishpiDocument) -> str:
@@ -244,8 +238,7 @@ class PetRelationListingFormattingStrategy(
         super().__init__(steps)
         self._input_formatter = tags.PetTagFormattingStrategy(include_ids=True)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/re/long.txt")
 
     def output(self, document: data.PetDocument) -> str:
@@ -290,8 +283,7 @@ class PetEntityListingFormattingStrategy(base.BaseFormattingStrategy[data.PetDoc
             include_ids=True, only_tags=["Activity Data", "Actor"]
         )
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/er/long.txt")
 
     def output(self, document: data.PetDocument) -> str:
@@ -341,8 +333,7 @@ class PetMentionListingFormattingStrategy(
         if self._only_tags is not None:
             self._only_tags = [t.lower() for t in self._only_tags]
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/short_prompt.tx")
 
     def output(self, document: data.PetDocument) -> str:
@@ -461,8 +452,7 @@ class PetActivityListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(self, steps: typing.List[str]):
         super().__init__(steps, only_tags=["activity"], generate_descriptions=False)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/activities.txt")
 
 
@@ -473,8 +463,7 @@ class PetActorListingFormattingStrategy(PetMentionListingFormattingStrategy):
             include_ids=False, only_tags=["Activity"]
         )
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/actors.txt")
 
     def input(self, document: data.PetDocument) -> str:
@@ -511,8 +500,7 @@ class PetAndListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(self, steps: typing.List[str]):
         super().__init__(steps, only_tags=["and gateway"], generate_descriptions=False)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/and.txt")
 
 
@@ -522,8 +510,7 @@ class PetConditionListingFormattingStrategy(PetMentionListingFormattingStrategy)
             steps, only_tags=["condition specification"], generate_descriptions=False
         )
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/condition.txt")
 
 
@@ -534,8 +521,7 @@ class PetDataListingFormattingStrategy(PetMentionListingFormattingStrategy):
             include_ids=False, only_tags=["Activity", "Actor"]
         )
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/data.txt")
 
     def input(self, document: data.PetDocument) -> str:
@@ -574,8 +560,7 @@ class PetFurtherListingFormattingStrategy(PetMentionListingFormattingStrategy):
             steps, only_tags=["further specification"], generate_descriptions=False
         )
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/further.txt")
 
 
@@ -583,8 +568,7 @@ class PetXorListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(self, steps: typing.List[str]):
         super().__init__(steps, only_tags=["xor gateway"], generate_descriptions=False)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/xor.txt")
 
 

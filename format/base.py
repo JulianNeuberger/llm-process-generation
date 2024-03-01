@@ -13,8 +13,7 @@ class BaseFormattingStrategy(abc.ABC, typing.Generic[TDocument]):
     def steps(self):
         return self._steps
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         raise NotImplementedError()
 
     def output(self, document: TDocument) -> str:

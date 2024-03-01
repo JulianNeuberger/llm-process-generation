@@ -7,8 +7,7 @@ import format
 
 
 class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument]):
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         raise NotImplementedError()
 
     def __init__(
@@ -61,7 +60,7 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
             indices = [raw_indices]
         else:
             indices = [int(s) for s in raw_indices.split(" ")]
-        return data.PetEntity(mention_indices=indices)
+        return data.PetEntity(mention_indices=tuple(indices))
 
     def output(self, document: data.PetDocument) -> str:
         content = {}
@@ -90,11 +89,7 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
         return yaml.safe_dump(content)
 
     def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
-        document = document.copy(
-            clear_mentions="mentions" in self._steps,
-            clear_entities="entities" in self._steps,
-            clear_relations="relations" in self._steps,
-        )
+        document = document.copy(clear=self.steps)
 
         content = yaml.safe_load(string)
 
@@ -114,7 +109,7 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
                         mention_part_of_entity = True
                         break
                 if not mention_part_of_entity:
-                    entities.append(data.PetEntity(mention_indices=[i]))
+                    entities.append(data.PetEntity(mention_indices=(i,)))
             document.entities = entities
 
         if "relations" in self._steps:

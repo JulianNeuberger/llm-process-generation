@@ -71,8 +71,7 @@ class PetReferencesFormattingStrategy(format.BaseFormattingStrategy[data.PetDocu
         self._input_formatter = format.PetTagFormattingStrategy(include_ids=True)
         self._output_formatter = format.PetYamlFormattingStrategy(steps=steps)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return prompt
 
     def output(self, document: data.PetDocument) -> str:
@@ -82,6 +81,6 @@ class PetReferencesFormattingStrategy(format.BaseFormattingStrategy[data.PetDocu
         return self._input_formatter.output(document)
 
     def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
-        document = document.copy(clear_relations=True)
+        document = document.copy(clear=self.steps)
         assert len(document.relations) == 0
         return self._output_formatter.parse(document, string)
