@@ -135,12 +135,13 @@ def entity_f1_stats(
     print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
+    calculate_only_tags = [t.lower() for t in calculate_only_tags]
     for d in predicted_documents:
         d.entities = [
             e
             for e in d.entities
             if len(e.mention_indices) >= min_num_mentions
-            and e.get_tag(d) in calculate_only_tags
+            and e.get_tag(d).lower() in calculate_only_tags
         ]
 
     ground_truth_documents = [d.copy([]) for d in ground_truth_documents]

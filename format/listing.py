@@ -236,6 +236,49 @@ class QuishpiListingFormattingStrategy(
         )
 
 
+class PetEntityListingFormattingStrategy(base.BaseFormattingStrategy[data.PetDocument]):
+    def __init__(self, steps: typing.List[str]):
+        super().__init__(steps)
+        self._input_formatter = tags.PetTagFormattingStrategy(
+            include_ids=True, only_tags=["Activity Data", "Actor"]
+        )
+
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/er/long.txt")
+
+    def output(self, document: data.PetDocument) -> str:
+        ret = []
+        for e in document.entities:
+            ret.append(" ".join([str(i) for i in e.mention_indices]))
+        return "\n".join(ret)
+
+    def input(self, document: data.PetDocument) -> str:
+        return self._input_formatter.output(document)
+
+    def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
+        document = document.copy(clear=["entities"])
+        for line in string.splitlines(keepends=False):
+            if " " not in line:
+                try:
+                    mention_ids = [int(line)]
+                except ValueError:
+                    print(f"Skipping non space-separated line '{line}'!")
+                    continue
+            else:
+                mention_ids = [int(i) for i in line.split(" ")]
+            mentions = [document.mentions[i] for i in mention_ids]
+            mention_types = set(m.type for m in mentions)
+            if len(mention_types) > 1:
+                print(f"Extracted multi-type entity, with mentions {mentions}.")
+            document.entities.append(data.PetEntity(mention_indices=tuple(mention_ids)))
+        for i, mention in enumerate(document.mentions):
+            if any([i in e.mention_indices for e in document.entities]):
+                continue
+            document.entities.append(data.PetEntity(mention_indices=(i,)))
+        return document
+
+
 class PetMentionListingFormattingStrategy(
     base.BaseFormattingStrategy[data.PetDocument]
 ):

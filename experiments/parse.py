@@ -114,7 +114,7 @@ def parse_experiment(
             predicted_documents=preds,
             ground_truth_documents=truths,
             verbose=verbose,
-            calculate_only_tags=["Actor", "Acitvity Data"],
+            calculate_only_tags=["Actor", "Activity Data"],
             print_only_tags=print_only_tags,
         )
         stats["entities"] = stats_by_tag
@@ -295,9 +295,11 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        f"res/answers/quishpi-md/2024-03-01_08-53-09.json",
+        f"res/answers/pet-er/2024-03-01_11-02-12.json",
         # f"res/answers/pet/2024-02-29_15-11-39.json",
-        data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
+        # f"res/answers/vanderaa/vanderaa_2024-02-29_17-57-53_handcrafted_stepwise_1_artificial_shot_103samples.json",
+        data.PetImporter("res/data/pet/all.new.jsonl"),
+        # data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
         # only_document_ids=["doc-6.1"],
         # print_only_tags=["activity data", "actor", "activity"],
         verbose=True,
