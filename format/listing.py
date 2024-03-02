@@ -1,7 +1,7 @@
 import typing
 
 import data
-from format import base
+from format import base, common, tags
 
 from format.prompts import quishpi_re_prompt, vanderaa_prompt
 
@@ -28,10 +28,10 @@ class VanDerAaListingFormattingStrategy(
         return document.text
 
     def parse(
-            self, document: data.VanDerAaDocument, string: str
+        self, document: data.VanDerAaDocument, string: str
     ) -> data.VanDerAaDocument:
-        if '#-#-#RESULT#-#-#' in string:
-            string = string.split('#-#-#RESULT#-#-#')[1].strip()
+        if "#-#-#RESULT#-#-#" in string:
+            string = string.split("#-#-#RESULT#-#-#")[1].strip()
         lines = string.splitlines(keepends=False)
         constraints = []
         for line in lines:
@@ -87,7 +87,7 @@ class VanDerAaStepwiseListingFormattingStrategy(
         return document.text
 
     def parse(
-            self, document: data.VanDerAaDocument, string: str
+        self, document: data.VanDerAaDocument, string: str
     ) -> data.VanDerAaDocument:
         lines = string.splitlines(keepends=False)
         constraints = []
@@ -144,10 +144,10 @@ class QuishpiREListingFormattingStrategy(
         return document.text
 
     def parse(
-            self, document: data.VanDerAaDocument, string: str
+        self, document: data.VanDerAaDocument, string: str
     ) -> data.VanDerAaDocument:
-        if '#-#-#RESULT#-#-#' in string:
-            string = string.split('#-#-#RESULT#-#-#')[1].strip()
+        if "#-#-#RESULT#-#-#" in string:
+            string = string.split("#-#-#RESULT#-#-#")[1].strip()
         lines = string.splitlines(keepends=False)
         constraints = []
         for line in lines:
@@ -165,6 +165,7 @@ class QuishpiREListingFormattingStrategy(
 
             if c_type.strip() == "":
                 print(f"Predicted empty type in {line}")
+                continue
             constraints.append(
                 data.VanDerAaConstraint(
                     type=c_type.strip().lower(),
@@ -181,39 +182,6 @@ class QuishpiREListingFormattingStrategy(
         )
 
 
-quishpi_prompt = """You are a business process modelling expert, tasked with finding
-actions and conditions in textual business process descriptions. These process descriptions
-are natural language texts that define how a business process has to be executed, with 
-actions that have to be taken and conditions, that make the execution of some actions 
-conditional. More details on actions and conditions:
-
-- action: the task a participant of the process has to execute, a single 
-          verb that defines a unit of work. Should not include the object the work is
-          executed on / with, nor the participant that executes the action, nor additional 
-          specifications, like adjectives or adverbs. Information 
-          about the process itself, such as "the process starts" do not constitute an action 
-          and should not be extracted. 
-- condition: a phrase (span of text) that declares a decision and starts a conditional 
-             path in the process, usually the part directly following conditional words 
-             e.g., "if", "either", and similar words. The condition does not include the 
-             trigger word itself. If the condition does exist only of the trigger word, 
-             do not extract it. Only extract, if the condition affects an earlier or 
-             following action.
-
-Please extract all mentions in the given raw text in the following format:
-Print one mention per line, where you separate the mentions type and text by tabs, 
-e.g. "action\tdo something". An example for the 
-format would be:
-
-action\tannotate
-condition\tit is a relevant element
-action\tformatted
-
-Please return raw text, do not use any code formatting. Do not change the text of extracted
-actions and conditions, keep it exactly the same as it appears in text.
-"""
-
-
 class QuishpiListingFormattingStrategy(
     base.BaseFormattingStrategy[data.QuishpiDocument]
 ):
@@ -222,7 +190,7 @@ class QuishpiListingFormattingStrategy(
 
     @staticmethod
     def description() -> str:
-        return quishpi_prompt
+        return common.load_prompt_from_file("quishpi/md/long-no-explain.txt")
 
     def output(self, document: data.QuishpiDocument) -> str:
         mentions = []
@@ -234,18 +202,30 @@ class QuishpiListingFormattingStrategy(
         return document.text
 
     def parse(
-            self, document: data.QuishpiDocument, string: str
+        self, document: data.QuishpiDocument, string: str
     ) -> data.QuishpiDocument:
         mentions: typing.List[data.QuishpiMention] = []
 
         for line in string.splitlines(keepends=False):
+            if "\t" not in line:
+                print(f"Skipping non-tab-separated line '{line}'.")
+                continue
+
             split_line = line.split("\t")
-            if len(split_line) != 2:
+            assert 2 <= len(split_line) <= 3, split_line
+            if 3 < len(split_line) < 2:
                 print(
-                    f"Expected two tab-separated values, got {len(split_line)} in '{line}' from LLM."
+                    f"Expected two or three tab-separated values, "
+                    f"got {len(split_line)} in '{line}' from LLM. Skipping."
                 )
                 continue
-            mention_type, mention_text = split_line
+
+            if len(split_line) == 3:
+                mention_type, mention_text, explanation = split_line
+                print(f"Explanation for {mention_text} ({mention_type}): {explanation}")
+            else:
+                mention_type, mention_text = split_line
+
             mention = data.QuishpiMention(
                 type=mention_type.strip().lower(), text=mention_text
             )
@@ -256,121 +236,64 @@ class QuishpiListingFormattingStrategy(
         )
 
 
-generated_pet_prompt = """
-As a business process modeling expert, your task is to identify and extract specific elements from textual descriptions of business processes. These elements are critical for creating formal business process models using Declare or BPMN. Focus on the following types of mentions within the text:
-
-- **Actor**: Extract mentions of persons, departments, or roles actively participating in the process. Extract only if the sentence describes the actor performing a task. Include determiners (e.g., "the student") and pronouns ("he", "I", "she"). Example: In "The manager approves the request," extract "The manager" as an Actor.
-
-- **Activity**: Identify active tasks or actions executed during the process. Extract only the verb indicating the action or event (e.g., "approve", "submit"). Do not include the actor performing it or any auxiliary verbs. Example: From "The employee submits the report," extract "submits" as an Activity.
-
-- **Activity Data**: Look for physical objects or digital data relevant to the process because an action produces or uses it. Always include the determiner (e.g., "the form", "a report"). Pronouns like "it" are also considered Activity Data if part of a task description. Example: In "The clerk archives the document," extract "the document" as Activity Data.
-
-- **Further Specification**: Extract information that details how an activity is executed, including means, manner, or conditions. It follows an Activity in the same sentence. Example: If the sentence is "She reviews the application thoroughly," extract "thoroughly" as Further Specification.
-
-- **XOR Gateway**: Identify decision points in the process, usually indicated by "if", "otherwise", "when". Example: In "If the application is complete, proceed to evaluation," extract "If" as an XOR Gateway.
-
-- **AND Gateway**: Spot descriptions of parallel work streams, marked by "while", "meanwhile", "at the same time". Example: "The technician repairs the device while the assistant updates the records," here, "while" is an AND Gateway.
-
-- **Condition Specification**: Defines the condition of an XOR Gateway path, usually following the gateway trigger word. Example: In "If the temperature is above 100, stop the machine," extract "the temperature is above 100" as Condition Specification.
-
-For each mention you detect, write a line in this format: text\ttype\tsentence
-
-- **text**: The exact text of the mention.
-- **type**: The type from the ones listed above.
-- **sentence**: An integer identifying the sentence where the mention was found, starting from zero.
-
-**Examples**
-
-Given the input text:
-
-Sentence 0: The manager reviews the application.
-Sentence 1: If approved, the application proceeds to the next step.
-
-The correct output should be:
-
-The manager\tActor\t0
-reviews\tActivity\t0
-the application\tActivity Data\t0
-If\tXOR Gateway\t1
-approved\tCondition Specification\t1
-
-**Note**: Do not alter the extracted text (e.g., correcting typos or changing punctuation). Focus on the essence of the task descriptions and the roles involved without assuming additional context not provided in the text."""
-
-pet_prompt = """
-You are a business process modelling expert, tasked with identifying mentions of
-process relevant elements in textual descriptions of business processes. These mentions are 
-spans of text, that are of a certain type, as described below: 
-
-- **Actor**: a person, department, or similar role that participates actively in the business 
-         process, e.g., "the student", "the professor", "the judge", "the clerk". It should
-         only be extracted, if the current sentence describes the actor executing a task. 
-         Include the determiner if it is present, e.g. extract "the student" from "First the 
-         student studies for their exam". Can also be a pronoun, such as "he", "I", "she".
-- **Activity**: an active task or action executed during the business process, e.g., 
-            "examine", "write", "bake", "review". Do not extract, if it is information about
-            the process itself, such as "the process ends", as this is not a task in the process!
-            Can also be an event during the process, that is executed by an external, implicit actor, 
-            that is not mentioned in the text, e.g., "placed" in "when an order is placed".
-            Never contains the Actor that executes it, nor the Activity Data that's used during this
-            Activity, is just the verb as in "checked" and not "is checked"! 
-- **Activity Data**: a physical object, or digital data that is relevant to the process, because 
-                 an action produces or uses it, e.g., "the paper", "the report", "the machine part".
-                 Always include the determiner! Can also be a pronoun, like "it", but is always part of 
-                 a task description. Is never information about the process itself, as in "the process 
-                 ends", here "process" is not Activity Data!
-- **Further Specification**: important information about an activity, such as the mean, the manner 
-                         of execution, or how an activity is executed. Follows an Activity in the
-                         same sentence, and describes how an Activity (task) is being done.
-- **XOR Gateway**: textual representation of a decision in the process, usually triggered by adverbs or 
-               conjunctions, e.g., "if", "otherwise", "when"
-- **AND Gateway**: textual description of parallel work streams in the process, i.e., simultaneous 
-               actions performed, marked by phrases like, e.g., "while", "meanwhile", "at the same time" 
-- **Condition Specification**: defines the condition of an XOR Gateway path usually directly following the
-                           gateway trigger word, e.g., "it is ready", "the claim is valid",
-                           "temperature is above 180"
-
-For each mention you detect, write a line in the following format:
-text\ttype\tsentence
-
-- **text**: the text of the mention
-- **type**: the type from the ones listed above
-- **sentence**: integer, that identifies the sentence where the mention text was found in the input. Zero based.
-     
-**Examples for the format given the input text:** 
-
-*Input*: 
-
-Sentence 0: the professor grades all student papers . 
-Sentence 1: some time passes . 
-Sentence 2: then the professor returns the papers .
-
-*Output*:
-
-the professor\tActor\t0
-grades\tActivity\t0
-all student papers\tActivity Data\t0
-the professor\tActor\t2
-returns\tActivity\t2
-the papers\tActivity Data\t2
-
-Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation.
-Do not use any code formatting.
-"""
-
-
 class PetMentionListingFormattingStrategy(
     base.BaseFormattingStrategy[data.PetDocument]
 ):
+    def __init__(
+        self,
+        steps: typing.List[str],
+        only_tags: typing.Optional[typing.List[str]] = None,
+        generate_descriptions: bool = False,
+    ):
+        super().__init__(steps)
+        self._generate_descriptions = generate_descriptions
+        self._only_tags = only_tags
+        if self._only_tags is not None:
+            self._only_tags = [t.lower() for t in self._only_tags]
+
     @staticmethod
     def description() -> str:
-        return generated_pet_prompt
+        return common.load_prompt_from_file("pet/md/short_prompt.tx")
 
     def output(self, document: data.PetDocument) -> str:
         formatted_mentions = []
-        for m in document.mentions:
+        for i, m in enumerate(document.mentions):
+            if self._only_tags is not None and m.type.lower() not in self._only_tags:
+                continue
+
+            relation_candidates = [
+                r
+                for r in document.relations
+                if r.head_mention_index == i or r.tail_mention_index == i
+            ]
+            relevant_relations = [
+                r
+                for r in relation_candidates
+                if r.type.lower() in ["uses", "actor performer", "actor recipient"]
+            ]
+
+            description = ""
+            if self._generate_descriptions:
+                if len(relevant_relations) > 0:
+                    relevant_relation = relevant_relations[0]
+                    head = document.mentions[relevant_relation.head_mention_index]
+                    tail = document.mentions[relevant_relation.tail_mention_index]
+                    if relevant_relation.type.lower() == "uses":
+                        description = f'"{tail.text(document)}" is an object that is being used in the activity "{head.text(document)}"'
+                    if relevant_relation.type.lower() == "actor performer":
+                        description = f'"{tail.text(document)}" is an actor that executes the activity "{head.text(document)}"'
+                    if relevant_relation.type.lower() == "actor recipient":
+                        description = f'"{tail.text(document)}" is an actor that is directly affected by the activity "{head.text(document)}"'
+                if description == "":
+                    print(
+                        f"WARNING: no description generated for '{m.text(document)}'! "
+                        f"{len(relation_candidates)} relevant relations "
+                        f"(candidates were: {relation_candidates})"
+                    )
+
             first_token = document.tokens[m.token_document_indices[0]]
             formatted_mentions.append(
-                f"{m.text(document)}\t{m.type}\t{first_token.sentence_index}"
+                f"{m.text(document)}\t{m.type}\t{first_token.sentence_index}\t{description}"
             )
         return "\n".join(formatted_mentions)
 
@@ -386,25 +309,35 @@ class PetMentionListingFormattingStrategy(
     def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
         sentences = document.sentences
         parsed_mentions: typing.List[data.PetMention] = []
-        print(document.text)
-        print(len(document.sentences))
-        print(string)
         for line in string.splitlines(keepends=False):
             if "\t" not in line:
+                print(f"line not tab-separated: '{line}'")
                 continue
             split_line = line.split("\t")
             split_line = tuple(e for e in split_line if e.strip() != "")
-            assert len(split_line) == 3, split_line
-            mention_text, mention_type, sentence_id = split_line
+
+            assert 3 <= len(split_line) <= 4, split_line
+
+            if len(split_line) == 3:
+                mention_text, mention_type, sentence_id = split_line
+            else:
+                mention_text, mention_type, sentence_id, explanation = split_line
+                print(f"Explanation for {mention_text}: {explanation}")
+
             sentence_id = int(sentence_id)
             sentence = sentences[sentence_id]
+
+            mention_text = mention_text.lower()
             mention_tokens = mention_text.split(" ")
+
+            matches_in_sentence = 0
             for i, token in enumerate(sentence):
-                candidates = sentence[i: i + len(mention_tokens)]
-                candidate_text = " ".join(c.text for c in candidates)
+                candidates = sentence[i : i + len(mention_tokens)]
+                candidate_text = " ".join(c.text.lower() for c in candidates)
 
                 if candidate_text != mention_text:
                     continue
+
                 parsed_mentions.append(
                     data.PetMention(
                         token_document_indices=tuple(
@@ -412,6 +345,15 @@ class PetMentionListingFormattingStrategy(
                         ),
                         type=mention_type.lower().strip(),
                     )
+                )
+                matches_in_sentence += 1
+            if matches_in_sentence == 0:
+                print(
+                    f"No match for line with parsed sentence id {sentence_id}: '{line}'"
+                )
+            if matches_in_sentence > 1:
+                print(
+                    f"Multiple matches for line with parsed sentence id {sentence_id}: '{line}'"
                 )
         return data.PetDocument(
             id=document.id,
@@ -423,6 +365,137 @@ class PetMentionListingFormattingStrategy(
             relations=[],
             entities=[],
         )
+
+
+class PetActivityListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    def __init__(self, steps: typing.List[str]):
+        super().__init__(steps, only_tags=["activity"], generate_descriptions=False)
+
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/activities.txt")
+
+
+class PetActorListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    def __init__(self, steps: typing.List[str]):
+        super().__init__(steps, only_tags=["actor"], generate_descriptions=True)
+        self._input_formatter = tags.PetTagFormattingStrategy(
+            include_ids=False, only_tags=["Activity"]
+        )
+
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/actors.txt")
+
+    def input(self, document: data.PetDocument) -> str:
+        res = []
+        # transform to list of sentences with an id in front
+        for i, sentence in enumerate(document.sentences):
+            sentence_token_indices = {
+                token.index_in_document: i for i, token in enumerate(sentence)
+            }
+            tmp_doc = data.PetDocument(
+                id=document.id,
+                name=document.name,
+                text=document.text,
+                category=document.category,
+                tokens=sentence,
+                mentions=[
+                    data.PetMention(
+                        type=m.type,
+                        token_document_indices=tuple(
+                            sentence_token_indices[i] for i in m.token_document_indices
+                        ),
+                    )
+                    for m in document.mentions
+                    if document.tokens[m.token_document_indices[0]].sentence_index == i
+                ],
+                relations=[],
+                entities=[],
+            )
+            res.append(f"Sentence {i}: {self._input_formatter.output(tmp_doc)}")
+        return "\n\n".join(res)
+
+
+class PetAndListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    def __init__(self, steps: typing.List[str]):
+        super().__init__(steps, only_tags=["and gateway"], generate_descriptions=False)
+
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/and.txt")
+
+
+class PetConditionListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    def __init__(self, steps: typing.List[str]):
+        super().__init__(
+            steps, only_tags=["condition specification"], generate_descriptions=False
+        )
+
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/condition.txt")
+
+
+class PetDataListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    def __init__(self, steps: typing.List[str]):
+        super().__init__(steps, only_tags=["activity data"], generate_descriptions=True)
+        self._input_formatter = tags.PetTagFormattingStrategy(
+            include_ids=False, only_tags=["Activity", "Actor"]
+        )
+
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/data.txt")
+
+    def input(self, document: data.PetDocument) -> str:
+        res = []
+        # transform to list of sentences with an id in front
+        for i, sentence in enumerate(document.sentences):
+            sentence_token_indices = {
+                token.index_in_document: i for i, token in enumerate(sentence)
+            }
+            tmp_doc = data.PetDocument(
+                id=document.id,
+                name=document.name,
+                text=document.text,
+                category=document.category,
+                tokens=sentence,
+                mentions=[
+                    data.PetMention(
+                        type=m.type,
+                        token_document_indices=tuple(
+                            sentence_token_indices[i] for i in m.token_document_indices
+                        ),
+                    )
+                    for m in document.mentions
+                    if document.tokens[m.token_document_indices[0]].sentence_index == i
+                ],
+                relations=[],
+                entities=[],
+            )
+            res.append(f"Sentence {i}: {self._input_formatter.output(tmp_doc)}")
+        return "\n\n".join(res)
+
+
+class PetFurtherListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    def __init__(self, steps: typing.List[str]):
+        super().__init__(
+            steps, only_tags=["further specification"], generate_descriptions=False
+        )
+
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/further.txt")
+
+
+class PetXorListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    def __init__(self, steps: typing.List[str]):
+        super().__init__(steps, only_tags=["xor gateway"], generate_descriptions=False)
+
+    @staticmethod
+    def description() -> str:
+        return common.load_prompt_from_file("pet/md/iterative/xor.txt")
 
 
 if __name__ == "__main__":
@@ -440,6 +513,5 @@ if __name__ == "__main__":
             print("-------")
             print()
             formatter.parse(d, formatter.output(d))
-
 
     main()

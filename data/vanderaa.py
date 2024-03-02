@@ -29,6 +29,24 @@ class VanDerAaDocument(base.DocumentBase):
     name: str
     constraints: typing.List["VanDerAaConstraint"]
 
+    def __add__(self, other: "VanDerAaDocument"):
+        assert self.id == other.id
+        new_constraints = [c for c in other.constraints if c not in self.constraints]
+        return VanDerAaDocument(
+            id=self.id,
+            text=self.text,
+            name=self.name,
+            constraints=self.constraints + new_constraints,
+        )
+
+    def copy(self, clear: typing.List[str]):
+        constraints = []
+        if "constraints" not in clear:
+            constraints = [c.copy() for c in self.constraints]
+        return VanDerAaDocument(
+            id=self.id, text=self.text, name=self.name, constraints=constraints
+        )
+
 
 @dataclasses.dataclass(eq=True, frozen=True)
 class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
@@ -42,6 +60,11 @@ class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
         if self.tail:
             pretty = f'{pretty}\t{self.tail}'
         return pretty
+
+    def copy(self):
+        return VanDerAaConstraint(
+            type=self.type, negative=self.negative, head=self.head, tail=self.tail
+        )
 
     @property
     def num_slots(self):
