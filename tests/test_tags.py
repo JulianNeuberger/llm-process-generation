@@ -8,8 +8,8 @@ def test_ner_to_tag():
         "</a>",
     )
     assert format.PetTagFormattingStrategy.ner_to_tag("Activity Data", {"id": "3"}) == (
-        "<Activity Data id=3>",
-        "</Activity Data>",
+        "<Activity_Data id=3>",
+        "</Activity_Data>",
     )
 
 
@@ -17,6 +17,6 @@ def test_tag_to_ner():
     assert format.PetTagFormattingStrategy.tag_to_ner("<a>") == "a"
     assert format.PetTagFormattingStrategy.tag_to_ner("<a b=1>") == "a"
     assert (
-        format.PetTagFormattingStrategy.tag_to_ner("<Activity Data id=3>")
+        format.PetTagFormattingStrategy.tag_to_ner("<Activity_Data id=3>")
         == "Activity Data"
     )

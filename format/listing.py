@@ -1,57 +1,140 @@
+import re
 import typing
 
 import data
 from format import base, common, tags
-from format.base import TDocument
-
-from format.prompts import quishpi_re_prompt, vanderaa_prompt
 
 
-class VanDerAaListingFormattingStrategy(
+class VanDerAaRelationListingFormattingStrategy(
     base.BaseFormattingStrategy[data.VanDerAaDocument]
 ):
-    def __init__(self, steps: typing.List[typing.Literal["constraints"]]):
+    def __init__(
+        self,
+        steps: typing.List[typing.Literal["constraints"]],
+        prompt_path: str,
+        separate_tasks: bool,
+    ):
         super().__init__(steps)
+        self._prompt_path = prompt_path
+        self._prompt = common.load_prompt_from_file(prompt_path)
+        self._separate_tasks = separate_tasks
+        self._sentence_re = re.compile(
+            r"^\s*\*\*\s?sentence\s*(\d+)\s*\*\*\s*$", flags=re.IGNORECASE
+        )
+
+    def description(self) -> str:
+        return self._prompt
+
+    @property
+    def args(self):
+        return {
+            "prompt_path": self._prompt_path,
+            "separate_tasks": self._separate_tasks,
+        }
+
+    def _dump_constraints(
+        self, document: data.VanDerAaDocument, sentence_id: int
+    ) -> str:
+        res = []
+        for c in document.constraints:
+            if c.sentence_id != sentence_id:
+                continue
+            negative = "TRUE" if c.negative else "FALSE"
+            tail = ""
+            if c.tail is not None:
+                tail = c.tail
+            if self._separate_tasks:
+                res.append(f"{negative}\t{c.type}\t{c.head}\t{tail}")
+            else:
+                res.append(f"{c.sentence_id}\t{negative}\t{c.type}\t{c.head}\t{tail}")
+        return "\n".join(res)
 
     @staticmethod
-    def description() -> str:
-        return vanderaa_prompt.VAN_DER_AA_PROMPT
+    def _dump_actions(document: data.VanDerAaDocument, sentence_id: int) -> str:
+        actions: typing.Set[str] = set()
+        for c in document.constraints:
+            if c.sentence_id != sentence_id:
+                continue
+            actions.add(c.head)
+            if c.tail is not None:
+                actions.add(c.tail)
+        return "\n".join(actions)
 
     def output(self, document: data.VanDerAaDocument) -> str:
-        constraints = []
-        for constraint in document.constraints:
-            constraints.append(
-                f"{constraint.type}\t{constraint.head}\t{constraint.tail}"
-            )
-        return "\n".join(constraints)
+        res = []
+        for i, sentence in enumerate(document.sentences):
+            if self._separate_tasks:
+                res.append(f"** Sentence {i} **")
+                res.append("")
+                res.append("Actions:")
+                res.append(self._dump_actions(document, i))
+                res.append("")
+                res.append("Constraints:")
+            res.append(self._dump_constraints(document, i))
+            if self._separate_tasks:
+                res.append("")
+        return "\n".join(res)
 
     def input(self, document: data.VanDerAaDocument) -> str:
-        return document.text
+        return "\n".join(f"Sentence {i}: {s}" for i, s in enumerate(document.sentences))
 
     def parse(
         self, document: data.VanDerAaDocument, string: str
     ) -> data.VanDerAaDocument:
-        if "#-#-#RESULT#-#-#" in string:
-            string = string.split("#-#-#RESULT#-#-#")[1].strip()
-        lines = string.splitlines(keepends=False)
         constraints = []
-        for line in lines:
-            split_line = line.strip().split("\t")
-            if len(split_line) == 4:
-                negative, c_type, c_head, c_tail = split_line
-            elif len(split_line) == 3:
-                negative, c_type, c_head = split_line
-                c_tail = None
-            else:
-                print(
-                    f'Expected 2-3 tab separated values in line "{line}", got {len(split_line)}, skipping line.'
-                )
+        current_sentence_id: typing.Optional[int] = None
+        for line in string.splitlines(keepends=False):
+            if line.strip() == "":
                 continue
 
+            match = re.match(self._sentence_re, line)
+            if match is not None:
+                # new sentence
+                current_sentence_id = int(match.group(1))
+                continue
+
+            if "\t" not in line:
+                # either a header like "Actions:" or "Constraints:",
+                # or an action, which we currently do not parse
+                continue
+
+            split_line = line.strip().split("\t")
+            if self._separate_tasks:
+                if len(split_line) == 4:
+                    negative, c_type, c_head, c_tail = split_line
+                elif len(split_line) == 3:
+                    negative, c_type, c_head = split_line
+                    c_tail = None
+                else:
+                    print(
+                        f'Expected 3 or 4 tab separated values in line "{line}", got {len(split_line)}, skipping line.'
+                    )
+                    continue
+            else:
+                if len(split_line) == 5:
+                    current_sentence_id, negative, c_type, c_head, c_tail = split_line
+                    if c_tail == "":
+                        c_tail = None
+                elif len(split_line) == 4:
+                    current_sentence_id, negative, c_type, c_head = split_line
+                    c_tail = None
+                else:
+                    print(
+                        f'Expected 4 or 5 tab separated values in line "{line}", got {len(split_line)}, skipping line.'
+                    )
+                    continue
+                current_sentence_id = int(current_sentence_id)
+
             if c_type.strip() == "":
-                print(f"Predicted empty type in {line}")
+                print(f"Predicted empty type in {line}. Skipping.")
+                continue
+
+            if c_tail == "None":
+                raise AssertionError()
+
             constraints.append(
                 data.VanDerAaConstraint(
+                    sentence_id=current_sentence_id,
                     type=c_type.strip().lower(),
                     head=c_head,
                     tail=c_tail,
@@ -63,135 +146,22 @@ class VanDerAaListingFormattingStrategy(
             name=document.name,
             text=document.text,
             constraints=constraints,
+            sentences=document.sentences,
         )
 
 
-class VanDerAaStepwiseListingFormattingStrategy(
-    base.BaseFormattingStrategy[data.VanDerAaDocument]
-):
-    def __init__(self, steps: typing.List[typing.Literal["constraints"]]):
-        super().__init__(steps)
-
-    @staticmethod
-    def description() -> str:
-        return vanderaa_prompt.VAN_DER_AA_PROMPT_STEPWISE
-
-    def output(self, document: data.VanDerAaDocument) -> str:
-        constraints = []
-        for constraint in document.constraints:
-            constraints.append(
-                f"{constraint.type}\t{constraint.head}\t{constraint.tail}"
-            )
-        return "\n".join(constraints)
-
-    def input(self, document: data.VanDerAaDocument) -> str:
-        return document.text
-
-    def parse(
-        self, document: data.VanDerAaDocument, string: str
-    ) -> data.VanDerAaDocument:
-        lines = string.splitlines(keepends=False)
-        constraints = []
-        for line in lines:
-            split_line = line.strip().split("\t")
-            if len(split_line) == 4:
-                negative, c_type, c_head, c_tail = split_line
-            elif len(split_line) == 3:
-                negative, c_type, c_head = split_line
-                c_tail = None
-            else:
-                print(
-                    f'Expected 2-3 tab separated values in line "{line}", got {len(split_line)}, skipping line.'
-                )
-                continue
-
-            if c_type.strip() == "":
-                print(f"Predicted empty type in {line}")
-            constraints.append(
-                data.VanDerAaConstraint(
-                    type=c_type.strip().lower(),
-                    head=c_head,
-                    tail=c_tail,
-                    negative=negative.lower() == "true",
-                )
-            )
-        return data.VanDerAaDocument(
-            id=document.id,
-            name=document.name,
-            text=document.text,
-            constraints=constraints,
-        )
-
-
-class QuishpiREListingFormattingStrategy(
-    base.BaseFormattingStrategy[data.VanDerAaDocument]
-):
-    def __init__(self, steps: typing.List[typing.Literal["constraints"]]):
-        super().__init__(steps)
-
-    @staticmethod
-    def description() -> str:
-        return quishpi_re_prompt.QUISHPI_RE_PROMPT_HANDCRAFTED_TASK_SEPARATION
-
-    def output(self, document: data.VanDerAaDocument) -> str:
-        constraints = []
-        for constraint in document.constraints:
-            constraints.append(
-                f"{'TRUE' if constraint.negative else 'FALSE'}\t{constraint.type}\t{constraint.head}\t{constraint.tail}"
-            )
-        return "\n".join(constraints)
-
-    def input(self, document: data.VanDerAaDocument) -> str:
-        return document.text
-
-    def parse(
-        self, document: data.VanDerAaDocument, string: str
-    ) -> data.VanDerAaDocument:
-        if "#-#-#RESULT#-#-#" in string:
-            string = string.split("#-#-#RESULT#-#-#")[1].strip()
-        lines = string.splitlines(keepends=False)
-        constraints = []
-        for line in lines:
-            split_line = line.strip().split("\t")
-            if len(split_line) == 4:
-                negative, c_type, c_head, c_tail = split_line
-            elif len(split_line) == 3:
-                negative, c_type, c_head = split_line
-                c_tail = None
-            else:
-                print(
-                    f'Expected 2-3 tab separated values in line "{line}", got {len(split_line)}, skipping line.'
-                )
-                continue
-
-            if c_type.strip() == "":
-                print(f"Predicted empty type in {line}")
-                continue
-            constraints.append(
-                data.VanDerAaConstraint(
-                    type=c_type.strip().lower(),
-                    head=c_head,
-                    tail=c_tail,
-                    negative=negative.lower() == "true",
-                )
-            )
-        return data.VanDerAaDocument(
-            id=document.id,
-            name=document.name,
-            text=document.text,
-            constraints=constraints,
-        )
-
-
-class QuishpiListingFormattingStrategy(
+class QuishpiMentionListingFormattingStrategy(
     base.BaseFormattingStrategy[data.QuishpiDocument]
 ):
     def __init__(self, steps: typing.List[typing.Literal["mentions"]]):
         super().__init__(steps)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("quishpi/md/long-no-explain.txt")
+
+    @property
+    def args(self):
+        return {}
 
     def output(self, document: data.QuishpiDocument) -> str:
         mentions = []
@@ -244,9 +214,12 @@ class PetRelationListingFormattingStrategy(
         super().__init__(steps)
         self._input_formatter = tags.PetTagFormattingStrategy(include_ids=True)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/re/long.txt")
+
+    @property
+    def args(self):
+        return {}
 
     def output(self, document: data.PetDocument) -> str:
         res = []
@@ -290,9 +263,12 @@ class PetEntityListingFormattingStrategy(base.BaseFormattingStrategy[data.PetDoc
             include_ids=True, only_tags=["Activity Data", "Actor"]
         )
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/er/long.txt")
+
+    @property
+    def args(self):
+        return {}
 
     def output(self, document: data.PetDocument) -> str:
         ret = []
@@ -341,9 +317,12 @@ class PetMentionListingFormattingStrategy(
         if self._only_tags is not None:
             self._only_tags = [t.lower() for t in self._only_tags]
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/short_prompt.tx")
+
+    @property
+    def args(self):
+        return {}
 
     def output(self, document: data.PetDocument) -> str:
         formatted_mentions = []
@@ -461,8 +440,7 @@ class PetActivityListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(self, steps: typing.List[str]):
         super().__init__(steps, only_tags=["activity"], generate_descriptions=False)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/activities.txt")
 
 
@@ -473,8 +451,7 @@ class PetActorListingFormattingStrategy(PetMentionListingFormattingStrategy):
             include_ids=False, only_tags=["Activity"]
         )
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/actors.txt")
 
     def input(self, document: data.PetDocument) -> str:
@@ -511,8 +488,7 @@ class PetAndListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(self, steps: typing.List[str]):
         super().__init__(steps, only_tags=["and gateway"], generate_descriptions=False)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/and.txt")
 
 
@@ -522,8 +498,7 @@ class PetConditionListingFormattingStrategy(PetMentionListingFormattingStrategy)
             steps, only_tags=["condition specification"], generate_descriptions=False
         )
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/condition.txt")
 
 
@@ -534,8 +509,7 @@ class PetDataListingFormattingStrategy(PetMentionListingFormattingStrategy):
             include_ids=False, only_tags=["Activity", "Actor"]
         )
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/data.txt")
 
     def input(self, document: data.PetDocument) -> str:
@@ -574,8 +548,7 @@ class PetFurtherListingFormattingStrategy(PetMentionListingFormattingStrategy):
             steps, only_tags=["further specification"], generate_descriptions=False
         )
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/further.txt")
 
 
@@ -583,8 +556,7 @@ class PetXorListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(self, steps: typing.List[str]):
         super().__init__(steps, only_tags=["xor gateway"], generate_descriptions=False)
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/xor.txt")
 
 

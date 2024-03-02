@@ -27,15 +27,21 @@ CONSTRAINT_3_COL = excel_col_to_index("O")
 @dataclasses.dataclass
 class VanDerAaDocument(base.DocumentBase):
     name: str
+    sentences: typing.List[str]
     constraints: typing.List["VanDerAaConstraint"]
 
     def __add__(self, other: "VanDerAaDocument"):
         assert self.id == other.id
+        assert len(self.sentences) == len(other.sentences)
+        assert self.sentences == other.sentences
+
         new_constraints = [c for c in other.constraints if c not in self.constraints]
+
         return VanDerAaDocument(
             id=self.id,
             text=self.text,
             name=self.name,
+            sentences=self.sentences,
             constraints=self.constraints + new_constraints,
         )
 
@@ -44,7 +50,11 @@ class VanDerAaDocument(base.DocumentBase):
         if "constraints" not in clear:
             constraints = [c.copy() for c in self.constraints]
         return VanDerAaDocument(
-            id=self.id, text=self.text, name=self.name, constraints=constraints
+            id=self.id,
+            text=self.text,
+            name=self.name,
+            constraints=constraints,
+            sentences=self.sentences,
         )
 
 
@@ -54,16 +64,21 @@ class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
     head: str
     tail: typing.Optional[str]
     negative: bool
+    sentence_id: int
 
     def pretty_dump(self, document: VanDerAaDocument) -> str:
         pretty = f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head}'
         if self.tail:
-            pretty = f'{pretty}\t{self.tail}'
-        return pretty
+            pretty = f"{pretty}\t{self.tail}"
+        return f"s: {self.sentence_id}\t{pretty}"
 
     def copy(self):
         return VanDerAaConstraint(
-            type=self.type, negative=self.negative, head=self.head, tail=self.tail
+            type=self.type,
+            negative=self.negative,
+            head=self.head,
+            tail=self.tail,
+            sentence_id=self.sentence_id,
         )
 
     @property
@@ -132,7 +147,7 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
         self._file_path = path_to_collection
 
     def do_import(self) -> typing.List[VanDerAaDocument]:
-        documents: typing.List[VanDerAaDocument] = []
+        documents: typing.Dict[str, VanDerAaDocument] = {}
 
         file_paths = [self._file_path]
         if os.path.isdir(self._file_path):
@@ -142,25 +157,42 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
         for file_path in file_paths:
             with open(file_path, "r", encoding="windows-1252") as f:
                 reader = csv.reader(f, delimiter=";")
+                # strip header
                 _ = next(reader)
+
                 for row in reader:
                     file_name = os.path.basename(file_path)
                     file_name, _ = os.path.splitext(file_name)
-                    doc_id = f"{file_name}-{row[ID_COL]}"
-                    doc_name = row[NAME_COL]
+                    doc_id = row[NAME_COL]
                     text = row[TEXT_COL]
-                    constraints = self.parse_constraints(row)
-                    documents.append(
-                        VanDerAaDocument(
-                            id=doc_id, text=text, name=doc_name, constraints=constraints
+
+                    # quishpi uses 1 for all rows and files, this would not be unique...
+                    doc_id = f"{file_name}-{doc_id}"
+
+                    if doc_id not in documents:
+                        documents[doc_id] = VanDerAaDocument(
+                            id=doc_id,
+                            text="",
+                            name=doc_id,
+                            constraints=[],
+                            sentences=[],
                         )
-                    )
-        return documents
+                    document = documents[doc_id]
+
+                    sentence_index = len(document.sentences)
+                    constraints = self.parse_constraints(row, sentence_index)
+
+                    document.sentences.append(text)
+                    document.constraints.extend(constraints)
+                    document.text += f"\n{text}"
+
+        return list(documents.values())
 
     @staticmethod
     def parse_constraints(
-            row: typing.List,
+        row: typing.List, sentence_index: int
     ) -> typing.List[VanDerAaConstraint]:
+        max_constraints = 3
         num_constraints = int(row[NUM_CONSTRAINTS_COL])
         base_index = CONSTRAINT_1_COL
         constraints: typing.List[VanDerAaConstraint] = []
@@ -171,10 +203,7 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
             constraint_negative = row[NEGATIVE_COL].lower().strip() == "true"
 
             if constraint_type.strip() == "":
-                print(
-                    f"Empty constraint in row with id {row[ID_COL]}! "
-                    f"Skipping this constraint, even though we expected one here!"
-                )
+                # no constraint given
                 continue
 
             if constraint_tail == "":
@@ -185,16 +214,27 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                     head=constraint_head,
                     tail=constraint_tail,
                     negative=constraint_negative,
+                    sentence_id=sentence_index,
                 )
+            )
+        if num_constraints != len(constraints):
+            print(
+                f"Mismatch between the given number of constraints ({num_constraints}) "
+                f"and the actual constraints listed ({len(constraints)}). "
+                f"This is not a problem, but indicates the dataset is inconsistent."
             )
         return constraints
 
 
 if __name__ == "__main__":
-    documents = VanDerAaImporter(
-        "../res/data/van-der-aa/datacollection.csv"
-    ).do_import()
-    print(len(documents))
 
-    documents = VanDerAaImporter("../res/data/quishpi/csv").do_import()
-    print(len(documents))
+    def main():
+        documents = VanDerAaImporter(
+            "../res/data/van-der-aa/datacollection.csv"
+        ).do_import()
+        print(len(documents))
+
+        documents = VanDerAaImporter("../res/data/quishpi/csv").do_import()
+        print(len(documents))
+
+    main()

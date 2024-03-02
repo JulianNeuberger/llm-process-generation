@@ -85,9 +85,12 @@ class PetTagFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument]):
     def supported_steps() -> typing.List[typing.Literal["mentions"]]:
         return ["mentions"]
 
-    @staticmethod
-    def description() -> str:
+    def description(self) -> str:
         return prompt
+
+    @property
+    def args(self):
+        return {"include_ids": self._include_ids, "only_tags": self._only_tags}
 
     def input(self, document: data.PetDocument) -> str:
         return " ".join([t.text for t in document.tokens])
