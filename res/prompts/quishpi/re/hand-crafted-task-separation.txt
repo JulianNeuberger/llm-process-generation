@@ -14,19 +14,19 @@ All constraints are one of the following types:
 
 - ** init **: marks an action as the start of an entire process. This action is the source / head action of the init constraint. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is started for an init constraint to apply. Signal words alone are not sufficient here.
 
-- ** end **: marks an action as the end of the whole process. The action is the source / head action. There is no no target / tail action. Note that it must be explicitly stated that the PROCESS is ended for an end constraint to apply. Signal words alone are not sufficient here.
+- ** end **: marks an action as the end of the whole process. The action is the source / head action. There is no no target / tail action. Note that it must be explicitly stated that the process (instance) is ended for an end constraint to apply. May appear in the middle of a process description, which indicates a path leads to early process termination.
 
-- ** precedence **: The tail action can only be executed, if the head was already executed before. the head may be executed without the tail being executed.
+- ** precedence **: If an action A can only be executed, after an action B has been executed, i.e., action A is a requirement for B, then there is a precedence constraint between A (head) and B (tail). A may be executed without B being executed.
 
 - ** response **: if the head action was executed, the tail action has to be executed, too.
 
-- ** succession **: this means if the head activity is executed, the tail activity needs to be executed as well and at the same time, the tail activity requires prior execution of the head activity.
+- ** succession **: combination of **precedence** and **response**. If either head or tail is executed, the other has to be executed as well.
 
 - ** existence **: requires that an action is executed at some point in the process; the execution is not dependent on any other explicitly mentioned action; there is only a head action but no tail action.
 
 - ** absence **: requires that an action is NOT executed at any time in the process; the absence is not dependent on any other action but other circumstances (e.g., information from the process context); there is only a head action but no tail action; Note: negated absence constraint is semantically equivalent to an existence constraint.
 
-- ** noncooccurrence **: requires the head action is not executed if the tail action is executed and vice versa.
+- ** noncooccurrence **: indicates that two actions are mutually exclusive, usually indicated by phrases like "or", "either", etc.
 
 ## Negations
 
@@ -53,6 +53,10 @@ Let's carry out your task in two steps.
 Restriction 1: Make sure that for Step 1 you generate actions in the form of 'predicate object', which usually consists of a transitive verb and the corresponding object. It must be an actual task, described in the same sentence.
 
 Restriction 2: Pay special attention to the existence constraint. Some sentences might to cover a precedence, response, or succession constraint but if there is only one action in the sentence in such cases it is more likely an existence constraint.
+
+Restriction 3: Sentences may contain up to three constraints, but some may contain no constraints at all!
+
+Restriction 4: You may use the context between sentences, but constraints are always only between actions of one sentence.
 
 # Notes
 

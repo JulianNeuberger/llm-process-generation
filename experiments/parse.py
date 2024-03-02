@@ -299,11 +299,11 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        f"res/answers/van-der-aa-re/2024-03-01_17-40-54.json",
-        # f"res/answers/pet/2024-02-29_15-11-39.json",
-        # f"res/answers/vanderaa/vanderaa_2024-02-29_17-57-53_handcrafted_stepwise_1_artificial_shot_103samples.json",
+        f"res/answers/quishpi-re/2024-03-02_09-59-31.json",
+        # f"res/answers/van-der-aa-re/2024-03-01_17-40-54.json",
         # data.PetImporter("res/data/pet/all.new.jsonl"),
-        data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
+        data.VanDerAaImporter("res/data/quishpi/csv"),
+        # data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
         # only_document_ids=["doc-6.1"],
         # print_only_tags=["activity data", "actor", "activity"],
         verbose=True,

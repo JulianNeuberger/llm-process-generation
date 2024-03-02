@@ -196,7 +196,7 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
         num_constraints = int(row[NUM_CONSTRAINTS_COL])
         base_index = CONSTRAINT_1_COL
         constraints: typing.List[VanDerAaConstraint] = []
-        for i in range(max_constraints):
+        for i in range(num_constraints):
             constraint_type = row[base_index + i * 3 + 0]
             constraint_head = row[base_index + i * 3 + 1]
             constraint_tail = row[base_index + i * 3 + 2]
