@@ -30,8 +30,8 @@ if __name__ == "__main__":
         importer = data.VanDerAaImporter("res/data/van-der-aa/")
 
         loaded_data = importer.do_import()
-        random.Random(42).shuffle(loaded_data)
-        loaded_data = loaded_data[1:31]
+        # random.Random(42).shuffle(loaded_data)
+        # loaded_data = loaded_data[1:31]
         folds = sampling.generate_folds(loaded_data, num_shots)
         print("Using folds:")
         print("------------")

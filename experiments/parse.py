@@ -246,7 +246,7 @@ def print_experiment_results(
 
 def main():
     print_experiment_results(
-        "../res/answers/quishpi-re/2024-02-29_13-00-43.json",
+        "../res/answers/quishpi-re/2024-02-29_12-37-51_handcrafted_separate_tasks_1shot_30samples.json",
         data.VanDerAaImporter("../res/data/quishpi/csv"),
         verbose=True,
     )

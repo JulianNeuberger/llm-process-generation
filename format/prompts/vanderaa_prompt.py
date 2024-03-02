@@ -19,7 +19,7 @@ to distinguish between precedence, response, and succession constraints.
 Please return raw text, do not use any formatting.
 """
 
-# F1=0.81 auf 30 Beispielen mit 0 Shots extra
+# F1=0.81 auf 30 Samples mit 0 Shots extra | F1=0.74 bei selbem Setting aber kompletter Datensatz
 VAN_DER_AA_PROMPT_STEPWISE = """Your task is to extract declarative process models from natural language process descriptions. 
 The process descriptions consist of a series of actions, each described by a predicate and an object. 
 Your goal is to identify constraints between these actions, which dictate the ordering and existence of actions within
