@@ -39,10 +39,14 @@ class VanDerAaRelationListingFormattingStrategy(
         for c in document.constraints:
             if c.sentence_id != sentence_id:
                 continue
+            negative = "TRUE" if c.negative else "FALSE"
+            tail = ""
+            if c.tail is not None:
+                tail = c.tail
             if self._separate_tasks:
-                res.append(f"{c.type}\t{c.head}\t{c.tail}")
+                res.append(f"{negative}\t{c.type}\t{c.head}\t{tail}")
             else:
-                res.append(f"{c.sentence_id}\t{c.type}\t{c.head}\t{c.tail}")
+                res.append(f"{c.sentence_id}\t{negative}\t{c.type}\t{c.head}\t{tail}")
         return "\n".join(res)
 
     @staticmethod
@@ -52,7 +56,8 @@ class VanDerAaRelationListingFormattingStrategy(
             if c.sentence_id != sentence_id:
                 continue
             actions.add(c.head)
-            actions.add(c.tail)
+            if c.tail is not None:
+                actions.add(c.tail)
         return "\n".join(actions)
 
     def output(self, document: data.VanDerAaDocument) -> str:
@@ -108,6 +113,8 @@ class VanDerAaRelationListingFormattingStrategy(
             else:
                 if len(split_line) == 5:
                     current_sentence_id, negative, c_type, c_head, c_tail = split_line
+                    if c_tail == "":
+                        c_tail = None
                 elif len(split_line) == 4:
                     current_sentence_id, negative, c_type, c_head = split_line
                     c_tail = None
@@ -121,6 +128,9 @@ class VanDerAaRelationListingFormattingStrategy(
             if c_type.strip() == "":
                 print(f"Predicted empty type in {line}. Skipping.")
                 continue
+
+            if c_tail == "None":
+                raise AssertionError()
 
             constraints.append(
                 data.VanDerAaConstraint(

@@ -1,0 +1,59 @@
+# Task Description
+
+You are a business process modelling expert, tasked with identifying constraints between actions in textual process descriptions. Processes consist of actions and, thus, textual process descriptions are sentences that describe a short sequence of actions. Ordering and existence of actions depend on constraints between them. Below you find further definitions for ** ACTIONS ** and ** CONSTRAINTS **.
+
+# Type Definitions
+
+- ** ACTION **: predicate and object describing a task. Predicate is usually a transitive verb, and object is some physical or digital object on which is being acted on.
+
+- ** CONSTRAINT **: defines if and how actions can be executed. Always has a source / head action and sometimes a target / tail action, depending on the type.
+
+## Constraint Types
+
+All constraints are one of the following types:
+
+- ** init **: marks an action as the start of an entire process. This action is the source / head action of the init constraint. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is started for an init constraint to apply. Signal words alone are not sufficient here.
+
+- ** end **: marks an action as the end of the whole process. The action is the source / head action. There is no no target / tail action. Note that it must be explicitly stated that the PROCESS is ended for an end constraint to apply. Signal words alone are not sufficient here.
+
+- ** precedence **: The tail action can only be executed, if the head was already executed before. the head may be executed without the tail being executed.
+
+- ** response **: if the head action was executed, the tail action has to be executed, too.
+
+- ** succession **: this means if the head activity is executed, the tail activity needs to be executed as well and at the same time, the tail activity requires prior execution of the head activity.
+
+- ** existence **: requires that an action is executed at some point in the process; the execution is not dependent on any other explicitly mentioned action; there is only a head action but no tail action.
+
+- ** absence **: requires that an action is NOT executed at any time in the process; the absence is not dependent on any other action but other circumstances (e.g., information from the process context); there is only a head action but no tail action; Note: negated absence constraint is semantically equivalent to an existence constraint.
+
+- ** noncooccurrence **: requires the head action is not executed if the tail action is executed and vice versa.
+
+## Negations
+
+Additionally, you can determine if the given document describes a negation of constraints, e.g., "when something happens, then we DO something" describes a positive constraint, while "when something happens, then we DON'T DO something" describes a negation.
+
+# Format
+
+Please ensure the correct identification and formatting of constraints in the given text. Output one constraint per line, including whether the constraint is negated (TRUE or FALSE), the type of constraint, and the extracted head and tail actions separated by tabs. Stick closely to the provided examples and descriptions, and be careful to distinguish between precedence, response, and succession constraints.
+
+Print one constraint per line, where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the type of the constraint, and the extracted actions by tabs in the following form (<...> are placeholders):
+
+<TRUE or FALSE>	<constraint type>	<head action>	<tail action>
+
+# Procedure
+
+Let's carry out your task in two steps.
+
+- Step 1: First, extract all actions contained in the input sentence and list them under the heading "Actions:" line by line (a description how you can identify actions is given in ACTION (Def.) above).
+
+- Step 2: Second, identify and extract constraints based on the constraint types above (see "Constraint Types"). To do this, only use the actions that you defined in Step 1, under the heading "Actions:".
+
+# Important Restriction
+
+Restriction 1: Make sure that for Step 1 you generate actions in the form of 'predicate object', which usually consists of a transitive verb and the corresponding object. It must be an actual task, described in the same sentence.
+
+Restriction 2: Pay special attention to the existence constraint. Some sentences might to cover a precedence, response, or succession constraint but if there is only one action in the sentence in such cases it is more likely an existence constraint.
+
+# Notes
+
+Please return raw text, do not use any formatting.

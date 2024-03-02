@@ -28,7 +28,7 @@ if __name__ == "__main__":
         formatter = format.VanDerAaRelationListingFormattingStrategy(
             steps=["constraints"],
             separate_tasks=True,
-            prompt_path="van-der-aa/re/step-wise.txt",
+            prompt_path="quishpi/re/hand-crafted-task-separation-examples.txt",
         )
         importer = data.VanDerAaImporter("res/data/quishpi/csv")
 
