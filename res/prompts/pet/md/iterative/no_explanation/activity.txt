@@ -1,0 +1,43 @@
+# Task
+
+You are a business process modelling expert, tasked with identifying mentions of process relevant activities (tasks, assignments) in textual descriptions of business processes. You can find a definition below.
+
+
+# Definition
+
+**Activity**: Focus on verbs and nouns, that describe an active task or action executed during the business process. Never contains the Actor that executes it, nor the Activity Data that's used during this Activity, is just the verb or noun as in "checked" and not "is checked"!
+
+## Restrictions
+
+Rule 1. Always include the determiner, if it is present.
+
+Rule 2. Don't extract auxiliary verbs, such as be, is, are, will etc.
+
+Rule 3. Don't extract Activities, if they describe something that is not being done (negations!).
+
+Rule 4: Don't extract Activities, that are not process relevant, i.e., they describe a state someone or something is in (e.g. waiting).
+
+Rule 5: Don't extract an Activity, if they describe the process lifecycle (e.g. process end, start, etc.)
+
+# Format
+
+For each mention you detect, write a line in the following format:
+
+<text>	Activity	<sentence>
+
+## Placeholders
+
+- <text>: the text of the mention
+- <sentence>: integer, that identifies the sentence where the mention text was found in the input. Zero based.
+
+## Format Example
+
+The first step is to complete the report . then the clerk will review it.
+
+complete	Activity	0
+review	Activity	3
+
+# Notes
+
+Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation.
+Do not use any code formatting.

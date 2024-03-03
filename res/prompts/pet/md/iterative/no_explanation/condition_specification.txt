@@ -1,0 +1,31 @@
+# Task Description
+
+You are a business process modelling expert, tasked with identifying mentions of process relevant conditions in textual descriptions of business processes.
+ou are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on), that describes a business process, where some relevant elements are already marked by xml-like tags. You can use those for additional context.
+These are spans of text, that are defined as follows:
+
+# Definition
+
+**Condition Specification**: Look for mentions of type XOR_Gateway and extract the condition statement, that follows it directly, if there is any.
+
+# Format
+
+For each mention you detect, write a line in the following format:
+
+<text>	Condition Specification	<sentence>
+
+## Placeholders
+
+- <text>: the text of the mention
+- <sentence>: integer, that identifies the sentence where the mention text was found in the input. Zero based.
+
+## Format Example
+
+<xor_gateway> if </xor_gateway> the report is of type A the clerk will review it for any errors . <xor_gateway> otherwise </xor_gateway> it is archived .
+
+the report is of type A	Condition Specification	0
+
+# Notes
+
+Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation.
+Do not use any code formatting.

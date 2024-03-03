@@ -15,4 +15,5 @@ from format.listing import (
     PetAndListingFormattingStrategy,
     PetEntityListingFormattingStrategy,
     PetRelationListingFormattingStrategy,
+    IterativePetMentionListingFormattingStrategy,
 )

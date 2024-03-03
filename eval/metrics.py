@@ -306,26 +306,32 @@ def _f1_stats(
     for p, t in zip(predicted_documents, ground_truth_documents):
         true_attribute = getattr(t, attribute)
         pred_attribute = getattr(p, attribute)
-        true = set(true_attribute)
-        pred = set(pred_attribute)
-        ok = true.intersection(pred)
-        non_ok = pred.difference(true)
-        missing = true.difference(pred)
 
-        if len(true) != len(true_attribute):
-            # contains identical values, need to use lists
-            true = list(true_attribute)
-            pred = list(pred_attribute)
-            true_candidates = list(true_attribute)
-            ok = []
-            non_ok = []
-            for cur in pred:
-                if cur in true_candidates:
-                    true_candidates.remove(cur)
-                    ok.append(cur)
-                    continue
-                non_ok.append(cur)
-            missing = true_candidates
+        true = list(true_attribute)
+        pred = list(pred_attribute)
+        true_candidates = list(true_attribute)
+        ok = []
+        non_ok = []
+        for cur in pred:
+            match: typing.Optional[data.DocumentBase] = None
+            if isinstance(cur, data.HasCustomMatch):
+                for candidate in true_candidates:
+                    if cur.match(candidate):
+                        match = candidate
+                        break
+            else:
+                try:
+                    match_index = true_candidates.index(cur)
+                    match = true_candidates[match_index]
+                except ValueError:
+                    pass
+
+            if match is not None:
+                true_candidates.remove(match)
+                ok.append(cur)
+                continue
+            non_ok.append(cur)
+        missing = true_candidates
 
         _add_to_stats_by_tag(
             stats_by_tag,
@@ -352,7 +358,7 @@ def _f1_stats(
                 t,
                 {
                     "true": true,
-                    "pred": pred,
+                    # "pred": pred,
                     "ok": ok,
                     "non-ok": non_ok,
                     "missing": missing,
