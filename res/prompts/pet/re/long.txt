@@ -1,8 +1,11 @@
-** Task **
+# Task
 
-You are a business process modelling expert, tasked with identifying relations of business process relevant facts in textual descriptions of business processes.
-These facts have a type and are marked in the given text by xml-style tags, which includes an id, used to refer to it.
-The possible types of facts are:
+You are a business process modelling expert, tasked with identifying relations between mentions of business process relevant facts in textual descriptions of business processes.
+These mentions have a type and are marked in the given text by xml-style tags, which includes an id, you can use to refer to it.
+
+# Definitions
+
+## Mention Types
 
 - **Actor**: a person, department, or similar role that participates actively in the business process, or who is affected by Activities in the process.
 
@@ -16,29 +19,32 @@ The possible types of facts are:
 
 - **AND_Gateway**: textual description of parallel work streams in the process, i.e., actions performed simultaneously
 
-- **Condition_Specification**: defines the condition of an XOR_gateway path and describes when this path is fol
+- **Condition_Specification**: defines the condition of an XOR_gateway path and describes when this path is followed.
 
-The types of relations you can extract are:
 
-- **uses**: links elements of type "activity_data" to those of type "activity", when the former is used during execution of the latter. The source mention is always of type Activity, the target mention is always of type Activity_Data.
+## Relation Types
 
-- **flow**: links elements of type "activity", "condition_specification", "xor_gateway", "and_gateway", if they are executed in order in the process. the source mention is executed before the target mention.
+Relations are directed and therefore have a source mention and a target mention. Additionally, they have one of the types described below.
 
-- **actor performer**: defines the actor that executes some activity, the source mention is always of type "Activity", the target mention is always of type "Actor".
+- **uses**: Focus on mentions of type "activity". Find the "activity_data" mention, that is being used or created during the execution of this activity. If you find one, extract a relation of type "uses". The source mention is the activity, the target mention is the "activity_data" mention.
 
-- **actor recipient**: defines the actor that receives the result of some activity execution, the source mention is always of type "Activity", the target mention is always of type "Actor".
+- **flow**: This relation describes the order of steps process participants have to take in the process. Focus on mentions of types "Activity", "XOR_Gateway", "AND_Gateway", and "Condition_Specification" and find the  mention of one of these types, that has to be considered next in the process. Flows can be implicit, in this case you can assume neighbouring mentions of these types are connected via "flow" relations. A flow between XOR_Gateway and Condition_Specification means, that the Condition_Specification is the condition the XOR_Gateway describes.
 
-- **same gateway**: links elements of type "xor_gateway" and "and_gateway", if they describe the same textual descriptions of gateways are often spread over several phrases, especially the different outgoing paths, this relation links these disjointed descriptions together.
+- **actor performer**: Focus on mentions of type "activity" and look for the "actor", that actively performs the activity (not is passively affected by it!). If you find one, extract a relation of type "actor performer". The source mention is the "activity", and the target mention is the "actor".
 
-- **further specification**: links additional important information (mentions of type "further_specification") about an activity element. the source mention is always of type "Activity", the target of type "Further_Specification"
+- **actor recipient**: Focus on mentions of type "activity" and look for the "actor", that receives the result of some activity execution, i.e., they are passively affected by the activity. If you find one, extract a relation of type "actor recipient". The source mention is the "Activity", the target mention is the "Actor".
 
-** Format **
+- **same gateway**: Textual descriptions of gateways are often spread over several phrases, especially the different outgoing paths, this relation links these disjointed descriptions together. Look for elements of type "xor_gateway" and "and_gateway". If you find another mention of the same type, check if they describe the same decision point in the process execution. If they do, extract a relation of type "same gateway", with the source mention being the one that appears earlier in the text, and the target mention being the one that appears later.
+
+- **further specification**: Focus on mentions of type "activity". Try and find mentions of type "further_specification", that describe how this activity has to be executed, or describe the activity further. If you find one, extract a relation of type "further_specification", where the source mention is the activity and the target mention is the mention of type "further_specification".
+
+# Format
 
 Retrieve a relation by listing the head mention index, tail mention index and its type, separated by tabs. List one relation per line.
 
 <relation-type>	<source-mention-index>	<target-mention-index>
 
-** Format Examples **
+## Format Examples
 
 Given the following input:
 
@@ -48,3 +54,7 @@ You will extract these relations
 
 actor performer	0	1
 uses	0	2
+
+# Restrictions
+
+Rule 1. Only extract relations with types, that are defined in chapter **Relation Types**.

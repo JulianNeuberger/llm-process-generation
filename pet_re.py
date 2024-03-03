@@ -18,9 +18,9 @@ if __name__ == "__main__":
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/pet-re/{date_formatted}.json"
-        # storage = f"res/answers/pet-er/2024-03-01_10-11-43.json"
+        # storage = f"res/answers/pet-re/2024-03-03_10-58-06.json"
 
-        num_shots = 1
+        num_shots = 3
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])

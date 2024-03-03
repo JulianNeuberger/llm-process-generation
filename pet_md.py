@@ -17,10 +17,10 @@ if __name__ == "__main__":
             nltk.download("punkt")
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        # storage = f"res/answers/pet-md/{date_formatted}.json"
-        storage = f"res/answers/pet-md/2024-03-02_16-26-51.json"
+        storage = f"res/answers/pet-md/{date_formatted}.json"
+        # storage = f"res/answers/pet-md/2024-03-02_16-26-51.json"
 
-        num_shots = 0
+        num_shots = 3
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])

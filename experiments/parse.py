@@ -1,5 +1,6 @@
 import dataclasses
 import json
+import sys
 import typing
 
 import data
@@ -298,15 +299,26 @@ def print_experiment_results(
 
 
 def main():
+    importers = {
+        "pet": data.PetImporter("res/data/pet/all.new.jsonl"),
+        "quishpi-re": data.VanDerAaImporter("res/data/quishpi/csv"),
+        "quishpi-md": data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
+        "van-der-aa": data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
+    }
+
+    answer_file = f"res/answers/pet-md/2024-03-03_10-52-58.json"
+    importer = None
+    for k, v in importers.items():
+        if k in answer_file:
+            importer = v
+            break
+    assert importer is not None
+
     print_experiment_results(
-        # "res/answers/quishpi-re/2024-03-02_09-59-31.json",
-        # f"res/answers/van-der-aa-re/2024-03-01_17-40-54.json",
-        f"res/answers/pet-md/2024-03-02_16-26-51.json",
-        data.PetImporter("res/data/pet/all.new.jsonl"),
-        # data.VanDerAaImporter("res/data/quishpi/csv"),
-        # data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
+        answer_file,
+        importer,
         # only_document_ids=["doc-6.1"],
-        print_only_tags=["activity"],
+        print_only_tags=["flow"],
         verbose=True,
     )
 
