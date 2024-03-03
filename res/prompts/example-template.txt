@@ -1,9 +1,2 @@
-User: Please retrieve all {steps} from the following text.
 
-Text:
-{input}
-
-Elements: {steps}
-
-AI:
 {output}

@@ -310,19 +310,28 @@ class PetMentionListingFormattingStrategy(
         steps: typing.List[str],
         only_tags: typing.Optional[typing.List[str]] = None,
         generate_descriptions: bool = False,
+        prompt: str = None,
     ):
         super().__init__(steps)
         self._generate_descriptions = generate_descriptions
         self._only_tags = only_tags
         if self._only_tags is not None:
             self._only_tags = [t.lower() for t in self._only_tags]
+        self._prompt = prompt
 
     def description(self) -> str:
-        return common.load_prompt_from_file("pet/md/short_prompt.tx")
+        if self._prompt is None:
+            return common.load_prompt_from_file("pet/md/short_prompt.tx")
+        else:
+            return common.load_prompt_from_file(self._prompt)
 
     @property
     def args(self):
-        return {}
+        return {
+            "only_tags": self._only_tags,
+            "generate_descriptions": self._generate_descriptions,
+            "prompt": self._prompt,
+        }
 
     def output(self, document: data.PetDocument) -> str:
         formatted_mentions = []
@@ -379,13 +388,25 @@ class PetMentionListingFormattingStrategy(
         sentences = document.sentences
         parsed_mentions: typing.List[data.PetMention] = []
         for line in string.splitlines(keepends=False):
+            if re.match("-{3,}", line.strip()):
+                print(
+                    "Found divider, will discard all mentions, as they were only candidates"
+                )
+                parsed_mentions = []
+                continue
+
             if "\t" not in line:
                 print(f"line not tab-separated: '{line}'")
                 continue
             split_line = line.split("\t")
             split_line = tuple(e for e in split_line if e.strip() != "")
 
-            assert 3 <= len(split_line) <= 4, split_line
+            if len(split_line) < 3 or len(split_line) > 4:
+                print(
+                    f"Skipping line {split_line}, as it is not formatted "
+                    f"properly, expected between 3 and 4 arguments."
+                )
+                continue
 
             if len(split_line) == 3:
                 mention_text, mention_type, sentence_id = split_line
@@ -393,7 +414,11 @@ class PetMentionListingFormattingStrategy(
                 mention_text, mention_type, sentence_id, explanation = split_line
                 print(f"Explanation for {mention_text}: {explanation}")
 
-            sentence_id = int(sentence_id)
+            try:
+                sentence_id = int(sentence_id)
+            except ValueError:
+                print(f"Invalid sentence index '{sentence_id}', skipping line.")
+                continue
             sentence = sentences[sentence_id]
 
             mention_text = mention_text.lower()
@@ -404,7 +429,7 @@ class PetMentionListingFormattingStrategy(
                 candidates = sentence[i : i + len(mention_tokens)]
                 candidate_text = " ".join(c.text.lower() for c in candidates)
 
-                if candidate_text != mention_text:
+                if candidate_text.lower() != mention_text.lower():
                     continue
 
                 parsed_mentions.append(
@@ -440,19 +465,79 @@ class PetActivityListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(self, steps: typing.List[str]):
         super().__init__(steps, only_tags=["activity"], generate_descriptions=False)
 
+    @property
+    def args(self):
+        return {}
+
     def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/activities.txt")
 
 
+class IterativePetMentionListingFormattingStrategy(PetMentionListingFormattingStrategy):
+    def __init__(
+        self, steps: typing.List[str], tag: str, context_tags: typing.List[str]
+    ):
+        super().__init__(steps, only_tags=[tag], generate_descriptions=False)
+        self._tag = tag.lower()
+        self._context_tags = [t.lower() for t in context_tags]
+        self._input_formatter = tags.PetTagFormattingStrategy(
+            include_ids=False, only_tags=self._context_tags
+        )
+
+    @property
+    def args(self):
+        return {"tag": self._tag, "context_tags": self._context_tags}
+
+    def description(self) -> str:
+        return common.load_prompt_from_file(
+            f"pet/md/iterative/no_explanation/{self._tag.replace(' ', '_')}.txt"
+        )
+
+    def input(self, document: data.PetDocument) -> str:
+        res = []
+        # transform to list of sentences with an id in front
+        for i, sentence in enumerate(document.sentences):
+            sentence_token_indices = {
+                token.index_in_document: i for i, token in enumerate(sentence)
+            }
+            tmp_doc = data.PetDocument(
+                id=document.id,
+                name=document.name,
+                text=document.text,
+                category=document.category,
+                tokens=sentence,
+                mentions=[
+                    data.PetMention(
+                        type=m.type,
+                        token_document_indices=tuple(
+                            sentence_token_indices[i] for i in m.token_document_indices
+                        ),
+                    )
+                    for m in document.mentions
+                    if document.tokens[m.token_document_indices[0]].sentence_index == i
+                ],
+                relations=[],
+                entities=[],
+            )
+            res.append(f"Sentence {i}: {self._input_formatter.output(tmp_doc)}")
+        return "\n\n".join(res)
+
+
 class PetActorListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(self, steps: typing.List[str]):
-        super().__init__(steps, only_tags=["actor"], generate_descriptions=True)
+        super().__init__(steps, only_tags=["actor"], generate_descriptions=False)
         self._input_formatter = tags.PetTagFormattingStrategy(
             include_ids=False, only_tags=["Activity"]
         )
 
     def description(self) -> str:
-        return common.load_prompt_from_file("pet/md/iterative/actors.txt")
+        return common.load_prompt_from_file(
+            "pet/md/iterative/actors_no_explanation.txt"
+        )
+
+    @property
+    def args(self):
+        return {}
 
     def input(self, document: data.PetDocument) -> str:
         res = []
@@ -491,6 +576,10 @@ class PetAndListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/and.txt")
 
+    @property
+    def args(self):
+        return {}
+
 
 class PetConditionListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(self, steps: typing.List[str]):
@@ -501,16 +590,26 @@ class PetConditionListingFormattingStrategy(PetMentionListingFormattingStrategy)
     def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/condition.txt")
 
+    @property
+    def args(self):
+        return {}
+
 
 class PetDataListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(self, steps: typing.List[str]):
-        super().__init__(steps, only_tags=["activity data"], generate_descriptions=True)
+        super().__init__(
+            steps, only_tags=["activity data"], generate_descriptions=False
+        )
         self._input_formatter = tags.PetTagFormattingStrategy(
             include_ids=False, only_tags=["Activity", "Actor"]
         )
 
     def description(self) -> str:
-        return common.load_prompt_from_file("pet/md/iterative/data.txt")
+        return common.load_prompt_from_file("pet/md/iterative/data_no_explanation.txt")
+
+    @property
+    def args(self):
+        return {}
 
     def input(self, document: data.PetDocument) -> str:
         res = []
@@ -551,6 +650,10 @@ class PetFurtherListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/further.txt")
 
+    @property
+    def args(self):
+        return {}
+
 
 class PetXorListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(self, steps: typing.List[str]):
@@ -558,6 +661,10 @@ class PetXorListingFormattingStrategy(PetMentionListingFormattingStrategy):
 
     def description(self) -> str:
         return common.load_prompt_from_file("pet/md/iterative/xor.txt")
+
+    @property
+    def args(self):
+        return {}
 
 
 if __name__ == "__main__":

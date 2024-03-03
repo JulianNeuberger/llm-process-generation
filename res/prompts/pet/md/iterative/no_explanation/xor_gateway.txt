@@ -1,26 +1,31 @@
-You are a business process modelling expert, tasked with identifying mentions of
-process relevant decision points in textual descriptions of business processes.
-These are spans of text, that are defined as follows:
+# Task Description
+
+You are a business process modelling expert, tasked with identifying mentions of process relevant decision points (XOR gateways) in textual descriptions of business processes.
+ou are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on), that describes a business process, where some relevant elements are already marked by xml-like tags. You can use those for additional context.
+
+# Definition
 
 **XOR Gateway**: Identify decision points in the process, i.e. exclusive work streams, usually indicated by conjunctions or adverbs. Extract only the trigger word, not the text following it. A conjunction or adverb is only a XOR Gateway, if it introduces two mutually exclusive actions i.e. a later sentence contains the description of the second work stream, e.g., indicated by an accompanying "otherwise".
+
+# Format
 
 For each mention you detect, write a line in the following format:
 
 <text>	XOR Gateway	<sentence>
 
-** Placeholders **
+## Placeholders
 
 - <text>: the text of the mention
 - <sentence>: integer, that identifies the sentence where the mention text was found in the input. Zero based.
 
-** Format Example **
+## Format Example
 
 if the report is of type A the clerk will review it for any errors . otherwise it is archived.
 
 if	XOR Gateway	0
 otherwise	XOR Gateway	1
 
-** Notes **
+# Notes
 
 Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation.
 Do not use any code formatting.

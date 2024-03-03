@@ -28,6 +28,11 @@ class HasType(abc.ABC):
     type: str
 
 
+class HasCustomMatch:
+    def match(self, other: object) -> bool:
+        raise NotImplementedError()
+
+
 TMention = typing.TypeVar("TMention", bound=HasType)
 
 
