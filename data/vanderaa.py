@@ -6,6 +6,7 @@ import typing
 import nltk
 
 from data import base
+from data.base import TDocument
 
 
 def excel_col_to_index(col: str):
@@ -25,7 +26,7 @@ CONSTRAINT_3_COL = excel_col_to_index("O")
 
 
 @dataclasses.dataclass
-class VanDerAaDocument(base.DocumentBase):
+class VanDerAaDocument(base.DocumentBase, base.HasMentions["VanDerAaMention"]):
     name: str
     sentences: typing.List[str]
     constraints: typing.List["VanDerAaConstraint"]
@@ -36,6 +37,7 @@ class VanDerAaDocument(base.DocumentBase):
         assert self.sentences == other.sentences
 
         new_constraints = [c for c in other.constraints if c not in self.constraints]
+        new_mentions = [m for m in other.mentions if m not in self.mentions]
 
         return VanDerAaDocument(
             id=self.id,
@@ -43,6 +45,7 @@ class VanDerAaDocument(base.DocumentBase):
             name=self.name,
             sentences=self.sentences,
             constraints=self.constraints + new_constraints,
+            mentions=self.mentions + new_mentions,
         )
 
     def copy(self, clear: typing.List[str]):
@@ -56,6 +59,14 @@ class VanDerAaDocument(base.DocumentBase):
             constraints=constraints,
             sentences=self.sentences,
         )
+
+
+@dataclasses.dataclass(eq=True, frozen=True)
+class VanDerAaMention(base.SupportsPrettyDump["VanDerAaDocument"]):
+    text: str
+
+    def pretty_dump(self, document: TDocument) -> str:
+        return self.text
 
 
 @dataclasses.dataclass(eq=True, frozen=True)

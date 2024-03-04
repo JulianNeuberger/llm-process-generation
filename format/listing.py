@@ -3,6 +3,39 @@ import typing
 
 import data
 from format import base, common, tags
+from format.base import TDocument
+
+
+class VanDerAaMentionListingFormattingStrategy(
+    base.BaseFormattingStrategy[data.VanDerAaDocument]
+):
+    def __init__(
+        self,
+        steps: typing.List[str],
+            prompt: str = None
+    ):
+        super().__init__(steps)
+        if prompt is None:
+            prompt = "van-der-aa/md/default.txt"
+        self._prompt = prompt
+
+    @property
+    def args(self):
+        return {
+            "prompt": self._prompt
+        }
+
+    def description(self) -> str:
+        return common.load_prompt_from_file(self._prompt)
+
+    def output(self, document: data.VanDerAaDocument) -> str:
+
+
+    def input(self, document: TDocument) -> str:
+        pass
+
+    def parse(self, document: TDocument, string: str) -> TDocument:
+        pass
 
 
 class VanDerAaRelationListingFormattingStrategy(
@@ -153,20 +186,32 @@ class VanDerAaRelationListingFormattingStrategy(
 class QuishpiMentionListingFormattingStrategy(
     base.BaseFormattingStrategy[data.QuishpiDocument]
 ):
-    def __init__(self, steps: typing.List[typing.Literal["mentions"]]):
+    def __init__(
+        self,
+        steps: typing.List[typing.Literal["mentions"]],
+        only_tags: typing.Optional[typing.List[str]] = None,
+        prompt: str = None,
+    ):
         super().__init__(steps)
+        if prompt is None:
+            prompt = "quishpi/md/long-no-explain.txt"
+        self._prompt = prompt
+        self._only_tags = only_tags
 
     def description(self) -> str:
-        return common.load_prompt_from_file("quishpi/md/long-no-explain.txt")
+        return common.load_prompt_from_file(self._prompt)
 
     @property
     def args(self):
-        return {}
+        return {"prompt": self._prompt}
 
     def output(self, document: data.QuishpiDocument) -> str:
         mentions = []
-        for mention in document.mentions:
-            mentions.append(f"{mention.type}\t{mention.text}")
+        for m in document.mentions:
+            if self._only_tags is not None and m.type.lower() not in self._only_tags:
+                continue
+
+            mentions.append(f"{m.type}\t{m.text}")
         return "\n".join(mentions)
 
     def input(self, document: data.QuishpiDocument) -> str:
@@ -205,6 +250,58 @@ class QuishpiMentionListingFormattingStrategy(
         return data.QuishpiDocument(
             id=document.id, text=document.text, mentions=mentions
         )
+
+
+class IterativeQuishpiMentionListingFormattingStrategy(
+    QuishpiMentionListingFormattingStrategy
+):
+    def __init__(
+        self,
+        steps: typing.List[typing.Literal["mentions"]],
+        tag: str,
+        context_tags: typing.List[str],
+    ):
+        prompt = f"quishpi/md/iterative/{tag.replace(' ', '_')}.txt"
+        super().__init__(steps, only_tags=[tag], prompt=prompt)
+        self._tag = tag.lower()
+        self._context_tags = [t.lower() for t in context_tags]
+        self._input_formatter = tags.PetTagFormattingStrategy(
+            include_ids=False, only_tags=self._context_tags
+        )
+
+    @property
+    def args(self):
+        return {"tag": self._tag, "context_tags": self._context_tags}
+
+    def description(self) -> str:
+        return common.load_prompt_from_file(self._prompt)
+
+    def input(self, document: data.QuishpiDocument) -> str:
+        text = document.text
+        for i in range(len(document.mentions)):
+            mention = document.mentions[len(document.mentions) - i - 1]
+            if mention.type.lower() not in self._context_tags:
+                continue
+
+            right_index = text.rfind(mention.text)
+            while right_index != -1:
+                can_replace = True
+                # if we are already at the left "edge" of our text, no need to check for an existing tag
+                if right_index > 1:
+                    # is there an existing tag?
+                    can_replace = text[right_index - 2] != ">"
+                if not can_replace:
+                    right_index = text.rfind(mention.text, 0, right_index)
+                    continue
+
+                text = (
+                    text[: right_index + len(mention.text)]
+                    + f" </{mention.type}>"
+                    + text[right_index + len(mention.text) :]
+                )
+                text = text[:right_index] + f"<{mention.type}> " + text[right_index:]
+                break
+        return text
 
 
 class PetRelationListingFormattingStrategy(
@@ -412,7 +509,7 @@ class PetMentionListingFormattingStrategy(
                 mention_text, mention_type, sentence_id = split_line
             else:
                 mention_text, mention_type, sentence_id, explanation = split_line
-                print(f"Explanation for {mention_text}: {explanation}")
+                # print(f"Explanation for {mention_text}: {explanation}")
 
             try:
                 sentence_id = int(sentence_id)

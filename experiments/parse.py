@@ -306,7 +306,7 @@ def main():
         "van-der-aa": data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
     }
 
-    answer_file = f"res/answers/pet-md/2024-03-03_10-52-58.json"
+    answer_file = f"res/answers/quishpi-md/2024-03-04_08-53-44.json"
     importer = None
     for k, v in importers.items():
         if k in answer_file:
@@ -317,8 +317,8 @@ def main():
     print_experiment_results(
         answer_file,
         importer,
-        # only_document_ids=["doc-6.1"],
-        print_only_tags=["flow"],
+        # only_document_ids=["1-1_bicycle_manufacturing"],
+        print_only_tags=["action"],
         verbose=True,
     )
 

@@ -1,0 +1,22 @@
+# Task Description
+
+You are a business process modelling expert, tasked with finding conditions in textual business process descriptions. These process descriptions are natural language texts that define how a business process has to be executed, with actions that have to be taken and conditions, that make the execution of some actions conditional.
+
+# Definitions
+
+- **condition**: Identify decision points in the process, i.e. conditional or exclusive work streams, usually indicated by a conjunction, an adverb, or other phrases that indicate a condition. These are only relevant, if they introduce a conditional action or mutually exclusive actions. Extract the text directly following the trigger word / phrase, if this text describes the condition, if it is just the trigger word / phrase, do not extract it.
+
+# Format
+
+Please extract all mentions in the given raw text in the following format:
+Print one mention per line, where you separate the mentions type and its text by tabs:
+
+condition	<text>
+
+# Requirements
+
+Rule 1. Conditions never include the phrase or word, that indicate a condition, i.e., if you hypothetically were to write "if" before the text you extract, it would be a valid sentence.
+
+# Notes
+
+Please return raw text, do not use any code formatting. Do not change the text of extracted conditions, keep it exactly the same as it appears in text.
