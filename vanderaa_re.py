@@ -28,7 +28,7 @@ if __name__ == "__main__":
         formatter = format.VanDerAaRelationListingFormattingStrategy(
             steps=["constraints"],
             separate_tasks=True,
-            prompt_path="van-der-aa/re/step-wise.txt",
+            prompt_path="van-der-aa/re/step-wise_tuning_CCoT.txt",
         )
         importer = data.VanDerAaImporter("res/data/van-der-aa/")
 
@@ -53,5 +53,6 @@ if __name__ == "__main__":
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
+
 
     main()
