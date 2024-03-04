@@ -9,3 +9,10 @@ Please extract these actions.
 # Format
 
 Write one action per line, without any additional formatting.
+
+## Format Example
+
+format text
+extract all activities
+send response to user
+finish request
