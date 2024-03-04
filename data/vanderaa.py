@@ -25,11 +25,50 @@ CONSTRAINT_2_COL = excel_col_to_index("L")
 CONSTRAINT_3_COL = excel_col_to_index("O")
 
 
+@dataclasses.dataclass(eq=True, frozen=True)
+class VanDerAaMention(base.SupportsPrettyDump["VanDerAaDocument"], base.HasCustomMatch):
+    text: str
+
+    def pretty_dump(self, document: TDocument) -> str:
+        return self.text
+
+    def copy(self):
+        return VanDerAaMention(text=self.text)
+
+    def match(self, other: object) -> bool:
+        if not isinstance(other, VanDerAaMention):
+            return False
+
+        pred = other.text.lower()
+        true = self.text.lower()
+
+        true_verb = true.split(" ")[0]
+        if true_verb.lower() in pred:
+            return True
+        pred_tokens = nltk.word_tokenize(pred)
+        pred_pos_tags: typing.Iterable[typing.Tuple[str, str]] = nltk.pos_tag(
+            pred_tokens
+        )
+        pred_verb: typing.Optional[str] = None
+        for token, pos in pred_pos_tags:
+            if pos.startswith("VB"):
+                pred_verb = token
+                break
+
+        if pred_verb is None:
+            pred_verb = pred_tokens[0]
+
+        if pred_verb.lower() in true:
+            return True
+        return False
+
+
 @dataclasses.dataclass
-class VanDerAaDocument(base.DocumentBase, base.HasMentions["VanDerAaMention"]):
+class VanDerAaDocument(base.DocumentBase):
     name: str
     sentences: typing.List[str]
     constraints: typing.List["VanDerAaConstraint"]
+    mentions: typing.List[VanDerAaMention]
 
     def __add__(self, other: "VanDerAaDocument"):
         assert self.id == other.id
@@ -52,28 +91,24 @@ class VanDerAaDocument(base.DocumentBase, base.HasMentions["VanDerAaMention"]):
         constraints = []
         if "constraints" not in clear:
             constraints = [c.copy() for c in self.constraints]
+        mentions = []
+        if "mentions" not in clear:
+            mentions = [c.copy() for c in self.mentions]
         return VanDerAaDocument(
             id=self.id,
             text=self.text,
             name=self.name,
             constraints=constraints,
             sentences=self.sentences,
+            mentions=mentions,
         )
-
-
-@dataclasses.dataclass(eq=True, frozen=True)
-class VanDerAaMention(base.SupportsPrettyDump["VanDerAaDocument"]):
-    text: str
-
-    def pretty_dump(self, document: TDocument) -> str:
-        return self.text
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
 class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
     type: str
-    head: str
-    tail: typing.Optional[str]
+    head: VanDerAaMention
+    tail: typing.Optional[VanDerAaMention]
     negative: bool
     sentence_id: int
 
@@ -101,50 +136,14 @@ class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
             slots += 1
         return slots
 
-    @staticmethod
-    def action_match(pred: typing.Optional[str], true: typing.Optional[str]) -> bool:
-        if pred == true:
-            return True
-        if pred is None:
-            return False
-        if true is None:
-            return False
-
-        pred = pred.lower()
-        true = true.lower()
-
-        true_verb = true.split(" ")[0]
-        if true_verb.lower() in pred:
-            return True
-        pred_tokens = nltk.word_tokenize(pred)
-        pred_pos_tags: typing.Iterable[typing.Tuple[str, str]] = nltk.pos_tag(
-            pred_tokens
-        )
-        pred_verb: typing.Optional[str] = None
-        for token, pos in pred_pos_tags:
-            if pos.startswith("VB"):
-                pred_verb = token
-                break
-
-        if pred_verb is None:
-            pred_verb = pred_tokens[0]
-            # print(
-            #     f"Expected action {pred} to have a verb in it, but nltk found none in "
-            #     f"{pred_pos_tags}, guessing first one, which is '{pred_verb}'."
-            # )
-
-        if pred_verb.lower() in true:
-            return True
-        return False
-
     def correct_slots(self, true: "VanDerAaConstraint") -> int:
         res = 0
         if self.type.lower() == true.type.lower():
             res += 1
-        if VanDerAaConstraint.action_match(self.head, true.head):
+        if true.head.match(self.head):
             res += 1
         if true.tail is not None:
-            if VanDerAaConstraint.action_match(self.tail, true.tail):
+            if true.tail.match(self.tail):
                 res += 1
         if self.negative and true.negative:
             res += 1
@@ -187,6 +186,7 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                             name=doc_id,
                             constraints=[],
                             sentences=[],
+                            mentions=[],
                         )
                     document = documents[doc_id]
 
@@ -195,6 +195,13 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
 
                     document.sentences.append(text)
                     document.constraints.extend(constraints)
+
+                    for c in constraints:
+                        if c.head not in document.mentions and c.head is not None:
+                            document.mentions.append(c.head)
+                        if c.tail not in document.mentions and c.tail is not None:
+                            document.mentions.append(c.tail)
+
                     document.text += f"\n{text}"
 
         return list(documents.values())
@@ -217,8 +224,11 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                 # no constraint given
                 continue
 
+            constraint_head = VanDerAaMention(text=constraint_head)
             if constraint_tail == "":
                 constraint_tail = None
+            else:
+                constraint_tail = VanDerAaMention(text=constraint_tail)
             constraints.append(
                 VanDerAaConstraint(
                     type=constraint_type.strip().lower(),
