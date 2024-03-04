@@ -353,13 +353,13 @@ def _f1_stats(
             "ok",
         )
 
-        if verbose:
+        if verbose and (len(non_ok) > 0 or len(missing) > 0):
             print_sets(
                 t,
                 {
                     "true": true,
-                    # "pred": pred,
-                    "ok": ok,
+                    "pred": pred,
+                    # "ok": ok,
                     "non-ok": non_ok,
                     "missing": missing,
                 },

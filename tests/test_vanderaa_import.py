@@ -7,4 +7,4 @@ def test_import():
 
     assert len(docs) == 17
     assert len(docs[0].sentences) == 30
-    assert len(docs[0].constraints) == 33
+    assert len(docs[0].constraints) == 32

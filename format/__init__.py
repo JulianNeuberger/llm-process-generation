@@ -5,6 +5,7 @@ from format.references import PetReferencesFormattingStrategy
 from format.listing import (
     VanDerAaRelationListingFormattingStrategy,
     QuishpiMentionListingFormattingStrategy,
+    IterativeQuishpiMentionListingFormattingStrategy,
     PetMentionListingFormattingStrategy,
     PetActivityListingFormattingStrategy,
     PetDataListingFormattingStrategy,
