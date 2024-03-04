@@ -3,17 +3,12 @@ import typing
 
 import data
 from format import base, common, tags
-from format.base import TDocument
 
 
 class VanDerAaMentionListingFormattingStrategy(
     base.BaseFormattingStrategy[data.VanDerAaDocument]
 ):
-    def __init__(
-        self,
-        steps: typing.List[str],
-            prompt: str = None
-    ):
+    def __init__(self, steps: typing.List[str], prompt: str = None):
         super().__init__(steps)
         if prompt is None:
             prompt = "van-der-aa/md/default.txt"
@@ -21,21 +16,27 @@ class VanDerAaMentionListingFormattingStrategy(
 
     @property
     def args(self):
-        return {
-            "prompt": self._prompt
-        }
+        return {"prompt": self._prompt}
 
     def description(self) -> str:
         return common.load_prompt_from_file(self._prompt)
 
     def output(self, document: data.VanDerAaDocument) -> str:
+        return "\n".join([m.text for m in document.mentions])
 
+    def input(self, document: data.VanDerAaDocument) -> str:
+        return document.text
 
-    def input(self, document: TDocument) -> str:
-        pass
-
-    def parse(self, document: TDocument, string: str) -> TDocument:
-        pass
+    def parse(
+        self, document: data.VanDerAaDocument, string: str
+    ) -> data.VanDerAaDocument:
+        document = document.copy(clear=["mentions"])
+        for mention_text in string.splitlines(keepends=False):
+            mention_text = mention_text.strip()
+            if mention_text == "":
+                continue
+            document.mentions.append(data.VanDerAaMention(text=mention_text))
+        return document
 
 
 class VanDerAaRelationListingFormattingStrategy(
@@ -88,9 +89,9 @@ class VanDerAaRelationListingFormattingStrategy(
         for c in document.constraints:
             if c.sentence_id != sentence_id:
                 continue
-            actions.add(c.head)
+            actions.add(c.head.text)
             if c.tail is not None:
-                actions.add(c.tail)
+                actions.add(c.tail.text)
         return "\n".join(actions)
 
     def output(self, document: data.VanDerAaDocument) -> str:
@@ -135,8 +136,11 @@ class VanDerAaRelationListingFormattingStrategy(
             if self._separate_tasks:
                 if len(split_line) == 4:
                     negative, c_type, c_head, c_tail = split_line
+                    c_head = data.VanDerAaMention(text=c_head)
+                    c_tail = data.VanDerAaMention(text=c_tail)
                 elif len(split_line) == 3:
                     negative, c_type, c_head = split_line
+                    c_head = data.VanDerAaMention(text=c_head)
                     c_tail = None
                 else:
                     print(
@@ -146,10 +150,14 @@ class VanDerAaRelationListingFormattingStrategy(
             else:
                 if len(split_line) == 5:
                     current_sentence_id, negative, c_type, c_head, c_tail = split_line
+                    c_head = data.VanDerAaMention(text=c_head)
                     if c_tail == "":
                         c_tail = None
+                    else:
+                        c_tail = data.VanDerAaMention(text=c_tail)
                 elif len(split_line) == 4:
                     current_sentence_id, negative, c_type, c_head = split_line
+                    c_head = data.VanDerAaMention(text=c_head)
                     c_tail = None
                 else:
                     print(
@@ -180,6 +188,7 @@ class VanDerAaRelationListingFormattingStrategy(
             text=document.text,
             constraints=constraints,
             sentences=document.sentences,
+            mentions=document.mentions,
         )
 
 
