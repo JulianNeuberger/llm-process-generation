@@ -1,5 +1,4 @@
 import datetime
-import random
 
 import nltk
 
@@ -18,7 +17,7 @@ if __name__ == "__main__":
             nltk.download("punkt")
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/van-der-aa-re/{date_formatted}.json"
+        storage = f"res/answers/van-der-aa-md/{date_formatted}.json"
         # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
 
         num_shots = 0
@@ -26,10 +25,9 @@ if __name__ == "__main__":
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         # formatter = format.PetTagFormattingStrategy()
-        formatter = format.VanDerAaRelationListingFormattingStrategy(
-            steps=["constraints"],
-            separate_tasks=True,
-            prompt_path="van-der-aa/re/step-wise.txt",
+        formatter = format.VanDerAaMentionListingFormattingStrategy(
+            steps=["mentions"],
+            prompt="van-der-aa/md/default.txt",
         )
         importer = data.VanDerAaImporter("res/data/van-der-aa/")
 

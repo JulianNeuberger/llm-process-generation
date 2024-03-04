@@ -287,6 +287,8 @@ def _tag(
     if type(e) == data.PetEntity:
         assert type(document) == data.PetDocument
         return e.get_tag(document)
+    if type(e) == data.VanDerAaMention:
+        return "action"
     raise AssertionError(f"Unknown type {type(e)}")
 
 
