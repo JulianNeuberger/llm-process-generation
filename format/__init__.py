@@ -18,4 +18,5 @@ from format.listing import (
 )
 from format.references import PetReferencesFormattingStrategy
 from format.tags import PetTagFormattingStrategy
-from format.yamlify import PetYamlFormattingStrategy
+from format.yamlify import PetEfficientYamlFormattingStrategy, PetYamlFormattingStrategy
+from format.jsonify import PetJsonifyFormattingStrategy
