@@ -10,8 +10,19 @@ from data.pet import (
     PetDictExporter as PetDictExporter,
     PetJsonExporter as PetJsonExporter,
 )
-from data.vanderaa import VanDerAaDocument, VanDerAaConstraint, VanDerAaImporter
-from data.base import BaseImporter, DocumentBase, SupportsPrettyDump, HasType
+from data.vanderaa import (
+    VanDerAaDocument,
+    VanDerAaConstraint,
+    VanDerAaImporter,
+    VanDerAaMention,
+)
+from data.base import (
+    BaseImporter,
+    DocumentBase,
+    SupportsPrettyDump,
+    HasType,
+    HasCustomMatch,
+)
 from data.quishpi import (
     QuishpiMention,
     QuishpiRelation,

@@ -1,13 +1,9 @@
 from format.base import BaseFormattingStrategy
-from format.tags import PetTagFormattingStrategy
-from format.yamlify import PetYamlFormattingStrategy
-from format.references import PetReferencesFormattingStrategy
 from format.listing import (
-    VanDerAaListingFormattingStrategy,
-    VanDerAaStepwiseListingFormattingStrategy,
-    QuishpiListingFormattingStrategy,
+    VanDerAaRelationListingFormattingStrategy,
+    QuishpiMentionListingFormattingStrategy,
+    IterativeQuishpiMentionListingFormattingStrategy,
     PetMentionListingFormattingStrategy,
-    QuishpiREListingFormattingStrategy,
     PetActivityListingFormattingStrategy,
     PetDataListingFormattingStrategy,
     PetXorListingFormattingStrategy,
@@ -15,4 +11,11 @@ from format.listing import (
     PetConditionListingFormattingStrategy,
     PetActorListingFormattingStrategy,
     PetAndListingFormattingStrategy,
+    PetEntityListingFormattingStrategy,
+    PetRelationListingFormattingStrategy,
+    IterativePetMentionListingFormattingStrategy,
+    VanDerAaMentionListingFormattingStrategy,
 )
+from format.references import PetReferencesFormattingStrategy
+from format.tags import PetTagFormattingStrategy
+from format.yamlify import PetYamlFormattingStrategy

@@ -1,0 +1,22 @@
+# Task Description
+
+You are a business process modelling expert, tasked with finding actions in textual business process descriptions. These process descriptions are natural language texts that define how a business process has to be executed, with actions that have to be taken
+
+# Definitions
+
+- **action**: the task a participant of the process has to execute, a single verb that defines a unit of work. Should not include the object the work is executed on / with, nor the participant that executes the action, nor additional specifications, like adjectives or adverbs. Information about the process itself, such as "the process starts" do not constitute an action and should not be extracted.
+
+# Format
+
+Please extract all mentions in the given raw text in the following format:
+Print one mention per line, where you separate the mentions type and its text by tabs:
+
+action	<text>
+
+# Requirements
+
+Rule 1. Actions are just the verb, nothing more, i.e., no auxiliary words, nor specifications on how an action is performed, who performs it, or what data is used during performing it.
+
+# Notes
+
+Please return raw text, do not use any code formatting. Do not change the text of extracted actions, keep it exactly the same as it appears in text.

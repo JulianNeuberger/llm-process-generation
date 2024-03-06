@@ -1,5 +1,6 @@
 import dataclasses
 import json
+import sys
 import typing
 
 import data
@@ -79,8 +80,12 @@ def parse_experiment(
         predicted_doc: typing.Optional[data.DocumentBase] = None
         input_doc = documents_by_id[result.original_id]
 
-        for formatter_class_name, steps, answer, prompt in zip(
-            result.formatters, result.steps, result.answers, result.prompts
+        for formatter_class_name, steps, answer, prompt, args in zip(
+            result.formatters,
+            result.steps,
+            result.answers,
+            result.prompts,
+            result.formatter_args,
         ):
             if overall_steps is None:
                 overall_steps = steps
@@ -88,7 +93,7 @@ def parse_experiment(
             formatter_class: typing.Type[format.BaseFormattingStrategy] = getattr(
                 format, formatter_class_name
             )
-            formatter = formatter_class(steps)
+            formatter = formatter_class(steps, **args)
             partial_predicted_doc = formatter.parse(input_doc, answer)
             if predicted_doc is None:
                 predicted_doc = partial_predicted_doc
@@ -114,7 +119,7 @@ def parse_experiment(
             predicted_documents=preds,
             ground_truth_documents=truths,
             verbose=verbose,
-            calculate_only_tags=["Actor", "Acitvity Data"],
+            calculate_only_tags=["Actor", "Activity Data"],
             print_only_tags=print_only_tags,
         )
         stats["entities"] = stats_by_tag
@@ -294,12 +299,26 @@ def print_experiment_results(
 
 
 def main():
+    importers = {
+        "pet": data.PetImporter("res/data/pet/all.new.jsonl"),
+        "quishpi-re": data.VanDerAaImporter("res/data/quishpi/csv"),
+        "quishpi-md": data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
+        "van-der-aa": data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
+    }
+
+    answer_file = f"res/answers/van-der-aa-md/2024-03-04_10-25-31.json"
+    importer = None
+    for k, v in importers.items():
+        if k in answer_file:
+            importer = v
+            break
+    assert importer is not None
+
     print_experiment_results(
-        f"res/answers/quishpi-md/2024-03-01_08-53-09.json",
-        # f"res/answers/pet/2024-02-29_15-11-39.json",
-        data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
-        # only_document_ids=["doc-6.1"],
-        # print_only_tags=["activity data", "actor", "activity"],
+        answer_file,
+        importer,
+        # only_document_ids=["1-1_bicycle_manufacturing"],
+        print_only_tags=["action"],
         verbose=True,
     )
 

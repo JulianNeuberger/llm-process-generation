@@ -11,57 +11,45 @@ from langchain_core import prompts
 import format
 from data import base
 from experiments import usage, iterative, model
+from format.common import load_prompt_from_file
 
 TDocument = typing.TypeVar("TDocument", bound=base.DocumentBase)
 
 
 def get_prompt(
-    input_document: TDocument,
     formatter: format.BaseFormattingStrategy[TDocument],
     example_docs: typing.Iterable[TDocument],
-) -> str:
+) -> prompts.ChatPromptTemplate:
     examples = [
         {
             "input": formatter.input(d),
-            "steps": formatter.steps,
+            "steps": ", ".join(formatter.steps),
             "output": formatter.output(d),
         }
         for d in example_docs
     ]
 
-    example_template = """User: Please retrieve all {steps} from the following text: 
-        Text: {input}
-        Elements: {steps}
+    example_template = load_prompt_from_file("example-template.txt")
+    user_prompt = load_prompt_from_file("user-prompt.txt")
 
-        AI: {output}"""
-
-    example_prompt = prompts.PromptTemplate(
-        input_variables=["input", "output", "steps"],
-        template=example_template,
+    example_prompt = prompts.ChatPromptTemplate.from_messages(
+        [("human", user_prompt), ("ai", example_template)]
     )
 
-    system_message = formatter.description()
-
-    user_prompt = (
-        "User: Please retrieve all {steps} from the following text: \n"
-        "Text: {input}\n"
-        "Elements: {steps}\n"
-        "AI:"
+    system_message = prompts.SystemMessagePromptTemplate.from_template(
+        formatter.description()
     )
 
-    few_shot_prompt = prompts.FewShotPromptTemplate(
-        input_variables=["input", "steps"],
-        example_separator="\n\n",
+    few_shot_prompt = prompts.FewShotChatMessagePromptTemplate(
         example_prompt=example_prompt,
         examples=examples,
-        prefix=system_message,
-        suffix=user_prompt,
     )
-    formatted_input_document = formatter.input(input_document)
-    return few_shot_prompt.format(
-        input=formatted_input_document,
-        steps=", ".join(formatter.steps),
+
+    chat_prompt = prompts.ChatPromptTemplate.from_messages(
+        [system_message, few_shot_prompt, user_prompt]
     )
+
+    return chat_prompt
 
 
 def run_single_document_prompt(
@@ -79,8 +67,19 @@ def run_single_document_prompt(
         assert num_shots <= len(example_docs)
         example_docs = random.sample(example_docs, num_shots)
 
-    prompt_text = get_prompt(current_prediction, formatter, example_docs)
-    num_input_tokens = chat_model.get_num_tokens(prompt_text)
+    prompt = get_prompt(formatter, example_docs)
+
+    formatted_input_document = formatter.input(current_prediction)
+
+    prompt_as_text = prompt.format(
+        input=formatted_input_document,
+        steps=", ".join(formatter.steps),
+    )
+    prompt_as_messages = prompt.format_prompt(
+        input=formatted_input_document,
+        steps=", ".join(formatter.steps),
+    )
+    num_input_tokens = chat_model.get_num_tokens(prompt_as_text)
 
     if dry_run:
         print(f"Dry run for request with an estimated {num_input_tokens} tokens.")
@@ -91,7 +90,7 @@ def run_single_document_prompt(
     else:
         print(f"Making request with an estimated {num_input_tokens} tokens.")
         with langchain_community.callbacks.get_openai_callback() as cb:
-            res = chat_model.invoke(prompt_text)
+            res = chat_model.invoke(prompt_as_messages)
             num_input_tokens = cb.prompt_tokens
             num_output_tokens = cb.completion_tokens
             total_costs = usage.get_cost_for_tokens(
@@ -102,7 +101,7 @@ def run_single_document_prompt(
         answer = res.content.__str__()
 
     return model.PromptResult(
-        prompts=[prompt_text],
+        prompts=[prompt_as_text],
         answers=[answer],
         formatters=[formatter.__class__.__name__],
         steps=[formatter.steps],
@@ -110,6 +109,7 @@ def run_single_document_prompt(
         input_tokens=num_input_tokens,
         output_tokens=num_output_tokens,
         total_costs=total_costs,
+        formatter_args=[formatter.args],
     )
 
 

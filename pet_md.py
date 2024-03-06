@@ -17,10 +17,10 @@ if __name__ == "__main__":
             nltk.download("punkt")
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        # storage = f"res/answers/pet/{date_formatted}.json"
-        storage = f"res/answers/pet/2024-02-29_16-41-29.json"
+        storage = f"res/answers/pet-md/{date_formatted}.json"
+        # storage = f"res/answers/pet-md/2024-03-02_16-26-51.json"
 
-        num_shots = 1
+        num_shots = 3
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
@@ -29,15 +29,74 @@ if __name__ == "__main__":
         # folds = [{"train": train_docs, "test": ["doc-6.1"]}]
         folds = sampling.generate_folds(importer.do_import(), num_shots)
 
+        # formatters = [
+        #     format.PetActivityListingFormattingStrategy(["mentions"]),
+        #     format.PetActorListingFormattingStrategy(["mentions"]),
+        #     format.PetDataListingFormattingStrategy(["mentions"]),
+        #     format.PetFurtherListingFormattingStrategy(["mentions"]),
+        #     format.PetXorListingFormattingStrategy(["mentions"]),
+        #     format.PetConditionListingFormattingStrategy(["mentions"]),
+        #     format.PetAndListingFormattingStrategy(["mentions"]),
+        # ]
+
         formatters = [
-            format.PetActivityListingFormattingStrategy(["mentions"]),
-            format.PetActorListingFormattingStrategy(["mentions"]),
-            format.PetDataListingFormattingStrategy(["mentions"]),
-            format.PetFurtherListingFormattingStrategy(["mentions"]),
-            format.PetXorListingFormattingStrategy(["mentions"]),
-            format.PetConditionListingFormattingStrategy(["mentions"]),
-            format.PetAndListingFormattingStrategy(["mentions"]),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"], "activity", context_tags=[]
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"], "actor", context_tags=["activity"]
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"], "activity data", context_tags=["activity", "actor"]
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"],
+                "further specification",
+                context_tags=["activity", "actor", "activity data"],
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"],
+                "xor gateway",
+                context_tags=[
+                    "activity",
+                    "actor",
+                    "activity data",
+                    "further specification",
+                ],
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"],
+                "condition specification",
+                context_tags=[
+                    "activity",
+                    "actor",
+                    "activity data",
+                    "further specification",
+                    "xor gateway",
+                ],
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"],
+                "and gateway",
+                context_tags=[
+                    "activity",
+                    "actor",
+                    "activity data",
+                    "further specification",
+                    "xor gateway",
+                    "condition specification",
+                ],
+            ),
         ]
+
+        # formatters = [
+        #     format.PetMentionListingFormattingStrategy(
+        #         steps=["mentions"],
+        #         only_tags=None,
+        #         generate_descriptions=False,
+        #         prompt="pet/md/long_prompt_stepwise.txt",
+        #     )
+        # ]
 
         print("Using folds:")
         print("------------")

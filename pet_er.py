@@ -17,24 +17,18 @@ if __name__ == "__main__":
             nltk.download("punkt")
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/quishpi-re/{date_formatted}.json"
-        # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
+        storage = f"res/answers/pet-er/{date_formatted}.json"
+        # storage = f"res/answers/pet-er/2024-03-01_10-11-43.json"
 
-        num_shots = 3
+        num_shots = 0
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
-        # formatter = format.PetTagFormattingStrategy()
-        formatter = format.VanDerAaRelationListingFormattingStrategy(
-            steps=["constraints"],
-            separate_tasks=True,
-            prompt_path="quishpi/re/hand-crafted-task-separation-examples.txt",
-        )
-        importer = data.VanDerAaImporter("res/data/quishpi/csv")
+        importer = data.PetImporter("res/data/pet/all.new.jsonl")
+        # folds = [{"train": [], "test": ["doc-6.1"]}]
+        folds = sampling.generate_folds(importer.do_import(), num_shots)
 
-        documents = importer.do_import()
-        print(f"Dataset consists of {len(documents)} documents.")
-        folds = sampling.generate_folds(documents, num_shots)[0:5]
+        formatters = [format.PetEntityListingFormattingStrategy(steps=["entities"])]
 
         print("Using folds:")
         print("------------")
@@ -44,7 +38,7 @@ if __name__ == "__main__":
 
         experiments.experiment(
             importer=importer,
-            formatters=[formatter],
+            formatters=formatters,
             model_name=model_name,
             storage=storage,
             num_shots=num_shots,
@@ -52,6 +46,8 @@ if __name__ == "__main__":
             folds=folds,
         )
 
-        experiments.print_experiment_results(storage, importer, verbose=True)
+        experiments.print_experiment_results(
+            storage, importer, verbose=True, print_only_tags=["Activity Data", "Actor"]
+        )
 
     main()

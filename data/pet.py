@@ -1,3 +1,4 @@
+import collections
 import dataclasses
 import json
 import typing
@@ -86,8 +87,10 @@ class PetDocument(
         )
 
 
-@dataclasses.dataclass(frozen=True, eq=True)
-class PetMention(base.HasType, base.SupportsPrettyDump[PetDocument]):
+@dataclasses.dataclass(frozen=True)
+class PetMention(
+    base.HasType, base.HasCustomMatch, base.SupportsPrettyDump[PetDocument]
+):
     token_document_indices: typing.Tuple[int, ...]
 
     def copy(self) -> "PetMention":
@@ -102,8 +105,30 @@ class PetMention(base.HasType, base.SupportsPrettyDump[PetDocument]):
     def pretty_dump(self, document: "PetDocument") -> str:
         return f"{self.type}, '{self.text(document)}', {self.token_document_indices}"
 
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, PetMention):
+            return False
+        if self.type.lower() != o.type.lower():
+            return False
+        return sorted(self.token_document_indices) == sorted(o.token_document_indices)
 
-@dataclasses.dataclass(frozen=True, eq=True)
+    def __hash__(self) -> int:
+        element_counts = collections.Counter(self.token_document_indices)
+        cur = hash(frozenset(element_counts.items()))
+        cur += hash(self.type.lower())
+        return cur
+
+    def match(self, o: object):
+        if not isinstance(o, PetMention):
+            return False
+        if self.type.lower() != o.type.lower():
+            return False
+        if any([i in o.token_document_indices for i in self.token_document_indices]):
+            return True
+        return False
+
+
+@dataclasses.dataclass(frozen=True)
 class PetEntity(base.SupportsPrettyDump[PetDocument]):
     mention_indices: typing.Tuple[int, ...]
 
@@ -117,9 +142,22 @@ class PetEntity(base.SupportsPrettyDump[PetDocument]):
         return list(tags)[0]
 
     def pretty_dump(self, document: PetDocument) -> str:
-        return "\n".join(
-            [document.mentions[i].pretty_dump(document) for i in self.mention_indices]
-        )
+        formatted_mentions = [
+            f"{i}: '{m.text(document)}' ({m.token_document_indices})"
+            for i, m in [(i, document.mentions[i]) for i in self.mention_indices]
+        ]
+        return ", ".join(formatted_mentions)
+
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, PetEntity):
+            return False
+        if len(self.mention_indices) != len(o.mention_indices):
+            return False
+        return sorted(self.mention_indices) == sorted(o.mention_indices)
+
+    def __hash__(self):
+        element_counts = collections.Counter(self.mention_indices)
+        return hash(frozenset(element_counts.items()))
 
 
 @dataclasses.dataclass(frozen=True, eq=True)

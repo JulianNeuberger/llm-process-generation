@@ -27,7 +27,20 @@ if __name__ == "__main__":
         # folds = [{"train": [], "test": ["20818304_rev1"]}]
         folds = sampling.generate_folds(importer.do_import(), num_shots)
 
-        formatters = [format.QuishpiListingFormattingStrategy(["mentions"])]
+        formatters = [
+            format.QuishpiMentionListingFormattingStrategy(
+                ["mentions"], prompt="quishpi/md/long-no-explain.txt"
+            )
+        ]
+
+        # formatters = [
+        # format.IterativeQuishpiMentionListingFormattingStrategy(
+        #     ["mentions"], tag="condition", context_tags=[]
+        # ),
+        # format.IterativeQuishpiMentionListingFormattingStrategy(
+        #     ["mentions"], tag="action", context_tags=[]
+        # ),
+        # ]
 
         print("Using folds:")
         print("------------")

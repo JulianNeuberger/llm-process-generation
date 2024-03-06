@@ -135,12 +135,13 @@ def entity_f1_stats(
     print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
+    calculate_only_tags = [t.lower() for t in calculate_only_tags]
     for d in predicted_documents:
         d.entities = [
             e
             for e in d.entities
             if len(e.mention_indices) >= min_num_mentions
-            and e.get_tag(d) in calculate_only_tags
+            and e.get_tag(d).lower() in calculate_only_tags
         ]
 
     ground_truth_documents = [d.copy([]) for d in ground_truth_documents]
@@ -195,6 +196,9 @@ def constraint_slot_filling_stats(
     for score in range(4, -1, -1):
         for p in pred:
             for t in true:
+                if p.sentence_id != t.sentence_id:
+                    continue
+
                 num_correct_slots = p.correct_slots(t)
                 if num_correct_slots != score:
                     continue
@@ -283,6 +287,8 @@ def _tag(
     if type(e) == data.PetEntity:
         assert type(document) == data.PetDocument
         return e.get_tag(document)
+    if type(e) == data.VanDerAaMention:
+        return "action"
     raise AssertionError(f"Unknown type {type(e)}")
 
 
@@ -302,26 +308,32 @@ def _f1_stats(
     for p, t in zip(predicted_documents, ground_truth_documents):
         true_attribute = getattr(t, attribute)
         pred_attribute = getattr(p, attribute)
-        true = set(true_attribute)
-        pred = set(pred_attribute)
-        ok = true.intersection(pred)
-        non_ok = pred.difference(true)
-        missing = true.difference(pred)
 
-        if len(true) != len(true_attribute):
-            # contains identical values, need to use lists
-            true = list(true_attribute)
-            pred = list(pred_attribute)
-            true_candidates = list(true_attribute)
-            ok = []
-            non_ok = []
-            for cur in pred:
-                if cur in true_candidates:
-                    true_candidates.remove(cur)
-                    ok.append(cur)
-                    continue
-                non_ok.append(cur)
-            missing = true_candidates
+        true = list(true_attribute)
+        pred = list(pred_attribute)
+        true_candidates = list(true_attribute)
+        ok = []
+        non_ok = []
+        for cur in pred:
+            match: typing.Optional[data.DocumentBase] = None
+            if isinstance(cur, data.HasCustomMatch):
+                for candidate in true_candidates:
+                    if cur.match(candidate):
+                        match = candidate
+                        break
+            else:
+                try:
+                    match_index = true_candidates.index(cur)
+                    match = true_candidates[match_index]
+                except ValueError:
+                    pass
+
+            if match is not None:
+                true_candidates.remove(match)
+                ok.append(cur)
+                continue
+            non_ok.append(cur)
+        missing = true_candidates
 
         _add_to_stats_by_tag(
             stats_by_tag,
@@ -343,13 +355,13 @@ def _f1_stats(
             "ok",
         )
 
-        if verbose:
+        if verbose and (len(non_ok) > 0 or len(missing) > 0):
             print_sets(
                 t,
                 {
                     "true": true,
                     "pred": pred,
-                    "ok": ok,
+                    # "ok": ok,
                     "non-ok": non_ok,
                     "missing": missing,
                 },

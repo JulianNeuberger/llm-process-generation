@@ -7,7 +7,9 @@ from data import base
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
-class QuishpiMention(base.SupportsPrettyDump["QuishpiDocument"], base.HasType):
+class QuishpiMention(
+    base.SupportsPrettyDump["QuishpiDocument"], base.HasType  # , base.HasCustomMatch
+):
     text: str
 
     def pretty_dump(self, document: "QuishpiDocument") -> str:
@@ -15,6 +17,16 @@ class QuishpiMention(base.SupportsPrettyDump["QuishpiDocument"], base.HasType):
 
     def copy(self):
         return QuishpiMention(type=self.type, text=self.text)
+
+    def match(self, other: object) -> bool:
+        if not isinstance(other, QuishpiMention):
+            return False
+        if self.type != other.type:
+            return False
+        self_tokens = self.text.split(" ")
+        other_tokens = other.text.split(" ")
+
+        return any([ot in self_tokens for ot in other_tokens])
 
 
 @dataclasses.dataclass(frozen=True, eq=True)

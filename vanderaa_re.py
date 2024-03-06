@@ -17,10 +17,10 @@ if __name__ == "__main__":
             nltk.download("punkt")
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/quishpi-re/{date_formatted}.json"
+        storage = f"res/answers/van-der-aa-re/{date_formatted}.json"
         # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
 
-        num_shots = 3
+        num_shots = 0
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
@@ -28,13 +28,13 @@ if __name__ == "__main__":
         formatter = format.VanDerAaRelationListingFormattingStrategy(
             steps=["constraints"],
             separate_tasks=True,
-            prompt_path="quishpi/re/hand-crafted-task-separation-examples.txt",
+            prompt_path="van-der-aa/re/step-wise.txt",
         )
-        importer = data.VanDerAaImporter("res/data/quishpi/csv")
+        importer = data.VanDerAaImporter("res/data/van-der-aa/")
 
         documents = importer.do_import()
         print(f"Dataset consists of {len(documents)} documents.")
-        folds = sampling.generate_folds(documents, num_shots)[0:5]
+        folds = sampling.generate_folds(documents, num_shots)
 
         print("Using folds:")
         print("------------")

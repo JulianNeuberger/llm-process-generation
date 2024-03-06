@@ -6,6 +6,7 @@ import typing
 import nltk
 
 from data import base
+from data.base import TDocument
 
 
 def excel_col_to_index(col: str):
@@ -24,68 +25,22 @@ CONSTRAINT_2_COL = excel_col_to_index("L")
 CONSTRAINT_3_COL = excel_col_to_index("O")
 
 
-@dataclasses.dataclass
-class VanDerAaDocument(base.DocumentBase):
-    name: str
-    constraints: typing.List["VanDerAaConstraint"]
-
-    def __add__(self, other: "VanDerAaDocument"):
-        assert self.id == other.id
-        new_constraints = [c for c in other.constraints if c not in self.constraints]
-        return VanDerAaDocument(
-            id=self.id,
-            text=self.text,
-            name=self.name,
-            constraints=self.constraints + new_constraints,
-        )
-
-    def copy(self, clear: typing.List[str]):
-        constraints = []
-        if "constraints" not in clear:
-            constraints = [c.copy() for c in self.constraints]
-        return VanDerAaDocument(
-            id=self.id, text=self.text, name=self.name, constraints=constraints
-        )
-
-
 @dataclasses.dataclass(eq=True, frozen=True)
-class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
-    type: str
-    head: str
-    tail: typing.Optional[str]
-    negative: bool
+class VanDerAaMention(base.SupportsPrettyDump["VanDerAaDocument"], base.HasCustomMatch):
+    text: str
 
-    def pretty_dump(self, document: VanDerAaDocument) -> str:
-        pretty = f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head}'
-        if self.tail:
-            pretty = f'{pretty}\t{self.tail}'
-        return pretty
+    def pretty_dump(self, document: TDocument) -> str:
+        return self.text
 
     def copy(self):
-        return VanDerAaConstraint(
-            type=self.type, negative=self.negative, head=self.head, tail=self.tail
-        )
+        return VanDerAaMention(text=self.text)
 
-    @property
-    def num_slots(self):
-        slots = 2
-        if self.tail is not None:
-            slots += 1
-        if self.negative:
-            slots += 1
-        return slots
-
-    @staticmethod
-    def action_match(pred: typing.Optional[str], true: typing.Optional[str]) -> bool:
-        if pred == true:
-            return True
-        if pred is None:
-            return False
-        if true is None:
+    def match(self, other: object) -> bool:
+        if not isinstance(other, VanDerAaMention):
             return False
 
-        pred = pred.lower()
-        true = true.lower()
+        pred = other.text.lower()
+        true = self.text.lower()
 
         true_verb = true.split(" ")[0]
         if true_verb.lower() in pred:
@@ -102,23 +57,93 @@ class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
 
         if pred_verb is None:
             pred_verb = pred_tokens[0]
-            # print(
-            #     f"Expected action {pred} to have a verb in it, but nltk found none in "
-            #     f"{pred_pos_tags}, guessing first one, which is '{pred_verb}'."
-            # )
 
         if pred_verb.lower() in true:
             return True
         return False
 
+
+@dataclasses.dataclass
+class VanDerAaDocument(base.DocumentBase):
+    name: str
+    sentences: typing.List[str]
+    constraints: typing.List["VanDerAaConstraint"]
+    mentions: typing.List[VanDerAaMention]
+
+    def __add__(self, other: "VanDerAaDocument"):
+        assert self.id == other.id
+        assert len(self.sentences) == len(other.sentences)
+        assert self.sentences == other.sentences
+
+        new_constraints = [c for c in other.constraints if c not in self.constraints]
+        new_mentions = [m for m in other.mentions if m not in self.mentions]
+
+        return VanDerAaDocument(
+            id=self.id,
+            text=self.text,
+            name=self.name,
+            sentences=self.sentences,
+            constraints=self.constraints + new_constraints,
+            mentions=self.mentions + new_mentions,
+        )
+
+    def copy(self, clear: typing.List[str]):
+        constraints = []
+        if "constraints" not in clear:
+            constraints = [c.copy() for c in self.constraints]
+        mentions = []
+        if "mentions" not in clear:
+            mentions = [c.copy() for c in self.mentions]
+        return VanDerAaDocument(
+            id=self.id,
+            text=self.text,
+            name=self.name,
+            constraints=constraints,
+            sentences=self.sentences,
+            mentions=mentions,
+        )
+
+
+@dataclasses.dataclass(eq=True, frozen=True)
+class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
+    type: str
+    head: VanDerAaMention
+    tail: typing.Optional[VanDerAaMention]
+    negative: bool
+    sentence_id: int
+
+    def pretty_dump(self, document: VanDerAaDocument) -> str:
+        pretty = f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head}'
+        if self.tail:
+            pretty = f"{pretty}\t{self.tail}"
+        return f"s: {self.sentence_id}\t{pretty}"
+
+    def copy(self):
+        return VanDerAaConstraint(
+            type=self.type,
+            negative=self.negative,
+            head=self.head,
+            tail=self.tail,
+            sentence_id=self.sentence_id,
+        )
+
+    @property
+    def num_slots(self):
+        slots = 2
+        if self.tail is not None:
+            slots += 1
+        if self.negative:
+            slots += 1
+        return slots
+
     def correct_slots(self, true: "VanDerAaConstraint") -> int:
         res = 0
         if self.type.lower() == true.type.lower():
             res += 1
-        if VanDerAaConstraint.action_match(self.head, true.head):
+        if true.head.match(self.head):
             res += 1
         if true.tail is not None:
-            if VanDerAaConstraint.action_match(self.tail, true.tail):
+            if true.tail.match(self.tail):
                 res += 1
         if self.negative and true.negative:
             res += 1
@@ -132,7 +157,7 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
         self._file_path = path_to_collection
 
     def do_import(self) -> typing.List[VanDerAaDocument]:
-        documents: typing.List[VanDerAaDocument] = []
+        documents: typing.Dict[str, VanDerAaDocument] = {}
 
         file_paths = [self._file_path]
         if os.path.isdir(self._file_path):
@@ -142,25 +167,50 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
         for file_path in file_paths:
             with open(file_path, "r", encoding="windows-1252") as f:
                 reader = csv.reader(f, delimiter=";")
+                # strip header
                 _ = next(reader)
+
                 for row in reader:
                     file_name = os.path.basename(file_path)
                     file_name, _ = os.path.splitext(file_name)
-                    doc_id = f"{file_name}-{row[ID_COL]}"
-                    doc_name = row[NAME_COL]
+                    doc_id = row[NAME_COL]
                     text = row[TEXT_COL]
-                    constraints = self.parse_constraints(row)
-                    documents.append(
-                        VanDerAaDocument(
-                            id=doc_id, text=text, name=doc_name, constraints=constraints
+
+                    # quishpi uses 1 for all rows and files, this would not be unique...
+                    doc_id = f"{file_name}-{doc_id}"
+
+                    if doc_id not in documents:
+                        documents[doc_id] = VanDerAaDocument(
+                            id=doc_id,
+                            text="",
+                            name=doc_id,
+                            constraints=[],
+                            sentences=[],
+                            mentions=[],
                         )
-                    )
-        return documents
+                    document = documents[doc_id]
+
+                    sentence_index = len(document.sentences)
+                    constraints = self.parse_constraints(row, sentence_index)
+
+                    document.sentences.append(text)
+                    document.constraints.extend(constraints)
+
+                    for c in constraints:
+                        if c.head not in document.mentions and c.head is not None:
+                            document.mentions.append(c.head)
+                        if c.tail not in document.mentions and c.tail is not None:
+                            document.mentions.append(c.tail)
+
+                    document.text += f"\n{text}"
+
+        return list(documents.values())
 
     @staticmethod
     def parse_constraints(
-            row: typing.List,
+        row: typing.List, sentence_index: int
     ) -> typing.List[VanDerAaConstraint]:
+        max_constraints = 3
         num_constraints = int(row[NUM_CONSTRAINTS_COL])
         base_index = CONSTRAINT_1_COL
         constraints: typing.List[VanDerAaConstraint] = []
@@ -171,30 +221,41 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
             constraint_negative = row[NEGATIVE_COL].lower().strip() == "true"
 
             if constraint_type.strip() == "":
-                print(
-                    f"Empty constraint in row with id {row[ID_COL]}! "
-                    f"Skipping this constraint, even though we expected one here!"
-                )
+                # no constraint given
                 continue
 
+            constraint_head = VanDerAaMention(text=constraint_head)
             if constraint_tail == "":
                 constraint_tail = None
+            else:
+                constraint_tail = VanDerAaMention(text=constraint_tail)
             constraints.append(
                 VanDerAaConstraint(
                     type=constraint_type.strip().lower(),
                     head=constraint_head,
                     tail=constraint_tail,
                     negative=constraint_negative,
+                    sentence_id=sentence_index,
                 )
+            )
+        if num_constraints != len(constraints):
+            print(
+                f"Mismatch between the given number of constraints ({num_constraints}) "
+                f"and the actual constraints listed ({len(constraints)}). "
+                f"This is not a problem, but indicates the dataset is inconsistent."
             )
         return constraints
 
 
 if __name__ == "__main__":
-    documents = VanDerAaImporter(
-        "../res/data/van-der-aa/datacollection.csv"
-    ).do_import()
-    print(len(documents))
 
-    documents = VanDerAaImporter("../res/data/quishpi/csv").do_import()
-    print(len(documents))
+    def main():
+        documents = VanDerAaImporter(
+            "../res/data/van-der-aa/datacollection.csv"
+        ).do_import()
+        print(len(documents))
+
+        documents = VanDerAaImporter("../res/data/quishpi/csv").do_import()
+        print(len(documents))
+
+    main()
