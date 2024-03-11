@@ -69,7 +69,7 @@ class PetReferencesFormattingStrategy(format.BaseFormattingStrategy[data.PetDocu
     def __init__(self, steps: typing.List[typing.Literal["entities", "relations"]]):
         super().__init__(steps)
         self._input_formatter = format.PetTagFormattingStrategy(include_ids=True)
-        self._output_formatter = format.PetYamlFormattingStrategy(steps=steps)
+        self._output_formatter = format.PetEfficientYamlFormattingStrategy(steps=steps)
 
     def description(self) -> str:
         return prompt

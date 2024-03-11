@@ -1,0 +1,66 @@
+# Mention Types
+
+- **Actor**: a person, department, or similar role that participates actively in the business
+         process, e.g., "the student", "the professor", "the judge", "the clerk". It should
+         only be extracted, if the current sentence describes the actor executing a task.
+         Include the determiner if it is present, e.g. extract "the student" from "First the
+         student studies for their exam". Can also be a pronoun, such as "he", "I", "she".
+
+- **Activity**: an active task or action executed during the business process, e.g.,
+            "examine", "write", "bake", "review". Do not extract, if it is information about
+            the process itself, such as "the process ends", as this is not a task in the process!
+            Can also be an event during the process, that is executed by an external, implicit actor,
+            that is not mentioned in the text, e.g., "placed" in "when an order is placed".
+            Never contains the Actor that executes it, nor the Activity Data that's used during this
+            Activity, is just the verb as in "checked" and not "is checked"!
+
+- **Activity Data**: a physical object, or digital data that is relevant to the process, because
+                 an action produces or uses it, e.g., "the paper", "the report", "the machine part".
+                 Always include the determiner! Can also be a pronoun, like "it", but is always part of
+                 a task description. Is never information about the process itself, as in "the process
+                 ends", here "process" is not Activity Data!
+
+- **Further Specification**: important information about an activity, such as the mean, the manner
+                         of execution, or how an activity is executed. Follows an Activity in the
+                         same sentence, and describes how an Activity (task) is being done.
+
+- **XOR Gateway**: textual representation of a decision in the process, usually triggered by adverbs or
+               conjunctions, e.g., "if", "otherwise", "when"
+
+- **AND Gateway**: textual description of parallel work streams in the process, i.e., simultaneous
+               actions performed, marked by phrases like, e.g., "while", "meanwhile", "at the same time"
+
+- **Condition Specification**: defines the condition of an XOR Gateway path usually directly following the
+                           gateway trigger word, e.g., "it is ready", "the claim is valid",
+                           "temperature is above 180"
+
+# Format
+
+For each mention you detect, write a line in the following format:
+text	type	sentence
+
+- **text**: the text of the mention
+- **type**: the type from the ones listed above
+- **sentence**: integer, that identifies the sentence where the mention text was found in the input. Zero based.
+
+## Format Examples
+
+*Input*:
+
+Sentence 0: the professor grades all student papers .
+Sentence 1: some time passes .
+Sentence 2: then the professor returns the papers .
+
+*Output*:
+
+the professor	Actor	0
+grades	Activity	0
+all student papers	Activity Data	0
+the professor	Actor	2
+returns	Activity	2
+the papers	Activity Data	2
+
+# Notes
+
+Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation.
+Do not use any code formatting.

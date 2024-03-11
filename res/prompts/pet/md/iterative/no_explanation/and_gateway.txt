@@ -20,7 +20,7 @@ For each mention you detect, write a line in the following format:
 
 ## Format Example
 
-while the clerk <activity> reviews </activity> the report for any errors it is <activity> scanned </activity> .
+Sentence 0: while the clerk <activity> reviews </activity> the report for any errors it is <activity> scanned </activity> .
 
 while	AND Gateway	0
 
