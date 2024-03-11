@@ -1,7 +1,14 @@
 import abc
+import dataclasses
 import typing
 
 TDocument = typing.TypeVar("TDocument")
+
+
+@dataclasses.dataclass
+class ParseResult(typing.Generic[TDocument]):
+    document: TDocument
+    num_parse_errors: int
 
 
 class BaseFormattingStrategy(abc.ABC, typing.Generic[TDocument]):
@@ -39,7 +46,7 @@ class BaseFormattingStrategy(abc.ABC, typing.Generic[TDocument]):
         """
         raise NotImplementedError()
 
-    def parse(self, document: TDocument, string: str) -> TDocument:
+    def parse(self, document: TDocument, string: str) -> ParseResult[TDocument]:
         """
         Parses output of LLM, inverse of method output
 

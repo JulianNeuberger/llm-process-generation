@@ -1,12 +1,11 @@
 import dataclasses
 import json
-import sys
 import typing
 
 import data
+import eval
 import experiments
 import format
-import eval
 
 TDocument = typing.TypeVar("TDocument", bound=data.DocumentBase)
 ExperimentStats = typing.Dict[str, typing.Dict[str, eval.Stats]]
@@ -68,13 +67,14 @@ def parse_experiment(
     importer: data.BaseImporter[TDocument],
     print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool,
-) -> ExperimentStats:
+) -> typing.Tuple[int, ExperimentStats]:
     preds: typing.List[TDocument] = []
     truths: typing.List[TDocument] = []
 
     documents = importer.do_import()
     documents_by_id = {d.id: d for d in documents}
 
+    num_parse_errors = 0
     overall_steps: typing.Optional[typing.List[str]] = None
     for result in experiment_result.results:
         predicted_doc: typing.Optional[data.DocumentBase] = None
@@ -94,11 +94,12 @@ def parse_experiment(
                 format, formatter_class_name
             )
             formatter = formatter_class(steps, **args)
-            partial_predicted_doc = formatter.parse(input_doc, answer)
+            partial_prediction = formatter.parse(input_doc, answer)
+            num_parse_errors += partial_prediction.num_parse_errors
             if predicted_doc is None:
-                predicted_doc = partial_predicted_doc
+                predicted_doc = partial_prediction.document
             else:
-                predicted_doc = predicted_doc + partial_predicted_doc
+                predicted_doc = predicted_doc + partial_prediction.document
 
         preds.append(predicted_doc)
         truths.append(input_doc)
@@ -139,7 +140,7 @@ def parse_experiment(
             print_only_tags=print_only_tags,
         )
         stats["constraints"] = stats_by_tag
-    return stats
+    return num_parse_errors, stats
 
 
 def parse_experiments(
@@ -147,18 +148,22 @@ def parse_experiments(
     importer: data.BaseImporter[TDocument],
     print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool,
-) -> typing.List[ExperimentStats]:
+) -> typing.Tuple[int, typing.List[ExperimentStats]]:
     model_name = experiment_results[0].meta.model
     print(
         f"Parsing {len(experiment_results)} experiments, predicted by {model_name}..."
     )
     fold_stats: typing.List[ExperimentStats] = []
 
+    total_parse_errors = 0
     for experiment in experiment_results:
-        stats = parse_experiment(experiment, importer, print_only_tags, verbose)
+        num_parse_errors, stats = parse_experiment(
+            experiment, importer, print_only_tags, verbose
+        )
+        total_parse_errors += num_parse_errors
         fold_stats.append(stats)
 
-    return fold_stats
+    return total_parse_errors, fold_stats
 
 
 def sum_stats(
@@ -276,7 +281,7 @@ def print_experiment_results(
     if print_only_tags is not None:
         print_only_tags = [t.lower() for t in print_only_tags]
     experiment_results = parse_file(result_file, only_document_ids)
-    experiment_stats = parse_experiments(
+    num_parse_errors, experiment_stats = parse_experiments(
         experiment_results, importer, print_only_tags, verbose
     )
     costs = parse_costs_from_experiments(experiment_results)
@@ -293,8 +298,12 @@ def print_experiment_results(
     print(
         f"Experimented on {len(unique_doc_ids)} unique documents, dataset has {len(importer.do_import())}."
     )
+    print(list(unique_doc_ids))
 
     scores = get_scores(experiment_stats, verbose)
+    print(
+        f"Total parse errors in {len(experiment_results)} answers: {num_parse_errors}"
+    )
     print_scores_by_step(scores)
 
 
@@ -304,9 +313,11 @@ def main():
         "quishpi-re": data.VanDerAaImporter("res/data/quishpi/csv"),
         "quishpi-md": data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
         "van-der-aa": data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
+        "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = f"res/answers/van-der-aa-md/2024-03-04_10-25-31.json"
+    answer_file = f"res/answers/pet-re/2024-03-11_13-59-30.json"
+    # answer_file = f"res/answers/pet-re/2024-03-11_12-07-58.json"
     importer = None
     for k, v in importers.items():
         if k in answer_file:
@@ -317,8 +328,7 @@ def main():
     print_experiment_results(
         answer_file,
         importer,
-        # only_document_ids=["1-1_bicycle_manufacturing"],
-        print_only_tags=["action"],
+        print_only_tags=["flow"],
         verbose=True,
     )
 

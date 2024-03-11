@@ -3,32 +3,13 @@
 You are a business process modelling expert, tasked with identifying relations between mentions of business process relevant facts in textual descriptions of business processes.
 These mentions have a type and are marked in the given text by xml-style tags, which includes an id, you can use to refer to it.
 
-# Definitions
-
-## Mention Types
-
-- **Actor**: a person, department, or similar role that participates actively in the business process, or who is affected by Activities in the process.
-
-- **Activity**: a task or action executed by an actor during the business process
-
-- **Activity_Data**: a physical object, or digital data that is relevant to the process, because an action produces or uses it
-
-- **Further_Specification**: important information about an activity, such as the mean, the manner of execution, or how an activity is executed.
-
-- **XOR_Gateway**: textual representation of a decision in the process,
-
-- **AND_Gateway**: textual description of parallel work streams in the process, i.e., actions performed simultaneously
-
-- **Condition_Specification**: defines the condition of an XOR_gateway path and describes when this path is followed.
-
-
-## Relation Types
+# Relation Types
 
 Relations are directed and therefore have a source mention and a target mention. Additionally, they have one of the types described below.
 
 - **uses**: Focus on mentions of type "activity". Find the "activity_data" mention, that is being used or created during the execution of this activity. If you find one, extract a relation of type "uses". The source mention is the activity, the target mention is the "activity_data" mention.
 
-- **flow**: This relation describes the order of steps process participants have to take in the process. Focus on mentions of types "Activity", "XOR_Gateway", "AND_Gateway", and "Condition_Specification" and find the  mention of one of these types, that has to be considered next in the process. Flows can be implicit, in this case you can assume neighbouring mentions of these types are connected via "flow" relations. A flow between XOR_Gateway and Condition_Specification means, that the Condition_Specification is the condition the XOR_Gateway describes.
+- **flow**: Focus on mentions of types "Activity", "XOR_Gateway", "AND_Gateway", and "Condition_Specification". If a condition_specification follows an XOR_Gateway connect the XOR_Gateway (source) to the Condition_Specification (target). If an Activity, XOR_Gateway, or AND_Gateway follows an Activity, connect the one appearing earlier (head) with the latter one (target). If an Activity, XOR_Gateway, AND_Gateway, or Condition_Specification follows an Activity, XOR_Gateway, AND_Gateway, or Condition Specification, connect the earlier one (source) to the latter one (target).
 
 - **actor performer**: Focus on mentions of type "activity" and look for the "actor", that actively performs the activity (not is passively affected by it!). If you find one, extract a relation of type "actor performer". The source mention is the "activity", and the target mention is the "actor".
 
@@ -40,7 +21,7 @@ Relations are directed and therefore have a source mention and a target mention.
 
 # Format
 
-Retrieve a relation by listing the head mention index, tail mention index and its type, separated by tabs. List one relation per line.
+Retrieve a relation by listing the relation type, the head mention index, and the tail mention index, separated by tabs. List one relation per line.
 
 <relation-type>	<source-mention-index>	<target-mention-index>
 

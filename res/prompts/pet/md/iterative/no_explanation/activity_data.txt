@@ -22,7 +22,8 @@ For each mention you detect, write a line in the following format:
 
 ## Format Example
 
-The first step is to <Activity> complete </Activity> the report . then <Actor> the clerk </Actor> will <Activity> review </Activity> it.
+Sentence 0: The first step is to <Activity> complete </Activity> the report .
+Sentence 1: then <Actor> the clerk </Actor> will <Activity> review </Activity> it.
 
 the report	Activity Data	0
 it	Activity Data	1

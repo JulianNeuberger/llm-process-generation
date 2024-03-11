@@ -1,4 +1,5 @@
 import re
+import traceback
 import typing
 
 import data
@@ -27,9 +28,7 @@ class VanDerAaMentionListingFormattingStrategy(
     def input(self, document: data.VanDerAaDocument) -> str:
         return document.text
 
-    def parse(
-        self, document: data.VanDerAaDocument, string: str
-    ) -> data.VanDerAaDocument:
+    def parse(self, document: data.VanDerAaDocument, string: str) -> base.ParseResult:
         document = document.copy(clear=["mentions"])
         for mention_text in string.splitlines(keepends=False):
             mention_text = mention_text.strip()
@@ -112,9 +111,7 @@ class VanDerAaRelationListingFormattingStrategy(
     def input(self, document: data.VanDerAaDocument) -> str:
         return "\n".join(f"Sentence {i}: {s}" for i, s in enumerate(document.sentences))
 
-    def parse(
-        self, document: data.VanDerAaDocument, string: str
-    ) -> data.VanDerAaDocument:
+    def parse(self, document: data.VanDerAaDocument, string: str) -> base.ParseResult:
         constraints = []
         current_sentence_id: typing.Optional[int] = None
         for line in string.splitlines(keepends=False):
@@ -182,7 +179,7 @@ class VanDerAaRelationListingFormattingStrategy(
                     negative=negative.lower() == "true",
                 )
             )
-        return data.VanDerAaDocument(
+        doc = data.VanDerAaDocument(
             id=document.id,
             name=document.name,
             text=document.text,
@@ -190,6 +187,7 @@ class VanDerAaRelationListingFormattingStrategy(
             sentences=document.sentences,
             mentions=document.mentions,
         )
+        return base.ParseResult(doc, 0)
 
 
 class QuishpiMentionListingFormattingStrategy(
@@ -226,9 +224,7 @@ class QuishpiMentionListingFormattingStrategy(
     def input(self, document: data.QuishpiDocument) -> str:
         return document.text
 
-    def parse(
-        self, document: data.QuishpiDocument, string: str
-    ) -> data.QuishpiDocument:
+    def parse(self, document: data.QuishpiDocument, string: str) -> base.ParseResult:
         mentions: typing.List[data.QuishpiMention] = []
 
         for line in string.splitlines(keepends=False):
@@ -256,9 +252,10 @@ class QuishpiMentionListingFormattingStrategy(
             )
             mentions.append(mention)
 
-        return data.QuishpiDocument(
+        doc = data.QuishpiDocument(
             id=document.id, text=document.text, mentions=mentions
         )
+        return base.ParseResult(doc, 0)
 
 
 class IterativeQuishpiMentionListingFormattingStrategy(
@@ -316,27 +313,58 @@ class IterativeQuishpiMentionListingFormattingStrategy(
 class PetRelationListingFormattingStrategy(
     base.BaseFormattingStrategy[data.PetDocument]
 ):
-    def __init__(self, steps: typing.List[str]):
+    def __init__(
+        self,
+        steps: typing.List[str],
+        prompt: str = None,
+        only_tags: typing.Optional[typing.List[str]] = None,
+        context_tags: typing.Optional[typing.List[str]] = None,
+    ):
         super().__init__(steps)
         self._input_formatter = tags.PetTagFormattingStrategy(include_ids=True)
+        self._prompt_path = prompt
+        self._only_tags = only_tags
+        self._context_tags = context_tags
+        if self._prompt_path is None:
+            self._prompt_path = "pet/re/long.txt"
 
     def description(self) -> str:
-        return common.load_prompt_from_file("pet/re/long.txt")
+        return common.load_prompt_from_file(self._prompt_path)
 
     @property
     def args(self):
-        return {}
+        return {
+            "prompt": self._prompt_path,
+            "only_tags": self._only_tags,
+            "context_tags": self._context_tags,
+        }
 
-    def output(self, document: data.PetDocument) -> str:
+    def _format_relations(self, relations: typing.Iterable[data.PetRelation]) -> str:
         res = []
-        for r in document.relations:
+        for r in relations:
+            if self._only_tags is not None and r.type.lower() not in self._only_tags:
+                continue
             res.append(f"{r.type}\t{r.head_mention_index}\t{r.tail_mention_index}")
         return "\n".join(res)
 
-    def input(self, document: data.PetDocument) -> str:
-        return self._input_formatter.output(document)
+    def output(self, document: data.PetDocument) -> str:
+        return self._format_relations(document.relations)
 
-    def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
+    def input(self, document: data.PetDocument) -> str:
+        context_relations = []
+        for r in document.relations:
+            if self._context_tags is None:
+                continue
+            if r.type.lower() not in self._context_tags:
+                continue
+            context_relations.append(r)
+
+        relations = self._format_relations(context_relations)
+        text = self._input_formatter.output(document)
+
+        return f"{text}\n\n{relations}"
+
+    def parse(self, document: data.PetDocument, string: str) -> base.ParseResult:
         document = document.copy(clear=["relations"])
         for line in string.splitlines(keepends=False):
             if "\t" not in line:
@@ -359,7 +387,13 @@ class PetRelationListingFormattingStrategy(
                     tail_mention_index=tail_index,
                 )
             )
-        return document
+        return base.ParseResult(document, 0)
+
+
+class PetIterativeRelationListingFormattingStrategy(
+    PetRelationListingFormattingStrategy
+):
+    pass
 
 
 class PetEntityListingFormattingStrategy(base.BaseFormattingStrategy[data.PetDocument]):
@@ -385,7 +419,7 @@ class PetEntityListingFormattingStrategy(base.BaseFormattingStrategy[data.PetDoc
     def input(self, document: data.PetDocument) -> str:
         return self._input_formatter.output(document)
 
-    def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
+    def parse(self, document: data.PetDocument, string: str) -> base.ParseResult:
         document = document.copy(clear=["entities"])
         for line in string.splitlines(keepends=False):
             if " " not in line:
@@ -405,7 +439,7 @@ class PetEntityListingFormattingStrategy(base.BaseFormattingStrategy[data.PetDoc
             if any([i in e.mention_indices for e in document.entities]):
                 continue
             document.entities.append(data.PetEntity(mention_indices=(i,)))
-        return document
+        return base.ParseResult(document, 0)
 
 
 class PetMentionListingFormattingStrategy(
@@ -490,72 +524,86 @@ class PetMentionListingFormattingStrategy(
             text += "\n"
         return text
 
-    def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
-        sentences = document.sentences
-        parsed_mentions: typing.List[data.PetMention] = []
-        for line in string.splitlines(keepends=False):
-            if re.match("-{3,}", line.strip()):
-                print(
-                    "Found divider, will discard all mentions, as they were only candidates"
+    def parse_line(
+        self, line: str, document: data.PetDocument
+    ) -> typing.Optional[typing.List[data.PetMention]]:
+        if "\t" not in line:
+            raise ValueError(f"line not tab-separated: '{line}'")
+
+        split_line = line.split("\t")
+        split_line = tuple(e for e in split_line if e.strip() != "")
+
+        if len(split_line) < 3 or len(split_line) > 4:
+            raise ValueError(
+                f"Skipping line {split_line}, as it is not formatted "
+                f"properly, expected between 3 and 4 arguments."
+            )
+
+        if len(split_line) == 3:
+            mention_text, mention_type, sentence_id = split_line
+        else:
+            mention_text, mention_type, sentence_id, explanation = split_line
+            # print(f"Explanation for {mention_text}: {explanation}")
+
+        try:
+            sentence_id = int(sentence_id)
+        except ValueError:
+            raise ValueError(f"Invalid sentence index '{sentence_id}', skipping line.")
+
+        sentence = document.sentences[sentence_id]
+
+        mention_text = mention_text.lower()
+        mention_tokens = mention_text.split(" ")
+
+        res = []
+        for i, token in enumerate(sentence):
+            candidates = sentence[i : i + len(mention_tokens)]
+            candidate_text = " ".join(c.text.lower() for c in candidates)
+
+            if candidate_text.lower() != mention_text.lower():
+                continue
+
+            res.append(
+                data.PetMention(
+                    token_document_indices=tuple(
+                        c.index_in_document for c in candidates
+                    ),
+                    type=mention_type.lower().strip(),
                 )
+            )
+        matches_in_sentence = len(res)
+        # if matches_in_sentence == 0:
+        #     print(f"No match for line with parsed sentence id {sentence_id}: '{line}'")
+        # if matches_in_sentence > 1:
+        #     print(
+        #         f"Multiple matches for line with parsed sentence id {sentence_id}: '{line}'"
+        #     )
+        return res
+
+    def parse(self, document: data.PetDocument, string: str) -> base.ParseResult:
+        parsed_mentions: typing.List[data.PetMention] = []
+        num_parse_errors = 0
+        for line in string.splitlines(keepends=False):
+            line = line.strip()
+            if line == "":
+                continue
+
+            if re.match("-{3,}", line):
+                # print(
+                #     "Found divider, will discard all mentions, as they were only candidates"
+                # )
                 parsed_mentions = []
                 continue
 
-            if "\t" not in line:
-                print(f"line not tab-separated: '{line}'")
-                continue
-            split_line = line.split("\t")
-            split_line = tuple(e for e in split_line if e.strip() != "")
-
-            if len(split_line) < 3 or len(split_line) > 4:
-                print(
-                    f"Skipping line {split_line}, as it is not formatted "
-                    f"properly, expected between 3 and 4 arguments."
-                )
-                continue
-
-            if len(split_line) == 3:
-                mention_text, mention_type, sentence_id = split_line
-            else:
-                mention_text, mention_type, sentence_id, explanation = split_line
-                # print(f"Explanation for {mention_text}: {explanation}")
-
             try:
-                sentence_id = int(sentence_id)
-            except ValueError:
-                print(f"Invalid sentence index '{sentence_id}', skipping line.")
-                continue
-            sentence = sentences[sentence_id]
+                mentions_from_line = self.parse_line(line, document)
+                parsed_mentions.extend(mentions_from_line)
+            except Exception:
+                num_parse_errors += 1
+                # print("Error during parsing of line, skipping line. Error was:")
+                # print(traceback.format_exc())
 
-            mention_text = mention_text.lower()
-            mention_tokens = mention_text.split(" ")
-
-            matches_in_sentence = 0
-            for i, token in enumerate(sentence):
-                candidates = sentence[i : i + len(mention_tokens)]
-                candidate_text = " ".join(c.text.lower() for c in candidates)
-
-                if candidate_text.lower() != mention_text.lower():
-                    continue
-
-                parsed_mentions.append(
-                    data.PetMention(
-                        token_document_indices=tuple(
-                            c.index_in_document for c in candidates
-                        ),
-                        type=mention_type.lower().strip(),
-                    )
-                )
-                matches_in_sentence += 1
-            if matches_in_sentence == 0:
-                print(
-                    f"No match for line with parsed sentence id {sentence_id}: '{line}'"
-                )
-            if matches_in_sentence > 1:
-                print(
-                    f"Multiple matches for line with parsed sentence id {sentence_id}: '{line}'"
-                )
-        return data.PetDocument(
+        doc = data.PetDocument(
             id=document.id,
             text=document.text,
             name=document.name,
@@ -565,6 +613,7 @@ class PetMentionListingFormattingStrategy(
             relations=[],
             entities=[],
         )
+        return base.ParseResult(doc, num_parse_errors)
 
 
 class PetActivityListingFormattingStrategy(PetMentionListingFormattingStrategy):

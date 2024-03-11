@@ -1,0 +1,37 @@
+# Task
+
+You are a business process modelling expert, tasked with identifying relations between mentions of business process relevant facts in textual descriptions of business processes.
+These mentions have a type and are marked in the given text by xml-style tags, which includes an id, you can use to refer to it.
+
+# Relation Types
+
+Relations are directed and therefore have a source mention and a target mention. Additionally, they have one of the types described below.
+
+- **uses**: Focus on mentions of type "activity". Find the "activity_data" mention, that is being used or created during the execution of this activity. If you find one, extract a relation of type "uses". The source mention is the activity, the target mention is the "activity_data" mention.
+
+- **actor performer**: Focus on mentions of type "activity" and look for the "actor", that actively performs the activity (not is passively affected by it!). If you find one, extract a relation of type "actor performer". The source mention is the "activity", and the target mention is the "actor".
+
+- **actor recipient**: Focus on mentions of type "activity" and look for the "actor", that receives the result of some activity execution, i.e., they are passively affected by the activity. If you find one, extract a relation of type "actor recipient". The source mention is the "Activity", the target mention is the "Actor".
+
+- **further specification**: Focus on mentions of type "activity". Try and find mentions of type "further_specification", that describe how this activity has to be executed, or describe the activity further. If you find one, extract a relation of type "further_specification", where the source mention is the activity and the target mention is the mention of type "further_specification".
+
+# Format
+
+Retrieve a relation by listing the relation type, the source mention index, and the target mention index, separated by tabs. List one relation per line.
+
+<relation-type>	<source-mention-index>	<target-mention-index>
+
+## Format Examples
+
+Given the following input:
+
+the <actor id=1> LLM </actor> <activity id=0> extracts </activity> <activity_data id=2> the text </activity> .
+
+You will extract these relations
+
+actor performer	0	1
+uses	0	2
+
+# Restrictions
+
+Rule 1. Only extract relations with types, that are defined in chapter **Relation Types**.
