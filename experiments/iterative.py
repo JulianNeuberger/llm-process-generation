@@ -36,9 +36,9 @@ def run_iterative_document_prompt(
         for answer in result.answers:
             parsed = formatter.parse(input_document, answer)
             if cur_doc is None:
-                cur_doc = parsed
+                cur_doc = parsed.document
             else:
-                cur_doc += parsed
+                cur_doc += parsed.document
         if merged_result is None:
             merged_result = result
         else:

@@ -22,7 +22,8 @@ For each mention you detect, write a line in the following format:
 
 ## Format Example
 
-The first step is to <activity> complete </activity> the report within the given time . then the clerk will <activity> review </activity> <activity_data> it </activity_data> for any errors.
+Sentence 0: The first step is to <activity> complete </activity> the report within the given time .
+Sentence 1: then the clerk will <activity> review </activity> <activity_data> it </activity_data> for any errors.
 
 within the given time	Further Specification	0
 for any errors	Further Specification	1

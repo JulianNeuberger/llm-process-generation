@@ -174,7 +174,10 @@ def experiment(
         current_save_fold = saved_experiment_results[fold_id]
 
         documents_already_run = [r.original_id for r in current_save_fold.results]
-        print(f"Skipping documents with ids {documents_already_run} in fold {fold_id}!")
+        if len(documents_already_run) > 0:
+            print(
+                f"Skipping documents with ids {documents_already_run} in fold {fold_id}!"
+            )
 
         example_docs = [documents_by_id[i] for i in fold["train"]]
         input_docs = [documents_by_id[i] for i in fold["test"]]

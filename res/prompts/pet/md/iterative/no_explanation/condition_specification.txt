@@ -21,7 +21,8 @@ For each mention you detect, write a line in the following format:
 
 ## Format Example
 
-<xor_gateway> if </xor_gateway> the report is of type A the clerk will review it for any errors . <xor_gateway> otherwise </xor_gateway> it is archived .
+Sentence 0: <xor_gateway> if </xor_gateway> the report is of type A the clerk will <activity> review </activity> it for any errors .
+Sentence 1: <xor_gateway> otherwise </xor_gateway> it is <activity> archived </activity> .
 
 the report is of type A	Condition Specification	0
 

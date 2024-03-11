@@ -1,17 +1,11 @@
 import typing
 
 import langchain_openai
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 import data
 import format
-
-import seaborn as sns
-
-import matplotlib
-
-matplotlib.use("TkAgg")
-import matplotlib.pyplot as plt
-
 
 documents = data.PetImporter("res/data/pet/all.new.jsonl").do_import()
 document = [d for d in documents if d.id == "doc-6.1"][0]

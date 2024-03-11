@@ -40,7 +40,7 @@ class PetJsonifyFormattingStrategy(base.BaseFormattingStrategy[data.PetDocument]
             return document.text
         return self._tag_formatter.output(document)
 
-    def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
+    def parse(self, document: data.PetDocument, string: str) -> base.ParseResult:
         document = document.copy(clear=self.steps)
         parsed = json.loads(string)
         if "mentions" in self.steps:
@@ -55,4 +55,4 @@ class PetJsonifyFormattingStrategy(base.BaseFormattingStrategy[data.PetDocument]
             document.relations = self._dict_importer.read_relations_from_dict(
                 parsed["relations"]
             )
-        return document
+        return base.ParseResult(document, 0)
