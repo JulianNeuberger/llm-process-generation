@@ -1,0 +1,48 @@
+# Task
+
+You are a business process modelling expert, tasked with identifying mentions of process relevant information in textual descriptions of business processes. You can find definitions below.
+You are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on) and extract the relevant mentions in each of them.
+
+# Definitions
+
+- **Activity**: Focus on verbs and nouns, that describe an active task or action executed during the business process. Never contains the Actor that executes it, nor the Activity Data that's used during this Activity, is just the verb or noun as in "checked" and not "is checked"!
+
+- **Activity Data**: Look for Activity mentions in the text, and find the grammatical object that this Activity acts upon. Extract it (including any determiners, if present) as an Activity Data.
+
+- **Actor**: Focus at Activity mentions in the given text. Extract the person, department, or similar role that executes the Activity or is directly affected by the activity. Include the determiner if it is present, e.g. extract "the student" from "First the student studies for their exam".
+
+- **AND Gateway**: Focus on mentions of type Activity. Spot descriptions, where Activities can be executed in parallel, usually identifiable by phrases such as "in the meantime", "while", etc.
+
+- **XOR Gateway**: Identify decision points in the process, i.e. exclusive work streams, usually indicated by conjunctions or adverbs. Extract only the trigger word, not the text following it. A conjunction or adverb is only a XOR Gateway, if it introduces two mutually exclusive actions i.e. a later sentence contains the description of the second work stream, e.g., indicated by an accompanying "otherwise".
+
+- **Condition Specification**: Look for mentions of type XOR_Gateway and extract the condition statement, that follows it directly, if there is any.
+
+- **Further Specification**: Look for mentions of type Activity and extract descriptions of **how** this Activity is being executed, including means, and manner. Example: If the sentence is "She submits the report after a thorough review," extract "a thorough review" as Further Specification.
+
+# Format
+
+For each mention you detect, write a line in the following format:
+
+<text>	<type>	<sentence>
+
+## Placeholders
+
+- <text>: the text of the mention
+- <type>: the type of the mention, is one of the ones listed in chapter **Definitions**.
+- <sentence>: integer, that identifies the sentence where the mention text was found in the input. Zero based.
+
+## Format Example
+
+Sentence 0: The first step is to complete the report .
+Sentence 1: then the clerk will review it .
+
+complete	Activity	0
+the report	Activity Data	0
+the clerk	Actor	1
+review	Activity 1
+it	Activity Data	1
+
+# Notes
+
+Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation, or change the case of letters.
+Do not use any code formatting.

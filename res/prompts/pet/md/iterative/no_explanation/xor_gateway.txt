@@ -20,7 +20,8 @@ For each mention you detect, write a line in the following format:
 
 ## Format Example
 
-if the report is of type A the clerk will review it for any errors . otherwise it is archived.
+Sentence 0: if the report is of type A the clerk will <activity> review </activity> it for any errors .
+Sentence 1: otherwise it is <activity> archived </activity> .
 
 if	XOR Gateway	0
 otherwise	XOR Gateway	1

@@ -1,3 +1,4 @@
+import json
 import typing
 
 import yaml
@@ -7,6 +8,32 @@ import format
 
 
 class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument]):
+    def __init__(self, steps: typing.List[str]):
+        super().__init__(steps)
+        self._dict_exporter = data.PetDictExporter()
+
+    @property
+    def args(self):
+        return {}
+
+    def description(self) -> str:
+        raise NotImplementedError()
+
+    def output(self, document: data.PetDocument) -> str:
+        return yaml.safe_dump(
+            [self._dict_exporter.export_mention(m) for m in document.mentions]
+        )
+
+    def input(self, document: data.PetDocument) -> str:
+        raise NotImplementedError()
+
+    def parse(self, document: data.PetDocument, string: str) -> data.PetDocument:
+        raise NotImplementedError()
+
+
+class PetEfficientYamlFormattingStrategy(
+    format.BaseFormattingStrategy[data.PetDocument]
+):
     def description(self) -> str:
         raise NotImplementedError()
 
@@ -99,12 +126,12 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
 
         if "mentions" in self._steps:
             raw = content["mentions"]
-            mentions = [PetYamlFormattingStrategy.load_mention(m) for m in raw]
+            mentions = [PetEfficientYamlFormattingStrategy.load_mention(m) for m in raw]
             document.mentions = mentions
 
         if "entities" in self._steps:
             raw = content["entities"]
-            entities = [PetYamlFormattingStrategy.load_entity(e) for e in raw]
+            entities = [PetEfficientYamlFormattingStrategy.load_entity(e) for e in raw]
             # create single mention entities
             for i, m in enumerate(document.mentions):
                 mention_part_of_entity = False
@@ -118,7 +145,9 @@ class PetYamlFormattingStrategy(format.BaseFormattingStrategy[data.PetDocument])
 
         if "relations" in self._steps:
             raw = content["relations"]
-            relations = [PetYamlFormattingStrategy.load_relation(r) for r in raw]
+            relations = [
+                PetEfficientYamlFormattingStrategy.load_relation(r) for r in raw
+            ]
             document.relations = relations
 
         return document
