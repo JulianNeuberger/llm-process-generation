@@ -298,6 +298,7 @@ def print_experiment_results(
     print(
         f"Experimented on {len(unique_doc_ids)} unique documents, dataset has {len(importer.do_import())}."
     )
+    print(list(unique_doc_ids))
 
     scores = get_scores(experiment_stats, verbose)
     print(
@@ -315,7 +316,8 @@ def main():
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = f"res/answers/analysis/md/no_formatting.json"
+    answer_file = f"res/answers/pet-re/2024-03-11_13-59-30.json"
+    # answer_file = f"res/answers/pet-re/2024-03-11_12-07-58.json"
     importer = None
     for k, v in importers.items():
         if k in answer_file:
@@ -326,8 +328,7 @@ def main():
     print_experiment_results(
         answer_file,
         importer,
-        # only_document_ids=["1-1_bicycle_manufacturing"],
-        print_only_tags=["action"],
+        print_only_tags=["flow"],
         verbose=True,
     )
 
