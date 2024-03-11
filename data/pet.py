@@ -88,9 +88,7 @@ class PetDocument(
 
 
 @dataclasses.dataclass(frozen=True)
-class PetMention(
-    base.HasType, base.HasCustomMatch, base.SupportsPrettyDump[PetDocument]
-):
+class PetMention(base.HasType, base.SupportsPrettyDump[PetDocument]):
     token_document_indices: typing.Tuple[int, ...]
 
     def copy(self) -> "PetMention":
