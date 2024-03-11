@@ -28,13 +28,13 @@ if __name__ == "__main__":
         formatter = format.VanDerAaRelationListingFormattingStrategy(
             steps=["constraints"],
             separate_tasks=True,
-            prompt_path="quishpi/re/hand-crafted-task-separation-examples.txt",
+            prompt_path="quishpi/re/hand-crafted-task-NO-separation-examples-CCoT.txt",
         )
         importer = data.VanDerAaImporter("res/data/quishpi/csv")
 
-        documents = importer.do_import()
+        documents = importer.do_import()[1:9]
         print(f"Dataset consists of {len(documents)} documents.")
-        folds = sampling.generate_folds(documents, num_shots)[0:5]
+        folds = sampling.generate_folds(documents, num_shots)
 
         print("Using folds:")
         print("------------")
