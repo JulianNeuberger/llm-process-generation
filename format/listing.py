@@ -366,6 +366,7 @@ class PetRelationListingFormattingStrategy(
 
     def parse(self, document: data.PetDocument, string: str) -> base.ParseResult:
         document = document.copy(clear=["relations"])
+        total_errors = 0
         for line in string.splitlines(keepends=False):
             if "\t" not in line:
                 print(f"Skipping non-tab-separated line {line}.")
@@ -375,11 +376,16 @@ class PetRelationListingFormattingStrategy(
                 print(
                     f"Expected exactly 3 arguments in line {line}, got {len(split_line)}. Skipping."
                 )
+                total_errors += 1
                 continue
             relation_type, head_index, tail_index = split_line
             relation_type = relation_type.lower().strip()
-            head_index = int(head_index)
-            tail_index = int(tail_index)
+            try:
+                head_index = int(head_index)
+                tail_index = int(tail_index)
+            except ValueError:
+                total_errors += 1
+                continue
             document.relations.append(
                 data.PetRelation(
                     type=relation_type,
@@ -387,7 +393,7 @@ class PetRelationListingFormattingStrategy(
                     tail_mention_index=tail_index,
                 )
             )
-        return base.ParseResult(document, 0)
+        return base.ParseResult(document, total_errors)
 
 
 class PetIterativeRelationListingFormattingStrategy(
@@ -527,9 +533,6 @@ class PetMentionListingFormattingStrategy(
     def parse_line(
         self, line: str, document: data.PetDocument
     ) -> typing.Optional[typing.List[data.PetMention]]:
-        if "\t" not in line:
-            raise ValueError(f"line not tab-separated: '{line}'")
-
         split_line = line.split("\t")
         split_line = tuple(e for e in split_line if e.strip() != "")
 
@@ -586,6 +589,8 @@ class PetMentionListingFormattingStrategy(
         for line in string.splitlines(keepends=False):
             line = line.strip()
             if line == "":
+                continue
+            if "\t" not in line:
                 continue
 
             if re.match("-{3,}", line):

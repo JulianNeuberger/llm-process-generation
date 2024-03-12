@@ -1,0 +1,42 @@
+# Task
+
+You are a business process modelling expert, tasked with identifying relations between mentions of business process relevant facts in textual descriptions of business processes.
+These mentions have a type and are marked in the given text by xml-style tags, which includes an id, you can use to refer to it.
+
+# Relation Types
+
+Relations are directed and therefore have a source mention and a target mention. Additionally, they have one of the types described below.
+
+**Flow**: Focus on the behavioural elements, which are mentions of types "Activity", "XOR_Gateway", "AND_Gateway", and "Condition_Specification". Extract the flow between behavioural elements, i.e., extract a relation of type "flow", if the text describes that one behavioural element is relevant during the process, before another behavioural element is.
+A flow relation between one behavioural element means, that it is relevant before another behavioural element, when the process is executed, e.g., if there is a flow between an "XOR_Gateway" and a "Condition_Specification" the XOR_Gateway is visited first (like an exclusive gateway in a BPMN process model), then the condition specification is relevant (like the condition in a BPMN process model). Afterwards there may be a flow between this "Condition_Specification" and an "Activity", because the condition is relevant first, and if it is fulfilled the employee has to perform the activity.
+
+- **uses**: Focus on mentions of type "activity". Find the "activity_data" mention, that is being used or created during the execution of this activity. If you find one, extract a relation of type "uses". The source mention is the activity, the target mention is the "activity_data" mention.
+
+- **actor performer**: Focus on mentions of type "activity" and look for the "actor", that actively performs the activity (not is passively affected by it!). If you find one, extract a relation of type "actor performer". The source mention is the "activity", and the target mention is the "actor".
+
+- **actor recipient**: Focus on mentions of type "activity" and look for the "actor", that receives the result of some activity execution, i.e., they are passively affected by the activity. If you find one, extract a relation of type "actor recipient". The source mention is the "Activity", the target mention is the "Actor".
+
+- **further specification**: Focus on mentions of type "activity". Try and find mentions of type "further_specification", that describe how this activity has to be executed, or describe the activity further. If you find one, extract a relation of type "further_specification", where the source mention is the activity and the target mention is the mention of type "further_specification".
+
+- **same gateway**: Focus on XOR_Gateway mentions and their corresponding condition_specification. Find the next XOR_Gateway and its condition_specification in the text. If the two condition specifications describe the same decision, i.e., the first describes what to do in one case and the second in the other case, then extract a relation of type "same gateway" for the XOR_Gateways preceding the respective condition_specification.
+
+# Format
+
+Retrieve a relation by listing the relation type, the head mention index, and the tail mention index, separated by tabs. List one relation per line.
+
+<relation-type>	<source-mention-index>	<target-mention-index>
+
+## Format Examples
+
+Given the following input:
+
+Sentence 0: the <actor id=1> LLM </actor> <activity id=0> extracts </activity> <activity_data id=2> the text </activity> .
+
+You will extract these relations
+
+actor performer	0	1
+uses	0	2
+
+# Restrictions
+
+Rule 1. Only extract relations with types, that are defined in chapter **Relation Types**.

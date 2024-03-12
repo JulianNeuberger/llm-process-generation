@@ -4,7 +4,7 @@ You are a business process modelling expert, tasked with finding conditions in t
 
 # Definitions
 
-- **condition**: Identify decision points in the process, i.e. conditional or exclusive work streams, usually indicated by a conjunction, an adverb, or other phrases that indicate a condition. These are only relevant, if they introduce a conditional action or mutually exclusive actions. Extract the text directly following the trigger word / phrase, if this text describes the condition, if it is just the trigger word / phrase, do not extract it.
+- **condition**: Focus on verb predicates and nominal predicates. If the predicate is part of a) a conditional sub-sentence, extract the conditional sub-sentence, without the trigger word (e.g., "if"). Don't include to much, i.e., not the next task, if it is separated by a comma. If the predicate is b) part of a description of mutually exclusive tasks (e.g. a list joined by "or"), extract the predicate. The condition must be for a process relevant task, not a verb that describes the process lifecylce, e.g. "the process ends". Extract all "otherwise" as conditions. The condition may not be started by "otherwise"!
 
 # Format
 
@@ -12,10 +12,6 @@ Please extract all mentions in the given raw text in the following format:
 Print one mention per line, where you separate the mentions type and its text by tabs:
 
 condition	<text>
-
-# Requirements
-
-Rule 1. Conditions never include the phrase or word, that indicate a condition, i.e., if you hypothetically were to write "if" before the text you extract, it would be a valid sentence.
 
 # Notes
 
