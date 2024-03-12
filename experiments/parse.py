@@ -315,7 +315,7 @@ def main():
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = f"res/answers/van-der-aa-re/2024-03-04_18-27-13_step-wise_tuning_CCoT_OUTPERFORMER.json"
+    answer_file = f"res/answers/van-der-aa-re/2024-03-12_10-00-16.json"
     importer = None
     for k, v in importers.items():
         if k in answer_file:
@@ -327,7 +327,7 @@ def main():
         answer_file,
         importer,
         # only_document_ids=["1-1_bicycle_manufacturing"],
-        print_only_tags=["action"],
+        # print_only_tags=["action"],
         verbose=True,
     )
 
