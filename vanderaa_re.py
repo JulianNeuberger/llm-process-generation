@@ -10,14 +10,41 @@ from experiments import sampling
 
 if __name__ == "__main__":
 
-    def filter_by_constraint_types(documents: typing.List[data.VanDerAaDocument], constraint_types: typing.List[str]) -> \
+    def select_one_by_constraint_types(documents: typing.List[data.VanDerAaDocument],
+                                       constraint_types: typing.List[str]) -> \
             typing.List[data.VanDerAaDocument]:
+
         if constraint_types is None or len(constraint_types) == 0:
             return documents
+
         filter_result = []
         for doc in documents:
-            if any(x in [c.type for c in doc.constraints] for x in constraint_types):
+            constraint_types_in_document = [c.type for c in doc.constraints]
+            doc_added = False
+            for c_type in constraint_types_in_document:
+                if c_type in constraint_types and not doc_added:
+                    filter_result.append(doc)
+                    doc_added = True
+                    constraint_types.remove(c_type)
+                elif c_type in constraint_types:
+                    constraint_types.remove(c_type)
+            if len(constraint_types) == 0:
+                return filter_result
+        return filter_result
+
+
+    def filter_by_constraint_types(documents: typing.List[data.VanDerAaDocument],
+                                   constraint_types: typing.List[str]) -> \
+            typing.List[data.VanDerAaDocument]:
+
+        if constraint_types is None or len(constraint_types) == 0:
+            return documents
+
+        filter_result = []
+        for doc in documents:
+            if any(c_type for c_type in [c.type for c in doc.constraints] if c_type in constraint_types):
                 filter_result.append(doc)
+
         return filter_result
 
 
@@ -32,7 +59,7 @@ if __name__ == "__main__":
         storage = f"res/answers/van-der-aa-re/{date_formatted}.json"
         # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
 
-        num_shots = 0
+        num_shots = 3
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
@@ -43,34 +70,41 @@ if __name__ == "__main__":
         #     prompt_path="van-der-aa/re/step-wise_tuning_CCoT.txt",
         # )
         formatters = [
-            format.IterativeVanDerAaRelationListingFormattingStrategy(
-                steps=["constraints"],
-                separate_tasks=False,
-                prompt_path="van-der-aa/re/iterative/succession.txt",
-                context_tags=[],
-                only_tags=['succession']
-            ),
-            format.IterativeVanDerAaRelationListingFormattingStrategy(
-                steps=["constraints"],
-                separate_tasks=False,
-                prompt_path="van-der-aa/re/iterative/precedence.txt",
-                context_tags=['succession'],
-                only_tags=['precedence']
-            ),
             # format.IterativeVanDerAaRelationListingFormattingStrategy(
             #     steps=["constraints"],
             #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/response_iso.txt",
+            #     prompt_path="van-der-aa/re/iterative/minimalistic/succession.txt",
+            #     context_tags=[],
+            #     only_tags=['succession']
+            # ),
+            # format.IterativeVanDerAaRelationListingFormattingStrategy(
+            #     steps=["constraints"],
+            #     separate_tasks=False,
+            #     prompt_path="van-der-aa/re/iterative/minimalistic/precedence.txt",
+            #     context_tags=[],
+            #     only_tags=['precedence']
+            # ),
+            # format.IterativeVanDerAaRelationListingFormattingStrategy(
+            #     steps=["constraints"],
+            #     separate_tasks=False,
+            #     prompt_path="van-der-aa/re/iterative/minimalistic/response.txt",
             #     context_tags=[],
             #     only_tags=['response']
             # ),
             # format.IterativeVanDerAaRelationListingFormattingStrategy(
             #     steps=["constraints"],
             #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/init_end_iso.txt",
+            #     prompt_path="van-der-aa/re/iterative/minimalistic/init_end.txt",
             #     context_tags=[],
             #     only_tags=['init', 'end']
             # )
+            format.IterativeVanDerAaRelationListingFormattingStrategy(
+                steps=["constraints"],
+                separate_tasks=False,
+                prompt_path="van-der-aa/re/minimalistic_explained.txt",
+                context_tags=[],
+                only_tags=['response', 'init', 'end', 'precedence', 'succession']
+            )
         ]
 
         # # 2 STEP APPROACH
@@ -94,7 +128,8 @@ if __name__ == "__main__":
         importer = data.VanDerAaImporter("res/data/van-der-aa/")
 
         documents = importer.do_import()
-        documents = filter_by_constraint_types(documents, ['succession'])[1:2]
+        documents = select_one_by_constraint_types(documents, [])
+        # documents = filter_by_constraint_types(documents, ['precedence'])
         print(f"Dataset consists of {len(documents)} documents.")
         folds = sampling.generate_folds(documents, num_shots)
 

@@ -243,7 +243,7 @@ class IterativeVanDerAaRelationListingFormattingStrategy(
         }
 
     def _dump_constraints(
-            self, constraints: typing.List[data.VanDerAaConstraint], sentence_id: int
+            self, constraints: typing.List[data.VanDerAaConstraint]
     ) -> str:
         res = []
         for c in constraints:
@@ -289,9 +289,9 @@ class IterativeVanDerAaRelationListingFormattingStrategy(
         for i, sentence in enumerate(document.sentences):
             if self._separate_tasks:
                 res.append(f"Sentence {i}: {sentence}")
-            if relevant_constraints is not None and len(relevant_constraints) > 0:
-                res.append("Constraints:")
-                res.append(self._dump_constraints(relevant_constraints, i))
+        if relevant_constraints is not None and len(relevant_constraints) > 0:
+            res.append("Constraints:")
+            res.append(self._dump_constraints(relevant_constraints))
         if self._separate_tasks:
             res.append("")
         return "\n".join(res)
@@ -300,11 +300,10 @@ class IterativeVanDerAaRelationListingFormattingStrategy(
         sentences = "\n".join(f"Sentence {i}: {s}" for i, s in enumerate(document.sentences))
         relevant_constraints = IterativeVanDerAaRelationListingFormattingStrategy._filter_constraints(
             tags_of_interest=self._context_tags, constraints=document.constraints)
-        constraints = []
-        for i in range(len(document.sentences)):
-            constraints.append(self._dump_constraints(relevant_constraints, i))
+        constraints = [self._dump_constraints(relevant_constraints)]
+        # for i in range(len(document.sentences)):
         constraints_as_string = "\n".join(constraints)
-        if len(constraints) > 0:
+        if len(relevant_constraints) > 0:
             constraints_heading = '\nConstraints:\n'
         else:
             constraints_heading = ''

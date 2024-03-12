@@ -19,8 +19,6 @@ You are given a list of sentences, each with their own id (e.g., "Sentence 0", "
 
 - ** end **: marks an action as the end of the whole process. The action is the source / head action. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is ended for an end constraint to apply. Signal words alone are not sufficient here.
 
-- ** precedence **: if the head action is executed the tail action CAN be executed as well. Thus, the head action is a precondition for executing the tail action.
-
 - ** response **: if the head action was executed, the tail action has to be executed, too. Thus, executing the tail action is mandatory in this case.
 
 ## Constraint type already extracted and provided as input (use for disambiguation purpose)
@@ -45,6 +43,8 @@ Sentence 1: After signing the contract, the product is advertised but never befo
 
 Constraints:
 1	FALSE	succession	sign contract	advertise product
+
+## Output
 0	FALSE	precedence	sign contract	advertise product
 
 # Important Restriction

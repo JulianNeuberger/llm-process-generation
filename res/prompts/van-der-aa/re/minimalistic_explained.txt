@@ -1,0 +1,43 @@
+# Context
+
+You are given a list of sentences, each with their own id (e.g., "Sentence 0"), that describes a business process.
+
+# Task
+
+Extract all constraints contained.
+
+## Definition: actions
+An **action** is a verb describing a task execution; often transitive in combination with an object; an action is either a source action or a target action depending on whether it is the restricting or the restricted action
+
+## Definitions: constraints
+- ** precedence **: the source action needs to precede the target action; often written as a combination of a conditional clause and a modal verb (e.g., can) constraining the target action
+- ** response **: If the source action is executed, the target action is (always) executed as well. But it is not mandatory to execute the source action before; often written as a description of strict sequence of two actions
+- ** succession **: If the source action is executed, the target action MUST be executed as well. And it is mandatory to execute the source action before the target action!
+- ** init **: if the source action is said to start a process or process instance. There is no target action.
+- ** end **: if the source action is said to end a process or process instance. There is no target action.
+
+## Negation
+
+A negative constraint inverts the implication for the target action. For instance, in case of a precedence constraint this means that the target action must not be preceded by the source action.
+
+# Format
+
+Print the constraints line by line prefixed with the sentence id in the following form (<...> are placeholders, <negative> is TRUE if the sentence describes a negative constraint, else: FALSE):
+<sentence id>	<negative>	<constraint type>	<source action>	<target action>
+
+# Format example (for precedence only; similar for remaining constraint types)
+
+## Input
+Sentence 0: After signing the contract, the product can be advertised.
+
+## Output
+0	FALSE	precedence	sign contract	advertise product
+
+# Important Restriction
+
+Restriction 1: Sentences do never contain more than three constraints. Most have less. Thus, extract constraints conservatively, i.e., only in case of a high confidence.
+
+Restriction 2: You may use the context between sentences, but constraints are always only between actions of the same sentence.
+
+# Notes
+Do not use any code formatting.
