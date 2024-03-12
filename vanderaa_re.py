@@ -43,40 +43,58 @@ if __name__ == "__main__":
         #     prompt_path="van-der-aa/re/step-wise_tuning_CCoT.txt",
         # )
         formatters = [
-            # format.IterativeVanDerAaRelationListingFormattingStrategy(
-            #     steps=["constraints"],
-            #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/precedence.txt",
-            #     context_tags=[],
-            #     only_tags=['precedence']
-            # ),
-            # format.IterativeVanDerAaRelationListingFormattingStrategy(
-            #     steps=["constraints"],
-            #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/response.txt",
-            #     context_tags=['precedence'],
-            #     only_tags=['response']
-            # ),
             format.IterativeVanDerAaRelationListingFormattingStrategy(
                 steps=["constraints"],
                 separate_tasks=False,
-                prompt_path="van-der-aa/re/iterative/init_end.txt",
+                prompt_path="van-der-aa/re/iterative/succession.txt",
                 context_tags=[],
-                only_tags=['init', 'end']
+                only_tags=['succession']
             ),
             format.IterativeVanDerAaRelationListingFormattingStrategy(
                 steps=["constraints"],
                 separate_tasks=False,
-                prompt_path="van-der-aa/re/iterative/succession",
-                context_tags=[],
-                only_tags=['succession']
-            )
+                prompt_path="van-der-aa/re/iterative/precedence.txt",
+                context_tags=['succession'],
+                only_tags=['precedence']
+            ),
+            # format.IterativeVanDerAaRelationListingFormattingStrategy(
+            #     steps=["constraints"],
+            #     separate_tasks=False,
+            #     prompt_path="van-der-aa/re/iterative/response_iso.txt",
+            #     context_tags=[],
+            #     only_tags=['response']
+            # ),
+            # format.IterativeVanDerAaRelationListingFormattingStrategy(
+            #     steps=["constraints"],
+            #     separate_tasks=False,
+            #     prompt_path="van-der-aa/re/iterative/init_end_iso.txt",
+            #     context_tags=[],
+            #     only_tags=['init', 'end']
+            # )
         ]
+
+        # # 2 STEP APPROACH
+        # formatters = [
+        #     format.IterativeVanDerAaRelationListingFormattingStrategy(
+        #         steps=["constraints"],
+        #         separate_tasks=False,
+        #         prompt_path="van-der-aa/re/iterative/2step/init_end_2step.txt",
+        #         context_tags=[],
+        #         only_tags=['init', 'end']
+        #     ),
+        #     format.IterativeVanDerAaRelationListingFormattingStrategy(
+        #         steps=["constraints"],
+        #         separate_tasks=False,
+        #         prompt_path="van-der-aa/re/iterative/2step/prec_resp_succ_2step.txt",
+        #         context_tags=[],
+        #         only_tags=['precedence', 'response', 'succession']
+        #     )
+        # ]
 
         importer = data.VanDerAaImporter("res/data/van-der-aa/")
 
         documents = importer.do_import()
-        documents = filter_by_constraint_types(documents, ['end', 'init'])[4:11]
+        documents = filter_by_constraint_types(documents, ['succession'])[1:2]
         print(f"Dataset consists of {len(documents)} documents.")
         folds = sampling.generate_folds(documents, num_shots)
 

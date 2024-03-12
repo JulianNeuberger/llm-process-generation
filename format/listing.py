@@ -247,8 +247,8 @@ class IterativeVanDerAaRelationListingFormattingStrategy(
     ) -> str:
         res = []
         for c in constraints:
-            if c.sentence_id != sentence_id:
-                continue
+            # if c.sentence_id != sentence_id:
+            #     continue
             negative = "TRUE" if c.negative else "FALSE"
             tail = ""
             if c.tail is not None:
@@ -288,16 +288,12 @@ class IterativeVanDerAaRelationListingFormattingStrategy(
             tags_of_interest=self._only_tags, constraints=document.constraints)
         for i, sentence in enumerate(document.sentences):
             if self._separate_tasks:
-                res.append(f"** Sentence {i} **")
-                res.append("")
-                res.append(sentence)
-                res.append("")
-                res.append("")
+                res.append(f"Sentence {i}: {sentence}")
+            if relevant_constraints is not None and len(relevant_constraints) > 0:
                 res.append("Constraints:")
-                res.append("")
-            res.append(self._dump_constraints(relevant_constraints, i))
-            if self._separate_tasks:
-                res.append("")
+                res.append(self._dump_constraints(relevant_constraints, i))
+        if self._separate_tasks:
+            res.append("")
         return "\n".join(res)
 
     def input(self, document: data.VanDerAaDocument) -> str:
@@ -307,8 +303,12 @@ class IterativeVanDerAaRelationListingFormattingStrategy(
         constraints = []
         for i in range(len(document.sentences)):
             constraints.append(self._dump_constraints(relevant_constraints, i))
-        constraints = "\n".join(constraints)
-        return f'{sentences}\n\n{constraints}'
+        constraints_as_string = "\n".join(constraints)
+        if len(constraints) > 0:
+            constraints_heading = '\nConstraints:\n'
+        else:
+            constraints_heading = ''
+        return f'{sentences}\n{constraints_heading}{constraints_as_string}'
 
     def parse(self, document: data.VanDerAaDocument, string: str) -> base.ParseResult:
         constraints = []

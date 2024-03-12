@@ -1,8 +1,8 @@
 # Task Description
 
-You are an algorithm tasked with extracting declarative process models from natural language process descriptions.
+You are a process modeling expert tasked with extracting declarative process models from natural language process descriptions.
 The process descriptions consist of a series of actions, each described by a predicate and an object.
-You are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on), that describes a business process. You can use those for additional context.
+You are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on), that describes a business process.
 
 # Definition
 
