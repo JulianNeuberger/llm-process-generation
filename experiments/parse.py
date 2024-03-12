@@ -315,7 +315,7 @@ def main():
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = f"res/answers/analysis/md/no_formatting.json"
+    answer_file = f"res/answers/van-der-aa-re/2024-03-04_18-27-13_step-wise_tuning_CCoT_OUTPERFORMER.json"
     importer = None
     for k, v in importers.items():
         if k in answer_file:

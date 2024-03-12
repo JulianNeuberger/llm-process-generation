@@ -1,0 +1,39 @@
+# Task Description
+
+You are a business process analyst tasked with extracting declarative process models from natural language process descriptions.
+Your goal is to identify constraints between these actions, which dictate the ordering and existence of actions within the process.
+
+# Type Definitions
+
+## Overview
+- ** ACTION **: predicate and object of a sentence describing a task. Predicate is usually a transitive verb, and object is some physical or digital object on which is being acted on. Transform the predicate into the infinitive (e.g. "he submits the paper" would lead to "submit paper").
+
+- ** CONSTRAINT **: defines if and how actions can be executed. Always has a source action and sometimes a target action, depending on the type.
+
+## Constraint Types
+
+- ** init **: holds if the sentence explicitly states that the PROCESS is started by a particular action (signal words such as "first" are not sufficient). This action is the source action of the init constraint. There is no target action.
+
+- ** end **: holds if the sentence explicitly states that the PROCESS is ended by a particular action (signal words such as "last" or "finally" are not sufficient). This action is the source action of the end constraint. There is no target action.
+
+- ** precedence **: holds if executing the source action enables the execution of the target action.
+
+- ** response **: holds if executing the source action requires that the target action is executed, too.
+
+- ** succession **: combination of **precedence** and **response**. Thus, source and targe action are executed exactly in the ordering stated in the sentence.
+
+## Negation
+
+You might encounter negative constraints indicated by formulations stating that "if something is done, something else is not allowed anymore." statements like "do not" or "must not." A negation is NOT a constraint type itself.
+
+# Format
+
+Print one constraint per line prefixed with the sentence index (starting with 0), where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the CONSTRAINT TYPE, and the extracted ACTIONS by tabs in the following form (<...> are placeholders):
+<sentence index>    <TRUE or FALSE>	<constraint type>	<head action>	<tail action>
+
+# Important Restriction
+
+Restriction 1: Sentences may contain up to three constraints, but some may contain no constraints at all!
+
+Restriction 2: You may use the context between sentences, but constraints are always only between actions of one sentence.
+

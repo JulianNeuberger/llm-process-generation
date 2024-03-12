@@ -1,5 +1,4 @@
 import re
-import traceback
 import typing
 
 import data
@@ -42,12 +41,16 @@ class VanDerAaRelationListingFormattingStrategy(
     base.BaseFormattingStrategy[data.VanDerAaDocument]
 ):
     def __init__(
-        self,
-        steps: typing.List[typing.Literal["constraints"]],
-        prompt_path: str,
-        separate_tasks: bool,
+            self,
+            steps: typing.List[typing.Literal["constraints"]],
+            prompt_path: str,
+            separate_tasks: bool,
+            context_tags: typing.List[str] = None,
+            only_tags: typing.List[str] = None
     ):
         super().__init__(steps)
+        self._only_tags = only_tags
+        self._context_tags = context_tags
         self._prompt_path = prompt_path
         self._prompt = common.load_prompt_from_file(prompt_path)
         self._separate_tasks = separate_tasks
@@ -63,14 +66,18 @@ class VanDerAaRelationListingFormattingStrategy(
         return {
             "prompt_path": self._prompt_path,
             "separate_tasks": self._separate_tasks,
+            "context_tags": self._context_tags,
+            "only_tags": self._only_tags
         }
 
     def _dump_constraints(
-        self, document: data.VanDerAaDocument, sentence_id: int
+            self, constraints: typing.List[data.VanDerAaConstraint], sentence_id: int
     ) -> str:
         res = []
-        for c in document.constraints:
+        for c in constraints:
             if c.sentence_id != sentence_id:
+                continue
+            if self._only_tags is not None and c.type.lower() not in self._only_tags:
                 continue
             negative = "TRUE" if c.negative else "FALSE"
             tail = ""
@@ -103,13 +110,205 @@ class VanDerAaRelationListingFormattingStrategy(
                 res.append(self._dump_actions(document, i))
                 res.append("")
                 res.append("Constraints:")
-            res.append(self._dump_constraints(document, i))
+            res.append(self._dump_constraints(document.constraints, i))
             if self._separate_tasks:
                 res.append("")
         return "\n".join(res)
 
     def input(self, document: data.VanDerAaDocument) -> str:
-        return "\n".join(f"Sentence {i}: {s}" for i, s in enumerate(document.sentences))
+        sentences = "\n".join(f"Sentence {i}: {s}" for i, s in enumerate(document.sentences))
+        relevant_constraints = []
+        for c in document.constraints:
+            if self._context_tags is not None:
+                continue
+            if c.type.lower() not in self._context_tags:
+                continue
+            relevant_constraints.append(c)
+        constraints = []
+        for i in range(len(document.sentences)):
+            constraints.append(self._dump_constraints(relevant_constraints, i))
+        constraints = "\n".join(constraints)
+        return f'{sentences}\n\n{constraints}'
+
+    def parse(self, document: data.VanDerAaDocument, string: str) -> base.ParseResult:
+        constraints = []
+        current_sentence_id: typing.Optional[int] = None
+        for line in string.splitlines(keepends=False):
+            if line.strip() == "":
+                continue
+
+            match = re.match(self._sentence_re, line)
+            if match is not None:
+                # new sentence
+                current_sentence_id = int(match.group(1))
+                continue
+
+            if "\t" not in line:
+                # either a header like "Actions:" or "Constraints:",
+                # or an action, which we currently do not parse
+                continue
+
+            split_line = line.strip().split("\t")
+            if self._separate_tasks:
+                if len(split_line) == 4:
+                    negative, c_type, c_head, c_tail = split_line
+                    c_head = data.VanDerAaMention(text=c_head)
+                    c_tail = data.VanDerAaMention(text=c_tail)
+                elif len(split_line) == 3:
+                    negative, c_type, c_head = split_line
+                    c_head = data.VanDerAaMention(text=c_head)
+                    c_tail = None
+                else:
+                    print(
+                        f'Expected 3 or 4 tab separated values in line "{line}", got {len(split_line)}, skipping line.'
+                    )
+                    continue
+            else:
+                if len(split_line) == 5:
+                    current_sentence_id, negative, c_type, c_head, c_tail = split_line
+                    c_head = data.VanDerAaMention(text=c_head)
+                    if c_tail == "":
+                        c_tail = None
+                    else:
+                        c_tail = data.VanDerAaMention(text=c_tail)
+                elif len(split_line) == 4:
+                    current_sentence_id, negative, c_type, c_head = split_line
+                    c_head = data.VanDerAaMention(text=c_head)
+                    c_tail = None
+                else:
+                    print(
+                        f'Expected 4 or 5 tab separated values in line "{line}", got {len(split_line)}, skipping line.'
+                    )
+                    continue
+                current_sentence_id = int(current_sentence_id)
+
+            if c_type.strip() == "":
+                print(f"Predicted empty type in {line}. Skipping.")
+                continue
+
+            if c_tail == "None":
+                raise AssertionError()
+
+            constraints.append(
+                data.VanDerAaConstraint(
+                    sentence_id=current_sentence_id,
+                    type=c_type.strip().lower(),
+                    head=c_head,
+                    tail=c_tail,
+                    negative=negative.lower() == "true",
+                )
+            )
+        doc = data.VanDerAaDocument(
+            id=document.id,
+            name=document.name,
+            text=document.text,
+            constraints=constraints,
+            sentences=document.sentences,
+            mentions=document.mentions,
+        )
+        return base.ParseResult(doc, 0)
+
+
+class IterativeVanDerAaRelationListingFormattingStrategy(
+    base.BaseFormattingStrategy[data.VanDerAaDocument]
+):
+    def __init__(
+            self,
+            steps: typing.List[typing.Literal["constraints"]],
+            prompt_path: str,
+            separate_tasks: bool,
+            context_tags: typing.List[str] = None,
+            only_tags: typing.List[str] = None
+    ):
+        super().__init__(steps)
+        self._only_tags = only_tags
+        self._context_tags = context_tags
+        self._prompt_path = prompt_path
+        self._prompt = common.load_prompt_from_file(prompt_path)
+        self._separate_tasks = separate_tasks
+        self._sentence_re = re.compile(
+            r"^\s*\*\*\s?sentence\s*(\d+)\s*\*\*\s*$", flags=re.IGNORECASE
+        )
+
+    def description(self) -> str:
+        return self._prompt
+
+    @property
+    def args(self):
+        return {
+            "prompt_path": self._prompt_path,
+            "separate_tasks": self._separate_tasks,
+            "context_tags": self._context_tags,
+            "only_tags": self._only_tags
+        }
+
+    def _dump_constraints(
+            self, constraints: typing.List[data.VanDerAaConstraint], sentence_id: int
+    ) -> str:
+        res = []
+        for c in constraints:
+            if c.sentence_id != sentence_id:
+                continue
+            negative = "TRUE" if c.negative else "FALSE"
+            tail = ""
+            if c.tail is not None:
+                tail = c.tail.text
+            if self._separate_tasks:
+                res.append(f"{negative}\t{c.type}\t{c.head}\t{tail}")
+            else:
+                res.append(f"{c.sentence_id}\t{negative}\t{c.type}\t{c.head.text}\t{tail}")
+        return "\n".join(res)
+
+    @staticmethod
+    def _filter_constraints(tags_of_interest: typing.List[str], constraints: typing.List[data.VanDerAaConstraint]) -> \
+            typing.List[data.VanDerAaConstraint]:
+        relevant_constraints = []
+        for c in constraints:
+            if tags_of_interest is None:
+                continue
+            if c.type.lower() not in tags_of_interest:
+                continue
+            relevant_constraints.append(c)
+        return relevant_constraints
+
+    @staticmethod
+    def _dump_actions(document: data.VanDerAaDocument, sentence_id: int) -> str:
+        actions: typing.Set[str] = set()
+        for c in document.constraints:
+            if c.sentence_id != sentence_id:
+                continue
+            actions.add(c.head.text)
+            if c.tail is not None:
+                actions.add(c.tail.text)
+        return "\n".join(actions)
+
+    def output(self, document: data.VanDerAaDocument) -> str:
+        res = []
+        relevant_constraints = IterativeVanDerAaRelationListingFormattingStrategy._filter_constraints(
+            tags_of_interest=self._only_tags, constraints=document.constraints)
+        for i, sentence in enumerate(document.sentences):
+            if self._separate_tasks:
+                res.append(f"** Sentence {i} **")
+                res.append("")
+                res.append(sentence)
+                res.append("")
+                res.append("")
+                res.append("Constraints:")
+                res.append("")
+            res.append(self._dump_constraints(relevant_constraints, i))
+            if self._separate_tasks:
+                res.append("")
+        return "\n".join(res)
+
+    def input(self, document: data.VanDerAaDocument) -> str:
+        sentences = "\n".join(f"Sentence {i}: {s}" for i, s in enumerate(document.sentences))
+        relevant_constraints = IterativeVanDerAaRelationListingFormattingStrategy._filter_constraints(
+            tags_of_interest=self._context_tags, constraints=document.constraints)
+        constraints = []
+        for i in range(len(document.sentences)):
+            constraints.append(self._dump_constraints(relevant_constraints, i))
+        constraints = "\n".join(constraints)
+        return f'{sentences}\n\n{constraints}'
 
     def parse(self, document: data.VanDerAaDocument, string: str) -> base.ParseResult:
         constraints = []
@@ -194,10 +393,10 @@ class QuishpiMentionListingFormattingStrategy(
     base.BaseFormattingStrategy[data.QuishpiDocument]
 ):
     def __init__(
-        self,
-        steps: typing.List[typing.Literal["mentions"]],
-        only_tags: typing.Optional[typing.List[str]] = None,
-        prompt: str = None,
+            self,
+            steps: typing.List[typing.Literal["mentions"]],
+            only_tags: typing.Optional[typing.List[str]] = None,
+            prompt: str = None,
     ):
         super().__init__(steps)
         if prompt is None:
@@ -262,10 +461,10 @@ class IterativeQuishpiMentionListingFormattingStrategy(
     QuishpiMentionListingFormattingStrategy
 ):
     def __init__(
-        self,
-        steps: typing.List[typing.Literal["mentions"]],
-        tag: str,
-        context_tags: typing.List[str],
+            self,
+            steps: typing.List[typing.Literal["mentions"]],
+            tag: str,
+            context_tags: typing.List[str],
     ):
         prompt = f"quishpi/md/iterative/{tag.replace(' ', '_')}.txt"
         super().__init__(steps, only_tags=[tag], prompt=prompt)
@@ -301,9 +500,9 @@ class IterativeQuishpiMentionListingFormattingStrategy(
                     continue
 
                 text = (
-                    text[: right_index + len(mention.text)]
-                    + f" </{mention.type}>"
-                    + text[right_index + len(mention.text) :]
+                        text[: right_index + len(mention.text)]
+                        + f" </{mention.type}>"
+                        + text[right_index + len(mention.text):]
                 )
                 text = text[:right_index] + f"<{mention.type}> " + text[right_index:]
                 break
@@ -409,11 +608,11 @@ class PetMentionListingFormattingStrategy(
     base.BaseFormattingStrategy[data.PetDocument]
 ):
     def __init__(
-        self,
-        steps: typing.List[str],
-        only_tags: typing.Optional[typing.List[str]] = None,
-        generate_descriptions: bool = False,
-        prompt: str = None,
+            self,
+            steps: typing.List[str],
+            only_tags: typing.Optional[typing.List[str]] = None,
+            generate_descriptions: bool = False,
+            prompt: str = None,
     ):
         super().__init__(steps)
         self._generate_descriptions = generate_descriptions
@@ -488,7 +687,7 @@ class PetMentionListingFormattingStrategy(
         return text
 
     def parse_line(
-        self, line: str, document: data.PetDocument
+            self, line: str, document: data.PetDocument
     ) -> typing.Optional[typing.List[data.PetMention]]:
         if "\t" not in line:
             raise ValueError(f"line not tab-separated: '{line}'")
@@ -520,7 +719,7 @@ class PetMentionListingFormattingStrategy(
 
         res = []
         for i, token in enumerate(sentence):
-            candidates = sentence[i : i + len(mention_tokens)]
+            candidates = sentence[i: i + len(mention_tokens)]
             candidate_text = " ".join(c.text.lower() for c in candidates)
 
             if candidate_text.lower() != mention_text.lower():
@@ -593,7 +792,7 @@ class PetActivityListingFormattingStrategy(PetMentionListingFormattingStrategy):
 
 class IterativePetMentionListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(
-        self, steps: typing.List[str], tag: str, context_tags: typing.List[str]
+            self, steps: typing.List[str], tag: str, context_tags: typing.List[str]
     ):
         super().__init__(steps, only_tags=[tag], generate_descriptions=False)
         self._tag = tag.lower()
@@ -800,5 +999,6 @@ if __name__ == "__main__":
             print("-------")
             print()
             formatter.parse(d, formatter.output(d))
+
 
     main()

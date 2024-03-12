@@ -41,9 +41,9 @@ The following abstract examples illustrate the differences:
 
 Please ensure the correct identification and formatting of constraints in the given text. Output one constraint per line, including whether the constraint is negated (TRUE or FALSE), the type of constraint, and the extracted head and tail actions separated by tabs. Stick closely to the provided examples and descriptions, and be careful to distinguish between precedence, response, and succession constraints.
 
-Print one constraint per line, where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the type of the constraint, and the extracted actions by tabs in the following form (<...> are placeholders):
+Print one constraint per line prefixed with the sentence index (starting with 0), where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the type of the constraint, and the extracted actions by tabs in the following form (<...> are placeholders):
 
-<negative>	<constraint type>	<head action>	<tail action>
+<sentence id>	<negative>	<constraint type>	<head action>	<tail action>
 
 # Procedure
 
@@ -82,7 +82,7 @@ Actions:
 submit paper
 
 Constraints:
-FALSE	init	submit paper
+0	FALSE	init	submit paper
 
 ** Sentence 1 **
 
@@ -91,7 +91,7 @@ sign contract
 advertise product
 
 Constraints:
-FALSE	precedence	sign contract	advertise product
+1	FALSE	precedence	sign contract	advertise product
 
 ** Sentence 2 **
 
@@ -100,7 +100,7 @@ sign contract
 advertise product
 
 Constraints:
-FALSE	succession	sign contract	advertise product
+2	FALSE	succession	sign contract	advertise product
 
 ** Sentence 3 **
 
@@ -109,7 +109,7 @@ call manager
 forward request
 
 Constraints:
-FALSE	response	call manager	forward request
+3	FALSE	response	call manager	forward request
 
 ** Sentence 4 **
 
@@ -117,7 +117,7 @@ Actions:
 archive proposal
 
 Constraints:
-0	FALSE	end	archive proposal
+4	FALSE	end	archive proposal
 
 ** Sentence 5 **
 
@@ -126,7 +126,7 @@ nofify manager
 reject request
 
 Constraints:
-TRUE	response	nofify manager	reject request
+5	TRUE	response	nofify manager	reject request
 
 # Notes
 

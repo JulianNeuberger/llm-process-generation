@@ -113,9 +113,9 @@ class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
     sentence_id: int
 
     def pretty_dump(self, document: VanDerAaDocument) -> str:
-        pretty = f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head}'
+        pretty = f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head.text}'
         if self.tail:
-            pretty = f"{pretty}\t{self.tail}"
+            pretty = f"{pretty}\t{self.tail.text}"
         return f"s: {self.sentence_id}\t{pretty}"
 
     def copy(self):
