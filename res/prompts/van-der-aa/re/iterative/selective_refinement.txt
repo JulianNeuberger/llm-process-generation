@@ -5,10 +5,10 @@ You are given a list of sentences, each with their own id (e.g., "Sentence 0"), 
 # Task
 
 Several constraints provided are invalid. Your task is to create a refined list of constraints by carefully selecting only those constraints given for each sentence according to the following criteria:
-- The meaning of the constraint (see definitions of the constraints below) must be similar to an utterance in the sentence. Reflect about this and if this is not the case, discard the constraint.
+- The meaning of the constraint (see definitions of the constraints below) must be very close to the utterance in the sentence. Reflect about this and if this is not the case, discard the constraint.
 - The constraint types precedence, response and succession can easily be mixed up. If you encounter all three constraint types for the same actions you have two options:
     a. discard precedence and response (always both of them!) or
-    b. discard the succession constraint and either the precedence or the response constraint depending on which is less plausible.
+    b. discard the succession constraint and either the precedence or the response constraint depending on which is less plausible. This is the preferred option and precedence constraints are way more likely to occur!
 
 ## Definition: ** action **:
 a verb describing a task execution; often transitive in combination with an object; an action is either a source action or a target action depending on whether it is the restricting or the restricted action

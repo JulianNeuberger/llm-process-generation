@@ -10,7 +10,7 @@ Extract all constraints contained.
 An **action** is a verb describing a task execution; often transitive in combination with an object; an action is either a source action or a target action depending on whether it is the restricting or the restricted action
 
 ## Definitions: constraints
-- ** precedence **: the source action needs to precede the target action; often written as a combination of a conditional clause and a modal verb (e.g., can) constraining the target action
+- ** precedence **: the source action needs to precede the target action; often written as a combination of a conditional clause and a modal verb (e.g., can) constraining the target action; this constraint occurs very frequently!
 - ** response **: If the source action is executed, the target action is (always) executed as well. But it is not mandatory to execute the source action before; often written as a description of strict sequence of two actions
 - ** succession **: If the source action is executed, the target action MUST be executed as well. And it is mandatory to execute the source action before the target action!
 - ** init **: if the source action is said to start a process or process instance. There is no target action.
