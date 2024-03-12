@@ -6,6 +6,7 @@ import data
 import eval
 import experiments
 import format
+from format import listing
 
 TDocument = typing.TypeVar("TDocument", bound=data.DocumentBase)
 ExperimentStats = typing.Dict[str, typing.Dict[str, eval.Stats]]
@@ -80,6 +81,11 @@ def parse_experiment(
         predicted_doc: typing.Optional[data.DocumentBase] = None
         input_doc = documents_by_id[result.original_id]
 
+        # If a refinement strategy is used, partial results are not considered.
+        refinement_result_only = False
+        if listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__ in result.formatters:
+            refinement_result_only = True
+
         for formatter_class_name, steps, answer, prompt, args in zip(
             result.formatters,
             result.steps,
@@ -87,6 +93,9 @@ def parse_experiment(
             result.prompts,
             result.formatter_args,
         ):
+            if refinement_result_only and formatter_class_name != listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__:
+                continue
+
             if overall_steps is None:
                 overall_steps = steps
             assert overall_steps == steps
@@ -315,7 +324,7 @@ def main():
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = f"res/answers/van-der-aa-re/2024-03-12_17-01-08.json"
+    answer_file = f"res/answers/van-der-aa-re/2024-03-12_23-04-12.json"
     importer = None
     for k, v in importers.items():
         if k in answer_file:
