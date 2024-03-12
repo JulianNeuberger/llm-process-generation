@@ -105,15 +105,18 @@ class VanDerAaDocument(base.DocumentBase):
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
-class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
-    type: str
+class VanDerAaConstraint(
+    base.SupportsPrettyDump["VanDerAaDocument"], base.HasCustomMatch, base.HasType
+):
     head: VanDerAaMention
     tail: typing.Optional[VanDerAaMention]
     negative: bool
     sentence_id: int
 
     def pretty_dump(self, document: VanDerAaDocument) -> str:
-        pretty = f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head.text}'
+        pretty = (
+            f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head.text}'
+        )
         if self.tail:
             pretty = f"{pretty}\t{self.tail.text}"
         return f"s: {self.sentence_id}\t{pretty}"
@@ -150,6 +153,23 @@ class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
             if self.type.lower() != true.type.lower():
                 res += 1
         return res
+
+    def match(self, other: object) -> bool:
+        if not isinstance(other, VanDerAaConstraint):
+            return False
+        if not self.head.match(other.head):
+            return False
+        if self.tail is None and other.tail is not None:
+            return False
+        if self.tail is None and other.tail is None:
+            return self.type.lower() == other.type.lower()
+        if not self.tail.match(other.tail):
+            return False
+        if self.negative and not other.negative:
+            return False
+        if self.sentence_id != other.sentence_id:
+            return False
+        return self.type.lower() == other.type.lower()
 
 
 class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
