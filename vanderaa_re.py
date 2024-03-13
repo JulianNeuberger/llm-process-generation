@@ -87,8 +87,8 @@ if __name__ == "__main__":
             # format.IterativeVanDerAaRelationListingFormattingStrategy(
             #     steps=["constraints"],
             #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/minimalistic/response.txt",
-            #     context_tags=[],
+            #     prompt_path="van-der-aa/re/iterative/response_given_precedence.txt",
+            #     context_tags=['precedence'],
             #     only_tags=['response']
             # ),
             # format.IterativeVanDerAaRelationListingFormattingStrategy(
@@ -101,17 +101,17 @@ if __name__ == "__main__":
             format.IterativeVanDerAaRelationListingFormattingStrategy(
                 steps=["constraints"],
                 separate_tasks=False,
-                prompt_path="van-der-aa/re/minimalistic_explained.txt",
+                prompt_path="van-der-aa/re/step-wise_tuning_CCoT_no_examples.txt",
                 context_tags=[],
                 only_tags=['response', 'init', 'end', 'precedence', 'succession']
             ),
-            format.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy(
-                steps=["constraints"],
-                separate_tasks=False,
-                prompt_path="van-der-aa/re/iterative/selective_refinement.txt",
-                context_tags=['succession', 'precedence', 'response', 'init', 'end'],
-                only_tags=['succession', 'precedence', 'response', 'init', 'end']
-            )
+            # format.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy(
+            #     steps=["constraints"],
+            #     separate_tasks=False,
+            #     prompt_path="van-der-aa/re/iterative/refinement/selective_refinement_tuning.txt",
+            #     context_tags=['precedence', 'response', 'init', 'end', 'succession'],
+            #     only_tags=['succession', 'precedence', 'response', 'init', 'end']
+            # )
 
         ]
 
@@ -137,6 +137,10 @@ if __name__ == "__main__":
 
         documents = importer.do_import()
         documents = select_one_by_constraint_types(documents, [])
+        # [8: 18]
+        #[0:8]
+        #[8:18]
+        # [8:12]
         # documents = filter_by_constraint_types(documents, ['precedence'])
         print(f"Dataset consists of {len(documents)} documents.")
         folds = sampling.generate_folds(documents, num_shots)

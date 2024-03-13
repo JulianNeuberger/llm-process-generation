@@ -63,7 +63,7 @@ def run_single_document_prompt(
 ) -> model.PromptResult:
     print(f"Running prompt for {input_document.id} ...")
 
-    if num_shots != -1:
+    if num_shots != -1 and formatter.__class__.__name__ != format.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy:
         assert num_shots <= len(example_docs)
         example_docs = random.sample(example_docs, num_shots)
 

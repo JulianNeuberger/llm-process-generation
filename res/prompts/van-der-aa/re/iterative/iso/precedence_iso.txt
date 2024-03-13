@@ -36,7 +36,7 @@ Constraints:
 
 # Important Restriction
 
-Restriction 1: Sentences may contain up to three constraints in total, but some may not contain any constraints at all!
+Restriction 1: Sentences may contain up to three constraints in total, but some may not contain any precedence constraint at all! Carefully decide whether to extract a constraint, since other constraints might fit better than precedence.
 
 Restriction 2: You may use the context between sentences, but constraints are always only between actions of the same sentence.
 
