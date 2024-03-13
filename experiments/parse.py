@@ -111,10 +111,6 @@ def parse_experiment(
         truths.append(input_doc)
 
     assert overall_steps is not None
-    print("ERRORS::::::::::::::")
-    for k, v in errors_by_doc.items():
-        print(k, v)
-    print("::::::::::::::::::::")
 
     stats = {}
     if "mentions" in overall_steps:

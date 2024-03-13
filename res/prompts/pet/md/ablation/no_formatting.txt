@@ -14,7 +14,7 @@ Can also be an event during the process, that is executed by an external, implic
 that is not mentioned in the text, e.g., "placed" in "when an order is placed".
 Never contains the Actor that executes it, nor the Activity Data that's used during this
 Activity, is just the verb as in "checked" and not "is checked"!
- Activity Data: a physical object, or digital data that is relevant to the process, because
+Activity Data: a physical object, or digital data that is relevant to the process, because
 an action produces or uses it, e.g., "the paper", "the report", "the machine part".
 Always include the determiner! Can also be a pronoun, like "it", but is always part of
 a task description. Is never information about the process itself, as in "the process

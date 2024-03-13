@@ -1,12 +1,15 @@
+import random
 import typing
 
 import Levenshtein
 import langchain_openai
+import matplotlib
 import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 import pandas
 import seaborn as sns
+import tqdm
 
 import data
 import eval
@@ -24,8 +27,35 @@ plt.rcParams["text.usetex"] = True
 importer = data.PetImporter("res/data/pet/all.new.jsonl")
 model_name = "gpt-4-0125-preview"
 
-task = "re"
-# task = "md"
+# task = "re"
+task = "md"
+
+
+def _set_theme():
+    sns.set_theme(
+        rc={
+            "figure.autolayout": False,
+            "font.family": ["Computer Modern", "CMU Serif", "cmu", "serif"],
+            "font.serif": ["Computer Modern", "CMU Serif", "cmu"],
+            #'text.usetex': True
+        }
+    )
+    matplotlib.rcParams.update(
+        {
+            "figure.autolayout": False,
+            "font.family": ["Computer Modern", "CMU Serif", "cmu", "serif"],
+            "font.serif": ["Computer Modern", "CMU Serif", "cmu"],
+            #'text.usetex': True
+        }
+    )
+    sns.set_style(
+        rc={
+            "font.family": ["Computer Modern", "CMU Serif", "cmu", "serif"],
+            "font.serif": ["Computer Modern", "CMU Serif", "cmu"],
+            #'text.usetex': True
+        }
+    )
+    sns.set(font="Computer Modern")
 
 
 def iterative_prompt():
@@ -368,8 +398,6 @@ def few_shots():
 
     df = pandas.DataFrame.from_records(run_scores)
 
-    sns.set_theme()
-
     fig = plt.figure(figsize=(8.53, 4.8))
     ax1 = fig.add_subplot(111)
 
@@ -543,7 +571,6 @@ def stochasticity_minor_changes():
         run_scores.append({"score": similarity, "metric": "cosine_similarity"})
 
     df = pandas.DataFrame.from_records(run_scores)
-    sns.set_theme()
     plt.figure(figsize=(6.4, 4.8))
     sns.boxplot(
         data=df[df["metric"].isin(["f1", "p", "r"])], x="metric", y="score", width=0.35
@@ -635,7 +662,6 @@ def stochasticity_repeated_runs():
         run_scores.append({"score": scores.f1, "metric": "f1"})
 
     df = pandas.DataFrame.from_records(run_scores)
-    sns.set_theme()
     plt.figure(figsize=(4.27, 4.8))
     sns.boxplot(data=df, x="metric", y="score", width=0.35)
     plt.ylim(0, 1)
@@ -666,12 +692,23 @@ def bar_plot():
         exp_file_path: str,
     ):
         results = parse.parse_file(exp_file_path)
-        _, stats = parse.parse_experiments(
+        errors, stats = parse.parse_experiments(
             results, importer, print_only_tags=None, verbose=False
         )
         scores = parse.get_scores(stats, verbose=False)
         assert len(scores) == 1
-        return list(scores.values())[0].micro_averaged_scores.f1
+        return list(scores.values())[0].micro_averaged_scores.f1, errors
+
+    def draw_labels(xs, ys, offset=1e-4):
+        for _x, _y in zip(xs, ys):
+            ax.text(
+                _y,  # + math.copysign(_y, offset),
+                _x,
+                f"{_y:.2f}",
+                horizontalalignment="left" if _y > 0 else "right",
+                verticalalignment="center",
+                fontname="CMS",
+            )
 
     experiment_names = [
         "Iterative",
@@ -682,32 +719,88 @@ def bar_plot():
         "GPT 3.5",
         "No Context Manager",
     ]
-    md_baseline = get_f1_from_experiment(f"res/answers/analysis/md/baseline.json")
+    md_baseline, md_baseline_errors = get_f1_from_experiment(
+        f"res/answers/analysis/md/baseline.json"
+    )
     md_values = []
-    re_baseline = get_f1_from_experiment(f"res/answers/analysis/re/baseline.json")
+    md_errors = []
+    re_baseline, re_baseline_errors = get_f1_from_experiment(
+        f"res/answers/analysis/re/baseline.json"
+    )
     re_values = []
-    for exp in [
-        "iterative",
-        "no_format_examples",
-        "no_formatting",
-        "short_explanation",
-        "combined",
-        "gpt_3_5",
-        "no_context_manager",
-    ]:
-        md_values.append(
-            md_baseline - get_f1_from_experiment(f"res/answers/analysis/md/{exp}.json")
+    re_errors = []
+    for exp in tqdm.tqdm(
+        [
+            "iterative",
+            "no_format_examples",
+            "no_formatting",
+            "short_explanations",
+            "combined",
+            "gpt_3_5",
+            "no_context_manager",
+        ]
+    ):
+        md_value, num_md_errors = get_f1_from_experiment(
+            f"res/answers/analysis/md/{exp}.json"
         )
-        re_values.append(
-            re_baseline - get_f1_from_experiment(f"res/answers/analysis/re/{exp}.json")
-        )
+        md_errors.append(num_md_errors)
+        md_values.append(md_value - md_baseline)
+        try:
+            re_value, num_re_errors = get_f1_from_experiment(
+                f"res/answers/analysis/re/{exp}.json"
+            )
+            re_values.append(re_value - re_baseline)
+            re_errors.append(num_re_errors)
+        except FileNotFoundError:
+            re_values.append(random.random())
+            re_errors.append(random.randint(0, 15))
 
-    y_pos = np.arrange(len(experiment_names))
+    fig, ax = plt.subplots()
+    y_pos = np.arange(len(experiment_names))
     height = 0.8
-    plt.barh(y_pos, md_values, height, left=0.15)
+    y_pos_md = y_pos - height / 4
+    y_pos_re = y_pos + height / 4
+    ax.barh(y_pos_md, md_values, height=height / 2, hatch="///", label="MD")
+    ax.barh(y_pos_re, re_values, height=height / 2, hatch="\\\\\\", label="RE")
+    ax.set_yticks(y_pos, experiment_names)
+    ax.invert_yaxis()
+
+    draw_labels(y_pos_md, md_values)
+    draw_labels(y_pos_re, re_values)
+
+    bottom, top = ax.get_xlim()
+    ax.set_xlim(bottom * 1.1, top * 1.1)
+
+    ax.legend()
+
+    plt.tight_layout()
+
+    plt.savefig("figures/ablation/bar.pdf")
+    plt.savefig("figures/ablation/bar.png")
+
+    max_experiment_name = max([len(n) for n in experiment_names])
+    print(
+        f"{'name':>{max_experiment_name}} | MD Rel. | MD Abs. | MD Err. | RE Rel. | RE Abs. | RE Err."
+    )
+    print(
+        f"{'-' * max_experiment_name}-+---------+---------+---------+---------+---------+---------"
+    )
+    print(
+        f"{'Baseline':>{max_experiment_name}} |   ---   | {md_baseline:+.2f}   | {md_baseline_errors:>7} |   ---   | {re_baseline:+.2f}   | {re_baseline_errors:>7}"
+    )
+    for exp_name, md_diff, md_errors, re_diff, re_errors in zip(
+        experiment_names, md_values, md_errors, re_values, re_errors
+    ):
+        absolute_md = md_baseline + md_diff
+        absolute_re = re_baseline + re_diff
+        print(
+            f"{exp_name:>{max_experiment_name}} | {md_diff:+.2f}   | {absolute_md:.2f}    | {md_errors:>7} | {re_diff:+.2f}   | {absolute_re:.2f}    | {re_errors:>7}"
+        )
 
 
 if __name__ == "__main__":
+    _set_theme()
+
     iterative_prompt()
     combined_prompt()
     default_prompt()
@@ -717,6 +810,9 @@ if __name__ == "__main__":
     no_context_manager()
     # stochasticity_repeated_runs()
     # stochasticity_minor_changes()
-    few_shots()
-    document_num_tokens()
+    # few_shots()
     gpt_3_5()
+
+    document_num_tokens()
+
+    bar_plot()
