@@ -1,0 +1,35 @@
+# Context
+
+You are given a list of sentences, each with their own id (e.g., "Sentence 0"), that describes a business process in terms of actions and constraints restricting their execution order.
+
+# Task
+Extract (a maximum of three constraints) between actions identified in one sentence. Actions encompass verbs that describe the execution of tasks, often involving an object. They are categorized as either source actions, which impose restrictions, or target actions, which are subject to restrictions.
+
+## Constraints
+Constraints associated with actions include precedence, response, succession, init and end.
+
+A precedence constraint dictates that the source action must precede the target action. It is typically expressed through conditional clauses and modal verbs such as "can" "may" or "might" that express an optional modality given a fulfilled precondition.
+
+A response constraint requires that, when the source action occurs, the target action is also (always) executed, although executing the source action beforehand is not mandatory. This constraint is usually described as a sequence of two actions.
+
+Succession means that if the source action is performed, the target action must also be executed, and it is mandatory to carry out the source action before the target action. This constraint is usually described as a very strict sequence of two actions.
+
+An init constraint applies when the source action initiates a process or process instance, with no specific target action.
+
+An end constraint occurs when the source action concludes a process or process instance, also without a specific target action.
+
+## Negation
+A negated constraint inverts its semantics.
+
+# Disambiguation
+
+The constraints precedence, response and succession are easy to confuse. To differentiate between response and precedence, carefully analyze whether the target action CAN be performed
+because the source action has already been performed (precedence), or whether the target action MUST THEREFORE be performed (response). If BOTH is true, it is a succession constraint. Thus, again, modal verbs play an important role for disambiguating constraints.
+The following abstract examples illustrate the differences:
+- Example 1: If action A is performed, action B can be carried out. (precedence, because A enables B)
+- Example 2: If action A is performed, action B is carried out, too. (response, because A requires that B is executed after it, too)
+- Example 3: If action A is performed, action B can and must also be carried out. (succession, because A and B mutually require each other: A requires B as the successor and B requires A as a predecessor)
+
+# Format
+Print the constraints line by line prefixed with the sentence id in the following form (<...> are placeholders, <negative> is TRUE if the sentence describes a negative constraint, else: FALSE):
+<sentence id>	<negative>	<constraint type>	<source action>	<target action>
