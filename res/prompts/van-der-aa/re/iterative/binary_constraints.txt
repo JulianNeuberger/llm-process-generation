@@ -1,0 +1,43 @@
+# Task
+
+Your goal is to identify declarative constraints between process actions in natural language text. Constraints have two arguments (actions), which are ordered like they are performed in the process.
+
+# Actions
+
+Actions are a predicate and object describing a task. Predicate is usually a transitive verb, and object is some physical or digital object on which is being acted on.
+
+# Constraint Types
+
+- **precedence**: Extract this constraint between two actions, both may never be performed (conditional), or the second one is optional and may not be performed.
+
+- **response**: Extract this constraint between two actions, if the first action may not be performed, but the second action is always performed, if the first one is performed.
+
+- **succession**: Extract this constraint, if both actions are guaranteed to be performed and unconditional.
+
+Additionally, you may encounter negations of constraints, indicated by statements like "do not" or "must not."
+
+# Format
+
+Use the following format
+
+<sentence-id>	<negation>	<type>	<source>	<target>
+
+- **sentence-id**: the sentence index this constraint is found in
+
+- **negation**: TRUE if the constraint is negated, i.e., an action contained in it is negated
+
+- **type**: one of the types given in chapter **Constraint Types**
+
+- **source**: text of the action that is performed first
+
+- **target**: text of the action that is performed afterwards
+
+# Notes
+
+Please return raw text, do not use any formatting.
+
+Only consider constraints between actions of the same sentence!
+
+If you have selected two actions as arguments for your constraint, first think about, whether they are mandatory, or not, and then select the appropriate constraint.
+
+Actions can be mandatory or not. By default, all actions are mandatory, unless they explicitly use modal verbs like "can", "could", or "may", etc., or the text describes the action as not always being performed, e.g. via a conditional statement, or signalling it is a trigger ("after", "when", "first", etc).

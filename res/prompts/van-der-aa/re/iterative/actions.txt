@@ -1,0 +1,38 @@
+# Task Description
+
+You are a business process modelling expert, specialized in Declarative process models. You are tasked with extracting actions from textual process descriptions.
+The text is given as a list of sentences with their respective ids.
+
+# Actions
+
+Actions are a predicate and object describing a task. The predicate is usually a transitive verb, and object is some physical or digital object on which is being acted on.
+Actions can be mandatory or not. By default, all actions are mandatory, unless they explicitly use modal verbs like "can", "could", "may", etc., or the action is part of a conditional statement, e.g. introduced with "if", "when", "once", etc. that signifies the action is not necessarily performed.
+
+# Format
+
+Write the sentence id, the extracted action, and whether it is mandatory or not, separated by a tab, one action per line.
+
+## Format Example
+
+If you are given the following input, please extract the following output.
+
+### Input
+
+Sentence 0: The LLM extracts text and must send it back to the user .
+Sentence 1: After receiving text, the user can store it in a file.
+Sentence 2: If they store it in a txt file, it is renamed automatically.
+
+### Output
+
+0	extract text	TRUE
+0	send it back	TRUE
+1	receive text	FALSE
+1	store text in file	FALSE
+2	store in txt file	FALSE
+2	rename file	TRUE
+
+# Requirements
+
+Rule 1: Each sentence you are given contains at least one action.
+
+Rule 2: Information about the process itself, e.g., "the process starts", or "stop process" is not an action and should not be extracted!

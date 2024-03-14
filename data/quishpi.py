@@ -12,7 +12,7 @@ class QuishpiMention(
 ):
     text: str
 
-    def pretty_dump(self, document: "QuishpiDocument") -> str:
+    def pretty_dump(self, document: "QuishpiDocument", human_readable: bool = False) -> str:
         return f"{self.text} ({self.type})"
 
     def copy(self):
@@ -35,7 +35,7 @@ class QuishpiRelation(base.SupportsPrettyDump["QuishpiDocument"]):
     tail: QuishpiMention
     type: str
 
-    def pretty_dump(self, document: "QuishpiDocument") -> str:
+    def pretty_dump(self, document: "QuishpiDocument", human_readable: bool = False) -> str:
         return f"{self.head.pretty_dump(document)} -{self.type}-> {self.tail.pretty_dump(document)}"
 
 

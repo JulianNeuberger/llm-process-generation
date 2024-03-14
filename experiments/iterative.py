@@ -18,7 +18,9 @@ def run_iterative_document_prompt(
     num_shots: int,
 ) -> model.PromptResult:
     merged_result: typing.Optional[model.PromptResult] = None
-    cur_doc: TDocument = input_document.copy(formatters[0].steps)
+    steps = list(set([s for f in formatters for s in f.steps]))
+    print(f"Clearing {steps}")
+    cur_doc: TDocument = input_document.copy(steps)
     for i, formatter in enumerate(formatters):
         if len(formatters) > 1:
             print(

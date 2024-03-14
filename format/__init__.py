@@ -16,7 +16,8 @@ from format.listing import (
     IterativePetMentionListingFormattingStrategy,
     VanDerAaMentionListingFormattingStrategy,
     IterativeVanDerAaRelationListingFormattingStrategy,
-    IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy
+    IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy,
+    VanDerAaRelationClassificationFormattingStrategy,
 )
 from format.references import PetReferencesFormattingStrategy
 from format.tags import PetTagFormattingStrategy

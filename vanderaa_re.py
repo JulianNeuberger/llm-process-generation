@@ -10,9 +10,10 @@ from experiments import sampling
 
 if __name__ == "__main__":
 
-    def select_one_by_constraint_types(documents: typing.List[data.VanDerAaDocument],
-                                       constraint_types: typing.List[str]) -> \
-            typing.List[data.VanDerAaDocument]:
+    def select_one_by_constraint_types(
+        documents: typing.List[data.VanDerAaDocument],
+        constraint_types: typing.List[str],
+    ) -> typing.List[data.VanDerAaDocument]:
 
         if constraint_types is None or len(constraint_types) == 0:
             return documents
@@ -32,21 +33,24 @@ if __name__ == "__main__":
                 return filter_result
         return filter_result
 
-
-    def filter_by_constraint_types(documents: typing.List[data.VanDerAaDocument],
-                                   constraint_types: typing.List[str]) -> \
-            typing.List[data.VanDerAaDocument]:
+    def filter_by_constraint_types(
+        documents: typing.List[data.VanDerAaDocument],
+        constraint_types: typing.List[str],
+    ) -> typing.List[data.VanDerAaDocument]:
 
         if constraint_types is None or len(constraint_types) == 0:
             return documents
 
         filter_result = []
         for doc in documents:
-            if any(c_type for c_type in [c.type for c in doc.constraints] if c_type in constraint_types):
+            if any(
+                c_type
+                for c_type in [c.type for c in doc.constraints]
+                if c_type in constraint_types
+            ):
                 filter_result.append(doc)
 
         return filter_result
-
 
     def main():
         # Load sentence tokenizer if necessary
@@ -59,7 +63,7 @@ if __name__ == "__main__":
         storage = f"res/answers/van-der-aa-re/{date_formatted}.json"
         # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
 
-        num_shots = 3
+        num_shots = 1
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
@@ -70,49 +74,60 @@ if __name__ == "__main__":
         #     prompt_path="van-der-aa/re/step-wise_tuning_CCoT.txt",
         # )
         formatters = [
-            # format.IterativeVanDerAaRelationListingFormattingStrategy(
+            # format.VanDerAaRelationListingFormattingStrategy(
             #     steps=["constraints"],
+            #     prompt_path="van-der-aa/re/mandatory_focused.txt",
             #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/minimalistic/succession.txt",
-            #     context_tags=[],
-            #     only_tags=['succession']
             # ),
+            format.IterativeVanDerAaRelationListingFormattingStrategy(
+                steps=["constraints"],
+                separate_tasks=False,
+                prompt_path="van-der-aa/re/iterative/succession_only.txt",
+                context_tags=[],
+                only_tags=["succession"],
+            ),
             # format.IterativeVanDerAaRelationListingFormattingStrategy(
             #     steps=["constraints"],
             #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/minimalistic/precedence.txt",
+            #     prompt_path="van-der-aa/re/iterative/unary_constraints.txt",
             #     context_tags=[],
-            #     only_tags=['precedence']
+            #     only_tags=["init", "end"],
             # ),
-            # format.IterativeVanDerAaRelationListingFormattingStrategy(
+            # format.VanDerAaMentionListingFormattingStrategy(
+            #     steps=["mentions"], prompt="van-der-aa/re/iterative/actions.txt"
+            # ),
+            # format.VanDerAaRelationClassificationFormattingStrategy(
             #     steps=["constraints"],
-            #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/minimalistic/response.txt",
-            #     context_tags=[],
-            #     only_tags=['response']
+            #     prompt="van-der-aa/re/iterative/classification.txt",
             # ),
             # format.IterativeVanDerAaRelationListingFormattingStrategy(
             #     steps=["constraints"],
             #     separate_tasks=False,
             #     prompt_path="van-der-aa/re/iterative/minimalistic/init_end.txt",
             #     context_tags=[],
-            #     only_tags=['init', 'end']
+            #     only_tags=["init", "end"],
             # ),
-            format.IterativeVanDerAaRelationListingFormattingStrategy(
-                steps=["constraints"],
-                separate_tasks=False,
-                prompt_path="van-der-aa/re/minimalistic_explained.txt",
-                context_tags=[],
-                only_tags=['response', 'init', 'end', 'precedence', 'succession']
-            ),
-            format.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy(
-                steps=["constraints"],
-                separate_tasks=False,
-                prompt_path="van-der-aa/re/iterative/selective_refinement.txt",
-                context_tags=['succession', 'precedence', 'response', 'init', 'end'],
-                only_tags=['succession', 'precedence', 'response', 'init', 'end']
-            )
-
+            # format.IterativeVanDerAaRelationListingFormattingStrategy(
+            #     steps=["constraints"],
+            #     separate_tasks=False,
+            #     prompt_path="van-der-aa/re/iterative/minimalistic/succession.txt",
+            #     context_tags=[],
+            #     only_tags=["succession"],
+            # ),
+            # format.IterativeVanDerAaRelationListingFormattingStrategy(
+            #     steps=["constraints"],
+            #     separate_tasks=False,
+            #     prompt_path="van-der-aa/re/minimalistic_explained.txt",
+            #     context_tags=[],
+            #     only_tags=["response", "init", "end", "precedence", "succession"],
+            # ),
+            # format.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy(
+            #     steps=["constraints"],
+            #     separate_tasks=False,
+            #     prompt_path="van-der-aa/re/iterative/selective_refinement.txt",
+            #     context_tags=["succession", "precedence", "response", "init", "end"],
+            #     only_tags=["succession", "precedence", "response", "init", "end"],
+            # ),
         ]
 
         # # 2 STEP APPROACH
@@ -139,7 +154,7 @@ if __name__ == "__main__":
         documents = select_one_by_constraint_types(documents, [])
         # documents = filter_by_constraint_types(documents, ['precedence'])
         print(f"Dataset consists of {len(documents)} documents.")
-        folds = sampling.generate_folds(documents, num_shots)
+        folds = sampling.generate_folds(documents, num_shots)[-5:]
 
         print("Using folds:")
         print("------------")
@@ -158,6 +173,5 @@ if __name__ == "__main__":
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
-
 
     main()

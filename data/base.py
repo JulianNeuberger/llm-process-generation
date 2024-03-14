@@ -50,5 +50,5 @@ class HasRelations(abc.ABC, typing.Generic[TRelation]):
 
 
 class SupportsPrettyDump(abc.ABC, typing.Generic[TDocument]):
-    def pretty_dump(self, document: TDocument) -> str:
+    def pretty_dump(self, document: TDocument, human_readable: bool = False) -> str:
         raise NotImplementedError()

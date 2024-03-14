@@ -1,5 +1,6 @@
 import csv
 import dataclasses
+import difflib
 import os.path
 import typing
 
@@ -28,12 +29,89 @@ CONSTRAINT_3_COL = excel_col_to_index("O")
 @dataclasses.dataclass(eq=True, frozen=True)
 class VanDerAaMention(base.SupportsPrettyDump["VanDerAaDocument"], base.HasCustomMatch):
     text: str
+    sentence_id: int
+    mandatory: bool
 
-    def pretty_dump(self, document: TDocument) -> str:
+    def pretty_dump(self, document: TDocument, human_readable: bool = False) -> str:
         return self.text
 
     def copy(self):
-        return VanDerAaMention(text=self.text)
+        return VanDerAaMention(
+            text=self.text, sentence_id=self.sentence_id, mandatory=self.mandatory
+        )
+
+    @staticmethod
+    def is_action_mandatory(
+        action: str, text: str, other_actions: typing.List[str]
+    ) -> bool:
+        verb = VanDerAaMention.get_action_verb(action)
+        tokenized_text = text.lower().split(" ")
+        close_matches = difflib.get_close_matches(
+            verb.lower(), tokenized_text, cutoff=0.0
+        )
+        most_likely_match: str = close_matches[0]
+        action_index = tokenized_text.index(most_likely_match)
+
+        tokenized_text = tokenized_text[max(0, action_index - 10) : action_index]
+
+        # other_action_indices = []
+        #
+        # for other_action in other_actions:
+        #     verb = VanDerAaMention.get_action_verb(other_action)
+        #     close_matches = difflib.get_close_matches(verb, tokenized_text, cutoff=0.0)
+        #     most_likely_match: str = close_matches[0]
+        #     most_likely_position = tokenized_text.index(most_likely_match)
+        #     other_action_indices.append(most_likely_position)
+        #
+        # other_action_indices.sort()
+        # other_action_indices = [i for i in other_action_indices if i < action_index]
+        # tokenized_text = tokenized_text[0:action_index]
+        # if len(other_action_indices) > 0:
+        #     tokenized_text = tokenized_text[other_action_indices[-1] :]
+
+        # check for trigger words that force mandatory
+        for t in tokenized_text:
+            if t in ["must", "will", "would", "shall", "should", "require", "have to"]:
+                return True
+
+        # check for conditions
+        for t in tokenized_text:
+            if t in [
+                "if",
+                "once",
+                "condition",
+                "after",
+                "before",
+                "when",
+                "unless",
+                "can",
+                "could",
+                "may",
+                "might",
+                "first",
+                "before",
+                "earlier",
+                "after",
+                "later",
+            ]:
+                return False
+
+        # by default everything else is mandatory
+        return True
+
+    @staticmethod
+    def get_action_verb(action_text: str):
+        tokens = nltk.word_tokenize(action_text)
+        pos_tags: typing.Iterable[typing.Tuple[str, str]] = nltk.pos_tag(tokens)
+        pred_verb: typing.Optional[str] = None
+        for token, pos in pos_tags:
+            if pos.startswith("VB"):
+                pred_verb = token
+                break
+
+        if pred_verb is None:
+            pred_verb = tokens[0]
+        return pred_verb
 
     def match(self, other: object) -> bool:
         if not isinstance(other, VanDerAaMention):
@@ -45,18 +123,7 @@ class VanDerAaMention(base.SupportsPrettyDump["VanDerAaDocument"], base.HasCusto
         true_verb = true.split(" ")[0]
         if true_verb.lower() in pred:
             return True
-        pred_tokens = nltk.word_tokenize(pred)
-        pred_pos_tags: typing.Iterable[typing.Tuple[str, str]] = nltk.pos_tag(
-            pred_tokens
-        )
-        pred_verb: typing.Optional[str] = None
-        for token, pos in pred_pos_tags:
-            if pos.startswith("VB"):
-                pred_verb = token
-                break
-
-        if pred_verb is None:
-            pred_verb = pred_tokens[0]
+        pred_verb = self.get_action_verb(pred)
 
         if pred_verb.lower() in true:
             return True
@@ -113,12 +180,15 @@ class VanDerAaConstraint(
     negative: bool
     sentence_id: int
 
-    def pretty_dump(self, document: VanDerAaDocument) -> str:
-        pretty = (
-            f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head.text}'
-        )
+    def pretty_dump(
+        self, document: VanDerAaDocument, human_readable: bool = False
+    ) -> str:
+        separator = ";\t" if human_readable else "\t"
+        pretty = f'{"TRUE" if self.negative else "FALSE"}{separator}{self.type}{separator}{self.head.pretty_dump(document, human_readable)}'
         if self.tail:
-            pretty = f"{pretty}\t{self.tail.text}"
+            pretty = (
+                f"{pretty}{separator}{self.tail.pretty_dump(document, human_readable)}"
+            )
         return f"s: {self.sentence_id}\t{pretty}"
 
     def copy(self):
@@ -216,13 +286,35 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                     document.sentences.append(text)
                     document.constraints.extend(constraints)
 
+                    new_actions = []
                     for c in constraints:
-                        if c.head not in document.mentions and c.head is not None:
-                            document.mentions.append(c.head)
-                        if c.tail not in document.mentions and c.tail is not None:
-                            document.mentions.append(c.tail)
+                        if (
+                            c.head not in document.mentions
+                            and c.head is not None
+                            and c.head not in new_actions
+                        ):
+                            new_actions.append(c.head)
+                        if (
+                            c.tail not in document.mentions
+                            and c.tail is not None
+                            and c.tail not in new_actions
+                        ):
+                            new_actions.append(c.tail)
 
-                    document.text += f"\n{text}"
+                    # fix mandatory state of actions
+                    new_action_texts = [m.text for m in new_actions]
+                    for i, m in enumerate(new_actions):
+                        new_actions[i] = VanDerAaMention(
+                            text=m.text,
+                            sentence_id=m.sentence_id,
+                            mandatory=VanDerAaMention.is_action_mandatory(
+                                m.text, text, new_action_texts
+                            ),
+                        )
+
+                    document.mentions.extend(new_actions)
+
+                document.text += f"\n{text}"
 
         return list(documents.values())
 
@@ -244,11 +336,19 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                 # no constraint given
                 continue
 
-            constraint_head = VanDerAaMention(text=constraint_head)
+            constraint_head = VanDerAaMention(
+                text=constraint_head,
+                sentence_id=sentence_index,
+                mandatory=False,
+            )
             if constraint_tail == "":
                 constraint_tail = None
             else:
-                constraint_tail = VanDerAaMention(text=constraint_tail)
+                constraint_tail = VanDerAaMention(
+                    text=constraint_tail,
+                    sentence_id=sentence_index,
+                    mandatory=False,
+                )
             constraints.append(
                 VanDerAaConstraint(
                     type=constraint_type.strip().lower(),
@@ -275,7 +375,27 @@ if __name__ == "__main__":
         ).do_import()
         print(len(documents))
 
-        documents = VanDerAaImporter("../res/data/quishpi/csv").do_import()
-        print(len(documents))
+        by_tag: typing.Dict[
+            str,
+            typing.List[typing.Tuple[VanDerAaDocument, VanDerAaConstraint]],
+        ] = {}
+        for d in documents:
+            for c in d.constraints:
+                if c.type not in by_tag:
+                    by_tag[c.type] = []
+                by_tag[c.type].append((d, c))
+        for tag, constraints in by_tag.items():
+            print(tag)
+            print(
+                "-----------------------------------------------------------------------"
+            )
+            for d, c in constraints:
+                print(c.pretty_dump(d, True) + "\t\t" + d.sentences[c.sentence_id])
+            print(
+                "-----------------------------------------------------------------------"
+            )
+        for d in documents:
+            for m in d.mentions:
+                print(m)
 
     main()

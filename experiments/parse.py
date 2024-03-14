@@ -76,14 +76,18 @@ def parse_experiment(
     documents_by_id = {d.id: d for d in documents}
 
     num_parse_errors = 0
-    overall_steps: typing.Optional[typing.List[str]] = None
+    overall_steps: typing.Set[str] = set()
+    last_steps: typing.Optional[typing.List[str]] = None
     for result in experiment_result.results:
         predicted_doc: typing.Optional[data.DocumentBase] = None
         input_doc = documents_by_id[result.original_id]
 
         # If a refinement strategy is used, partial results are not considered.
         refinement_result_only = False
-        if listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__ in result.formatters:
+        if (
+            listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__
+            in result.formatters
+        ):
             refinement_result_only = True
 
         for formatter_class_name, steps, answer, prompt, args in zip(
@@ -93,12 +97,16 @@ def parse_experiment(
             result.prompts,
             result.formatter_args,
         ):
-            if refinement_result_only and formatter_class_name != listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__:
+            if (
+                refinement_result_only
+                and formatter_class_name
+                != listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__
+            ):
                 continue
 
-            if overall_steps is None:
-                overall_steps = steps
-            assert overall_steps == steps
+            for s in steps:
+                overall_steps.add(s)
+            last_steps = steps
             formatter_class: typing.Type[format.BaseFormattingStrategy] = getattr(
                 format, formatter_class_name
             )
@@ -113,10 +121,10 @@ def parse_experiment(
         preds.append(predicted_doc)
         truths.append(input_doc)
 
-    assert overall_steps is not None
+    assert last_steps is not None
 
     stats = {}
-    if "mentions" in overall_steps:
+    if "mentions" in last_steps:
         stats_by_tag = eval.mentions_f1_stats(
             predicted_documents=preds,
             ground_truth_documents=truths,
@@ -124,7 +132,7 @@ def parse_experiment(
             print_only_tags=print_only_tags,
         )
         stats["mentions"] = stats_by_tag
-    if "entities" in overall_steps:
+    if "entities" in last_steps:
         stats_by_tag = eval.entity_f1_stats(
             predicted_documents=preds,
             ground_truth_documents=truths,
@@ -133,7 +141,7 @@ def parse_experiment(
             print_only_tags=print_only_tags,
         )
         stats["entities"] = stats_by_tag
-    if "relations" in overall_steps:
+    if "relations" in last_steps:
         stats_by_tag = eval.relation_f1_stats(
             predicted_documents=preds,
             ground_truth_documents=truths,
@@ -141,7 +149,7 @@ def parse_experiment(
             print_only_tags=print_only_tags,
         )
         stats["relations"] = stats_by_tag
-    if "constraints" in overall_steps:
+    if "constraints" in last_steps:
         stats_by_tag = eval.constraint_f1_stats(
             predicted_documents=preds,
             ground_truth_documents=truths,
@@ -324,7 +332,7 @@ def main():
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = f"res/answers/van-der-aa-re/2024-03-12_23-04-12.json"
+    answer_file = f"res/answers/van-der-aa-re/2024-03-13_17-43-51.json"
     importer = None
     for k, v in importers.items():
         if k in answer_file:

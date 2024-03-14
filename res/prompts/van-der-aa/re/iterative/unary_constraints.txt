@@ -1,0 +1,31 @@
+# Task
+
+Your goal is to identify unary declarative constraints for process actions in natural language text.
+
+# Actions
+
+Actions are a predicate and object describing a task. Predicate is usually a transitive verb, and object is some physical or digital object on which is being acted on.
+
+# Constraint Types
+
+- **init**: Unary constraint, that marks an action as the start of the entire process. It has no target action. Usually indicated by verbs that indicate a process starts, e.g., "starts", "begins", etc. Usually only one per process.
+
+- **end**: Unary constraint, that marks an action as the end of the whole process. It has no target action. Usually indicated by verbs that describe the end of a process, e.g., "ends", "stops", etc. Usually only one per process.
+
+# Format
+
+Use the following format
+
+<sentence-id>	FALSE	<type>	<source>
+
+- **sentence-id**: the sentence index this constraint is found in
+
+- **type**: one of the types given in chapter **Constraint Types**
+
+- **source**: text of the action that has the unary constraint
+
+# Notes
+
+Please return raw text, do not use any formatting.
+
+Only consider constraints between actions of the same sentence!

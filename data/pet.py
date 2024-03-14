@@ -100,7 +100,7 @@ class PetMention(base.HasType, base.SupportsPrettyDump[PetDocument]):
     def text(self, document: "PetDocument") -> str:
         return " ".join([document.tokens[i].text for i in self.token_document_indices])
 
-    def pretty_dump(self, document: "PetDocument") -> str:
+    def pretty_dump(self, document: "PetDocument", human_readable: bool = False) -> str:
         return f"{self.type}, '{self.text(document)}', {self.token_document_indices}"
 
     def __eq__(self, o: object) -> bool:
@@ -139,7 +139,7 @@ class PetEntity(base.SupportsPrettyDump[PetDocument]):
             print(f"Entity has mentions of mixed ner tags: {tags}")
         return list(tags)[0]
 
-    def pretty_dump(self, document: PetDocument) -> str:
+    def pretty_dump(self, document: PetDocument, human_readable: bool = False) -> str:
         formatted_mentions = [
             f"{i}: '{m.text(document)}' ({m.token_document_indices})"
             for i, m in [(i, document.mentions[i]) for i in self.mention_indices]
@@ -170,7 +170,7 @@ class PetRelation(base.HasType, base.SupportsPrettyDump[PetDocument]):
             type=self.type.lower().strip(),
         )
 
-    def pretty_dump(self, document: PetDocument) -> str:
+    def pretty_dump(self, document: PetDocument, human_readable: bool = False) -> str:
         head = document.mentions[self.head_mention_index].pretty_dump(document)
         tail = document.mentions[self.tail_mention_index].pretty_dump(document)
         return f"{head} -{self.type}-> {tail}"

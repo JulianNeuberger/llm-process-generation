@@ -1,0 +1,37 @@
+# Task
+
+Your goal is to identify the declarative succession constraint between process actions in natural language text. This constraint has two arguments (actions), which are ordered like they are performed in the process.
+
+# Actions
+
+Actions are a predicate and object describing a task. Predicate is usually a transitive verb, and object is some physical or digital object on which is being acted on.
+
+# Definition
+
+- **succession**: Focus on the actions in a sentence. Determine which are guaranteed to be executed, i.e., the text describes them as mandatory. Extract a succession constraint between them, if the text describes the two actions to be performed one after the other.
+
+Additionally, you may encounter negations of constraints, indicated by statements like "do not" or "must not."
+
+# Format
+
+Use the following format
+
+<sentence-id>	<negation>	succession	<source>	<target>
+
+- **sentence-id**: the sentence index this constraint is found in
+
+- **negation**: TRUE if the constraint is negated, i.e., an action contained in it is negated
+
+- **source**: text of the action that is performed first
+
+- **target**: text of the action that is performed afterwards
+
+# Notes
+
+Please return raw text, do not use any formatting.
+
+Only consider constraints between actions of the same sentence, never between sentences with different ids!
+
+The type of the constraint is always succession!
+
+Successions are very rare, if you are not sure both actions are guaranteed to be performed, don't extract a succession between them.
