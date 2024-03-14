@@ -105,17 +105,20 @@ class VanDerAaDocument(base.DocumentBase):
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
-class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
-    type: str
+class VanDerAaConstraint(
+    base.SupportsPrettyDump["VanDerAaDocument"], base.HasCustomMatch, base.HasType
+):
     head: VanDerAaMention
     tail: typing.Optional[VanDerAaMention]
     negative: bool
     sentence_id: int
 
     def pretty_dump(self, document: VanDerAaDocument) -> str:
-        pretty = f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head}'
+        pretty = (
+            f'{"TRUE" if self.negative else "FALSE"}\t{self.type}\t{self.head.text}'
+        )
         if self.tail:
-            pretty = f"{pretty}\t{self.tail}"
+            pretty = f"{pretty}\t{self.tail.text}"
         return f"s: {self.sentence_id}\t{pretty}"
 
     def copy(self):
@@ -151,10 +154,28 @@ class VanDerAaConstraint(base.SupportsPrettyDump["VanDerAaDocument"]):
                 res += 1
         return res
 
+    def match(self, other: object) -> bool:
+        if not isinstance(other, VanDerAaConstraint):
+            return False
+        if not self.head.match(other.head):
+            return False
+        if self.tail is None and other.tail is not None:
+            return False
+        if self.tail is None and other.tail is None:
+            return self.type.lower() == other.type.lower()
+        if not self.tail.match(other.tail):
+            return False
+        if self.negative and not other.negative:
+            return False
+        if self.sentence_id != other.sentence_id:
+            return False
+        return self.type.lower() == other.type.lower()
+
 
 class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
     def __init__(self, path_to_collection: str):
         self._file_path = path_to_collection
+        self._sentence_wise = False
 
     def do_import(self) -> typing.List[VanDerAaDocument]:
         documents: typing.Dict[str, VanDerAaDocument] = {}
@@ -175,9 +196,12 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
                     file_name, _ = os.path.splitext(file_name)
                     doc_id = row[NAME_COL]
                     text = row[TEXT_COL]
+                    row_id = row[ID_COL]
 
                     # quishpi uses 1 for all rows and files, this would not be unique...
                     doc_id = f"{file_name}-{doc_id}"
+                    if self._sentence_wise:
+                        doc_id = f"{doc_id}-{row_id}"
 
                     if doc_id not in documents:
                         documents[doc_id] = VanDerAaDocument(
@@ -247,14 +271,26 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
         return constraints
 
 
+class VanDerAaSentenceImporter(VanDerAaImporter):
+    def __init__(self, path_to_collection: str):
+        super().__init__(path_to_collection)
+        self._sentence_wise = True
+
+
 if __name__ == "__main__":
 
     def main():
+        documents = VanDerAaSentenceImporter(
+            "../res/data/van-der-aa/datacollection.csv"
+        ).do_import()
+        print(len(documents))
         documents = VanDerAaImporter(
             "../res/data/van-der-aa/datacollection.csv"
         ).do_import()
         print(len(documents))
 
+        documents = VanDerAaSentenceImporter("../res/data/quishpi/csv").do_import()
+        print(len(documents))
         documents = VanDerAaImporter("../res/data/quishpi/csv").do_import()
         print(len(documents))
 
