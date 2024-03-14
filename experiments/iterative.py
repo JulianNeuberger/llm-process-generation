@@ -15,7 +15,6 @@ def run_iterative_document_prompt(
     example_docs: typing.List[TDocument],
     chat_model: langchain_openai.ChatOpenAI,
     dry_run: bool,
-    num_shots: int,
 ) -> model.PromptResult:
     merged_result: typing.Optional[model.PromptResult] = None
     cur_doc: TDocument = input_document.copy(formatters[0].steps)
@@ -31,7 +30,6 @@ def run_iterative_document_prompt(
             example_docs,
             chat_model,
             dry_run,
-            num_shots,
         )
         for answer in result.answers:
             parsed = formatter.parse(input_document, answer)
@@ -53,9 +51,8 @@ def run_multiple_iterative_document_prompts(
     example_docs: typing.List[TDocument],
     chat_model: langchain_openai.ChatOpenAI,
     dry_run: bool,
-    num_shots: int,
 ) -> typing.Generator[model.PromptResult, None, None]:
     for d in input_documents:
         yield run_iterative_document_prompt(
-            d, formatters, example_docs, chat_model, dry_run, num_shots
+            d, formatters, example_docs, chat_model, dry_run
         )

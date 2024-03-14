@@ -10,9 +10,10 @@ from experiments import sampling
 
 if __name__ == "__main__":
 
-    def select_one_by_constraint_types(documents: typing.List[data.VanDerAaDocument],
-                                       constraint_types: typing.List[str]) -> \
-            typing.List[data.VanDerAaDocument]:
+    def select_one_by_constraint_types(
+        documents: typing.List[data.VanDerAaDocument],
+        constraint_types: typing.List[str],
+    ) -> typing.List[data.VanDerAaDocument]:
 
         if constraint_types is None or len(constraint_types) == 0:
             return documents
@@ -32,21 +33,24 @@ if __name__ == "__main__":
                 return filter_result
         return filter_result
 
-
-    def filter_by_constraint_types(documents: typing.List[data.VanDerAaDocument],
-                                   constraint_types: typing.List[str]) -> \
-            typing.List[data.VanDerAaDocument]:
+    def filter_by_constraint_types(
+        documents: typing.List[data.VanDerAaDocument],
+        constraint_types: typing.List[str],
+    ) -> typing.List[data.VanDerAaDocument]:
 
         if constraint_types is None or len(constraint_types) == 0:
             return documents
 
         filter_result = []
         for doc in documents:
-            if any(c_type for c_type in [c.type for c in doc.constraints] if c_type in constraint_types):
+            if any(
+                c_type
+                for c_type in [c.type for c in doc.constraints]
+                if c_type in constraint_types
+            ):
                 filter_result.append(doc)
 
         return filter_result
-
 
     def main():
         # Load sentence tokenizer if necessary
@@ -62,88 +66,22 @@ if __name__ == "__main__":
         num_shots = 3
         model_name = "gpt-4-0125-preview"
 
-        # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
-        # formatter = format.PetTagFormattingStrategy()
-        # formatter = format.VanDerAaRelationListingFormattingStrategy(
-        #     steps=["constraints"],
-        #     separate_tasks=False,
-        #     prompt_path="van-der-aa/re/step-wise_tuning_CCoT.txt",
-        # )
         formatters = [
-            # format.IterativeVanDerAaRelationListingFormattingStrategy(
-            #     steps=["constraints"],
-            #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/minimalistic/succession.txt",
-            #     context_tags=[],
-            #     only_tags=['succession']
-            # ),
-            # format.IterativeVanDerAaRelationListingFormattingStrategy(
-            #     steps=["constraints"],
-            #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/minimalistic/precedence.txt",
-            #     context_tags=[],
-            #     only_tags=['precedence']
-            # ),
-            # format.IterativeVanDerAaRelationListingFormattingStrategy(
-            #     steps=["constraints"],
-            #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/response_given_precedence.txt",
-            #     context_tags=['precedence'],
-            #     only_tags=['response']
-            # ),
-            # format.IterativeVanDerAaRelationListingFormattingStrategy(
-            #     steps=["constraints"],
-            #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/minimalistic/init_end.txt",
-            #     context_tags=[],
-            #     only_tags=['init', 'end']
-            # ),
-            format.IterativeVanDerAaRelationListingFormattingStrategy(
+            format.VanDerAaRelationListingFormattingStrategy(
                 steps=["constraints"],
                 separate_tasks=False,
-                prompt_path="van-der-aa/re/step-wise_tuning_CCoT_no_examples.txt",
-                context_tags=[],
-                only_tags=['response', 'init', 'end', 'precedence', 'succession']
-            ),
-            # format.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy(
-            #     steps=["constraints"],
-            #     separate_tasks=False,
-            #     prompt_path="van-der-aa/re/iterative/refinement/selective_refinement_tuning.txt",
-            #     context_tags=['precedence', 'response', 'init', 'end', 'succession'],
-            #     only_tags=['succession', 'precedence', 'response', 'init', 'end']
-            # )
-
+                prompt_path="van-der-aa/re/step-wise_tuning_CCoT_single.txt",
+                context_tags=None,
+                only_tags=None,
+            )
         ]
 
-        # # 2 STEP APPROACH
-        # formatters = [
-        #     format.IterativeVanDerAaRelationListingFormattingStrategy(
-        #         steps=["constraints"],
-        #         separate_tasks=False,
-        #         prompt_path="van-der-aa/re/iterative/2step/init_end_2step.txt",
-        #         context_tags=[],
-        #         only_tags=['init', 'end']
-        #     ),
-        #     format.IterativeVanDerAaRelationListingFormattingStrategy(
-        #         steps=["constraints"],
-        #         separate_tasks=False,
-        #         prompt_path="van-der-aa/re/iterative/2step/prec_resp_succ_2step.txt",
-        #         context_tags=[],
-        #         only_tags=['precedence', 'response', 'succession']
-        #     )
-        # ]
-
-        importer = data.VanDerAaImporter("res/data/van-der-aa/")
+        importer = data.VanDerAaSentenceImporter("res/data/van-der-aa/")
 
         documents = importer.do_import()
         documents = select_one_by_constraint_types(documents, [])
-        # [8: 18]
-        #[0:8]
-        #[8:18]
-        # [8:12]
-        # documents = filter_by_constraint_types(documents, ['precedence'])
         print(f"Dataset consists of {len(documents)} documents.")
-        folds = sampling.generate_folds(documents, num_shots)
+        folds = sampling.generate_sentence_constraint_folds(documents, num_shots)
 
         print("Using folds:")
         print("------------")
@@ -156,12 +94,11 @@ if __name__ == "__main__":
             formatters=formatters,
             model_name=model_name,
             storage=storage,
-            num_shots=num_shots,
             dry_run=False,
             folds=folds,
+            num_shots=num_shots,
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
-
 
     main()

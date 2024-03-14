@@ -1,6 +1,5 @@
 import json
 import os
-import random
 import typing
 
 import langchain_community.callbacks
@@ -59,13 +58,8 @@ def run_single_document_prompt(
     example_docs: typing.List[TDocument],
     chat_model: langchain_openai.ChatOpenAI,
     dry_run: bool,
-    num_shots: int,
 ) -> model.PromptResult:
     print(f"Running prompt for {input_document.id} ...")
-
-    if num_shots != -1 and formatter.__class__.__name__ != format.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy:
-        assert num_shots <= len(example_docs)
-        example_docs = random.sample(example_docs, num_shots)
 
     prompt = get_prompt(formatter, example_docs)
 
@@ -119,12 +113,11 @@ def run_multiple_document_prompts(
     example_docs: typing.List[TDocument],
     chat_model: langchain_openai.ChatOpenAI,
     dry_run: bool,
-    num_shots: int,
 ) -> typing.Generator[model.PromptResult, None, None]:
     for d in input_documents:
         cur_pred = d.copy(clear=formatter.steps)
         yield run_single_document_prompt(
-            d, cur_pred, formatter, example_docs, chat_model, dry_run, num_shots
+            d, cur_pred, formatter, example_docs, chat_model, dry_run
         )
 
 
@@ -186,7 +179,6 @@ def experiment(
         result_iterator = iterative.run_multiple_iterative_document_prompts(
             input_documents=input_docs,
             formatters=formatters,
-            num_shots=num_shots,
             chat_model=chat_model,
             example_docs=example_docs,
             dry_run=dry_run,

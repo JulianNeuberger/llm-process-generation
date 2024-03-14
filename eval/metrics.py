@@ -72,19 +72,19 @@ def constraint_f1_stats(
     print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
-    return _f1_stats(
-        predicted_documents=predicted_documents,
-        ground_truth_documents=ground_truth_documents,
-        attribute="constraints",
-        print_only_tags=print_only_tags,
-        verbose=verbose,
-    )
-    # return slot_filling(
+    # return _f1_stats(
     #     predicted_documents=predicted_documents,
     #     ground_truth_documents=ground_truth_documents,
+    #     attribute="constraints",
     #     print_only_tags=print_only_tags,
     #     verbose=verbose,
     # )
+    return slot_filling(
+        predicted_documents=predicted_documents,
+        ground_truth_documents=ground_truth_documents,
+        print_only_tags=print_only_tags,
+        verbose=verbose,
+    )
 
 
 def slot_filling(

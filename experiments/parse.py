@@ -83,7 +83,10 @@ def parse_experiment(
 
         # If a refinement strategy is used, partial results are not considered.
         refinement_result_only = False
-        if listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__ in result.formatters:
+        if (
+            listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__
+            in result.formatters
+        ):
             refinement_result_only = True
 
         for formatter_class_name, steps, answer, prompt, args in zip(
@@ -93,7 +96,11 @@ def parse_experiment(
             result.prompts,
             result.formatter_args,
         ):
-            if refinement_result_only and formatter_class_name != listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__:
+            if (
+                refinement_result_only
+                and formatter_class_name
+                != listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__
+            ):
                 continue
 
             if overall_steps is None:
@@ -320,11 +327,13 @@ def main():
         "pet": data.PetImporter("res/data/pet/all.new.jsonl"),
         "quishpi-re": data.VanDerAaImporter("res/data/quishpi/csv"),
         "quishpi-md": data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
-        "van-der-aa": data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
+        "van-der-aa": data.VanDerAaSentenceImporter(
+            "res/data/van-der-aa/datacollection.csv"
+        ),
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = f"res/answers/van-der-aa-re/2024-03-13_19-36-56.json"
+    answer_file = f"res/answers/van-der-aa-re/2024-03-14_09-43-29.json"
     importer = None
     for k, v in importers.items():
         if k in answer_file:
