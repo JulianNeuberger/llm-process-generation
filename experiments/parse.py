@@ -6,6 +6,7 @@ import data
 import eval
 import experiments
 import format
+from format import listing
 
 TDocument = typing.TypeVar("TDocument", bound=data.DocumentBase)
 ExperimentStats = typing.Dict[str, typing.Dict[str, eval.Stats]]
@@ -75,11 +76,18 @@ def parse_experiment(
     documents_by_id = {d.id: d for d in documents}
 
     num_parse_errors = 0
-    errors_by_doc = {}
     overall_steps: typing.Optional[typing.List[str]] = None
     for result in experiment_result.results:
         predicted_doc: typing.Optional[data.DocumentBase] = None
         input_doc = documents_by_id[result.original_id]
+
+        # If a refinement strategy is used, partial results are not considered.
+        refinement_result_only = False
+        if (
+            listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__
+            in result.formatters
+        ):
+            refinement_result_only = True
 
         for formatter_class_name, steps, answer, prompt, args in zip(
             result.formatters,
@@ -88,6 +96,13 @@ def parse_experiment(
             result.prompts,
             result.formatter_args,
         ):
+            if (
+                refinement_result_only
+                and formatter_class_name
+                != listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__
+            ):
+                continue
+
             if overall_steps is None:
                 overall_steps = steps
             assert overall_steps == steps
@@ -97,11 +112,6 @@ def parse_experiment(
             formatter = formatter_class(steps, **args)
             partial_prediction = formatter.parse(input_doc, answer)
             num_parse_errors += partial_prediction.num_parse_errors
-            if partial_prediction.document.id not in errors_by_doc:
-                errors_by_doc[partial_prediction.document.id] = 0
-            errors_by_doc[
-                partial_prediction.document.id
-            ] += partial_prediction.num_parse_errors
             if predicted_doc is None:
                 predicted_doc = partial_prediction.document
             else:
@@ -111,10 +121,6 @@ def parse_experiment(
         truths.append(input_doc)
 
     assert overall_steps is not None
-    print("ERRORS::::::::::::::")
-    for k, v in errors_by_doc.items():
-        print(k, v)
-    print("::::::::::::::::::::")
 
     stats = {}
     if "mentions" in overall_steps:
@@ -322,12 +328,14 @@ def main():
         "pet": data.PetImporter("res/data/pet/all.new.jsonl"),
         "quishpi-re": data.VanDerAaImporter("res/data/quishpi/csv"),
         "quishpi-md": data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
-        "van-der-aa": data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
+        "van-der-aa": data.VanDerAaSentenceImporter(
+            "res/data/van-der-aa/datacollection.csv"
+        ),
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
-    # answer_file = f"res/answers/quishpi-md/2024-03-11_16-51-51.json"
-    answer_file = f"res/answers/analysis/md/no_context_manager.json"
+    answer_file = f"res/answers/pet-re/2024-03-11_13-59-30.json"
+    # answer_file = f"res/answers/pet-re/2024-03-11_12-07-58.json"
     importer = None
     for k, v in importers.items():
         if k in answer_file:
@@ -338,7 +346,8 @@ def main():
     print_experiment_results(
         answer_file,
         importer,
-        print_only_tags=["action"],
+        # only_document_ids=["1-1_bicycle_manufacturing"],
+        # print_only_tags=["action"],
         verbose=True,
     )
 
