@@ -29,7 +29,7 @@ Retrieve a relation by listing the relation type, the head mention index, and th
 
 Given the following input:
 
-the <actor id=1> LLM </actor> <activity id=0> extracts </activity> <activity_data id=2> the text </activity> .
+Sentence 0: the <actor id=1> LLM </actor> <activity id=0> extracts </activity> <activity_data id=2> the text </activity> .
 
 You will extract these relations
 

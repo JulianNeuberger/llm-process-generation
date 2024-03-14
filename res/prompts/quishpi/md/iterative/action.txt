@@ -1,6 +1,6 @@
 # Task Description
 
-You are a business process modelling expert, tasked with finding actions in textual business process descriptions. These process descriptions are natural language texts that define how a business process has to be executed, with actions that have to be taken
+You are a business process modelling expert, tasked with finding actions in textual business process descriptions. These process descriptions are natural language texts that define how a business process has to be executed, with actions that have to be taken. The text contains xml-style tags for the mentions that were already extracted. You may use them for additional context.
 
 # Definitions
 
@@ -16,6 +16,8 @@ action	<text>
 # Requirements
 
 Rule 1. Actions are just the verb, nothing more, i.e., no auxiliary words, nor specifications on how an action is performed, who performs it, or what data is used during performing it.
+
+Rule 2. Actions and Conditions never overlap, if there is already a condition, do not extract an action there.
 
 # Notes
 

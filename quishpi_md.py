@@ -17,30 +17,30 @@ if __name__ == "__main__":
             nltk.download("punkt")
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/quishpi-md/{date_formatted}.json"
-        # storage = f"res/answers/quishpi-md/2024-03-01_08-37-31.json"
+        # storage = f"res/answers/quishpi-md/{date_formatted}.json"
+        storage = f"res/answers/quishpi-md/2024-03-11_16-51-51.json"
 
-        num_shots = 3
+        num_shots = 1
         model_name = "gpt-4-0125-preview"
 
         importer = data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"])
         # folds = [{"train": [], "test": ["20818304_rev1"]}]
         folds = sampling.generate_folds(importer.do_import(), num_shots)
 
-        formatters = [
-            format.QuishpiMentionListingFormattingStrategy(
-                ["mentions"], prompt="quishpi/md/long-no-explain.txt"
-            )
-        ]
-
         # formatters = [
-        # format.IterativeQuishpiMentionListingFormattingStrategy(
-        #     ["mentions"], tag="condition", context_tags=[]
-        # ),
-        # format.IterativeQuishpiMentionListingFormattingStrategy(
-        #     ["mentions"], tag="action", context_tags=[]
-        # ),
+        #     format.QuishpiMentionListingFormattingStrategy(
+        #         ["mentions"], prompt="quishpi/md/long-no-explain.txt"
+        #     )
         # ]
+
+        formatters = [
+            format.IterativeQuishpiMentionListingFormattingStrategy(
+                ["mentions"], tag="condition", context_tags=[]
+            ),
+            format.IterativeQuishpiMentionListingFormattingStrategy(
+                ["mentions"], tag="action", context_tags=["condition"]
+            ),
+        ]
 
         print("Using folds:")
         print("------------")
@@ -58,6 +58,8 @@ if __name__ == "__main__":
             folds=folds,
         )
 
-        experiments.print_experiment_results(storage, importer, verbose=True)
+        experiments.print_experiment_results(
+            storage, importer, verbose=True, print_only_tags=["condition"]
+        )
 
     main()
