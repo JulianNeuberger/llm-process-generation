@@ -1,27 +1,26 @@
 # Task Description
 
-You are a business process modelling expert, tasked with identifying constraints between actions in textual process descriptions. Processes consist of actions and, thus, textual process descriptions are sentences that describe a short sequence of actions. Ordering and existence of actions depend on constraints between them.
-A textual process descriptions is a list of sentences, each with their own id (e.g., "Sentence 0").
+You are an algorithm tasked with extracting declarative process models from natural language process descriptions.
+The process descriptions consist of a series of actions, each described by a predicate and an object.
+Your goal is to identify constraints between these actions, which dictate the ordering and existence of actions within the process.
 
 # Type Definitions
 
 - ** ACTION **: predicate and object describing a task. Predicate is usually a transitive verb, and object is some physical or digital object on which is being acted on.
 
-- ** CONSTRAINT **: defines if and how actions can be executed. Always has a source / head action and sometimes a target / tail action, depending on the type.
+- ** CONSTRAINT **: defines if and how actions can be executed. Always has a source / head action and sometimes a target / tail action, depending on the type. If a constraint has a head action, the tail action is restricted in a way defined by the type.
 
 ## Constraint Types
 
-All constraints are one of the following types:
-
 - ** init **: marks an action as the start of an entire process. This action is the source / head action of the init constraint. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is started for an init constraint to apply. Signal words alone are not sufficient here.
 
-- ** end **: marks an action as the end of the whole process. The action is the source / head action. There is no no target / tail action. Note that it must be explicitly stated that the process (instance) is ended for an end constraint to apply. May appear in the middle of a process description, which indicates a path leads to early process termination.
+- ** end **: marks an action as the end of the whole process. The action is the source / head action. There is no no target / tail action. Note that it must be explicitly stated that the PROCESS is ended for an end constraint to apply. Signal words alone are not sufficient here.
 
-- ** precedence **: If an action A can only be executed, after an action B has been executed, i.e., action A is a requirement for B, then there is a precedence constraint between A (head) and B (tail). A may be executed without B being executed.
+- ** precedence **: if the head action is executed the tail action CAN be executed as well. Thus, the head action is a precondition for executing the tail action.
 
-- ** response **: if the head action was executed, the tail action has to be executed, too.
+- ** response **: if the head action was executed, the tail action has to be executed, too. Thus, executing the tail action is mandatory in this case.
 
-- ** succession **: combination of **precedence** and **response**. If either head or tail is executed, the other has to be executed as well.
+- ** succession **: combination of **precedence** and **response**. The tail action cannot be executed before the head action, but once the head action has been executed, it is mandatory to also execute the tail action.
 
 - ** existence **: requires that an action is executed at some point in the process; the execution is not dependent on any other explicitly mentioned action; there is only a head action but no tail action.
 
@@ -29,9 +28,20 @@ All constraints are one of the following types:
 
 - ** noncooccurrence **: indicates that two actions are mutually exclusive, usually indicated by phrases like "or", "either", etc.
 
-## Negations
+## Negation
 
-Additionally, you can determine if the given document describes a negation of constraints, e.g., "when something happens, then we DO something" describes a positive constraint, while "when something happens, then we DON'T DO something" describes a negation.
+Additionally, you may encounter negative constraints, indicated by statements like "do not" or "must not." Negations invert the restriction of the tail activity. A negation is NOT a constraint type itself.
+
+# Disambiguation
+
+The constraints precedence, response and succession are easy to confuse. To differentiate between Response and Precedence, carefully analyze whether the tail action CAN be performed
+because the head action has already been performed (Precedence), or whether the tail action MUST THEREFORE be performed (Response). If BOTH is true, it is a Succession constraint. Thus, modal verbs play an important role for disambiguating constraints.
+However, if you recognize an action in a sentence and there is no other action, it is NEVER a Precedence, Response or Succession constraint.
+The following abstract examples illustrate the differences:
+
+- Example 1: If action A is performed, action B can be carried out. (precedence)
+- Example 2: If action A is performed, action B is carried out, too. (response)
+- Example 3: If action A is performed, action B can and must also be performed carried out. (succession)
 
 # Format
 
@@ -39,7 +49,7 @@ Please ensure the correct identification and formatting of constraints in the gi
 
 Print one constraint per line, where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the type of the constraint, and the extracted actions by tabs in the following form (<...> are placeholders):
 
-<sentence id>	<TRUE or FALSE>	<constraint type>	<head action>	<tail action>
+<negative>	<constraint type>	<head action>	<tail action>
 
 # Procedure
 

@@ -1,6 +1,6 @@
 # Task Description
 
-You are a business process modelling expert, tasked with identifying mentions of
+You are tasked with identifying mentions of
 process relevant elements in textual descriptions of business processes. These mentions are
 spans of text, that are of a certain type, as described below:
 

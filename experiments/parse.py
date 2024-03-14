@@ -326,15 +326,15 @@ def print_experiment_results(
 def main():
     importers = {
         "pet": data.PetImporter("res/data/pet/all.new.jsonl"),
-        "quishpi-re": data.VanDerAaImporter("res/data/quishpi/csv"),
+        "quishpi-re": data.VanDerAaSentenceImporter("res/data/quishpi/csv"),
         "quishpi-md": data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
         "van-der-aa": data.VanDerAaSentenceImporter(
             "res/data/van-der-aa/datacollection.csv"
         ),
-        "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
+        "analysis": data.PetImporter("res/data/quishpi/csv/2024-03-14_13-37-53.json"),
     }
 
-    answer_file = f"res/answers/pet-re/2024-03-11_13-59-30.json"
+    answer_file = f"res/answers/quishpi-re/2024-03-14_16-45-25.json"
     # answer_file = f"res/answers/pet-re/2024-03-11_12-07-58.json"
     importer = None
     for k, v in importers.items():
