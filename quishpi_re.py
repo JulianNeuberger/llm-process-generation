@@ -32,7 +32,7 @@ if __name__ == "__main__":
         )
         importer = data.VanDerAaImporter("res/data/quishpi/csv")
 
-        documents = importer.do_import()[1:9]
+        documents = importer.do_import()
         print(f"Dataset consists of {len(documents)} documents.")
         folds = sampling.generate_folds(documents, num_shots)
 
