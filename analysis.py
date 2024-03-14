@@ -96,6 +96,26 @@ def default_prompt():
     )
 
 
+def no_meta_language():
+    folds = sampling.generate_folds(importer.do_import(), num_examples=1)
+    formatters = [
+        format.PetMentionListingFormattingStrategy(
+            steps=["mentions"],
+            prompt="pet/md/ablation/no_meta_language.txt",
+        )
+    ]
+
+    experiments.experiment(
+        importer=importer,
+        formatters=formatters,
+        model_name=model_name,
+        storage="res/answers/analysis/md/no_meta_language.json",
+        num_shots=1,
+        dry_run=False,
+        folds=folds,
+    )
+
+
 def gpt_3_5():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
     formatters = [
@@ -156,12 +176,32 @@ def no_formatting():
     )
 
 
+def long_prompt():
+    folds = sampling.generate_folds(importer.do_import(), num_examples=0)
+    formatters = [
+        format.PetMentionListingFormattingStrategy(
+            steps=["mentions"],
+            prompt="pet/md/ablation/long_descriptions.txt",
+        )
+    ]
+
+    experiments.experiment(
+        importer=importer,
+        formatters=formatters,
+        model_name=model_name,
+        storage="res/answers/analysis/md/long_descriptions.json",
+        num_shots=0,
+        dry_run=False,
+        folds=folds,
+    )
+
+
 def short_prompt():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
     formatters = [
         format.PetMentionListingFormattingStrategy(
             steps=["mentions"],
-            prompt="pet/md/ablation/short_explanations.txt",
+            prompt="pet/md/ablation/short_prompt.txt",
         )
     ]
 
@@ -170,6 +210,26 @@ def short_prompt():
         formatters=formatters,
         model_name=model_name,
         storage="res/answers/analysis/md/short_explanations.json",
+        num_shots=0,
+        dry_run=False,
+        folds=folds,
+    )
+
+
+def no_persona():
+    folds = sampling.generate_folds(importer.do_import(), num_examples=0)
+    formatters = [
+        format.PetMentionListingFormattingStrategy(
+            steps=["mentions"],
+            prompt="pet/md/ablation/no_persona.txt",
+        )
+    ]
+
+    experiments.experiment(
+        importer=importer,
+        formatters=formatters,
+        model_name=model_name,
+        storage="res/answers/analysis/md/no_persona.json",
         num_shots=0,
         dry_run=False,
         folds=folds,
@@ -553,14 +613,15 @@ def document_num_tokens():
 
 if __name__ == "__main__":
     # iterative_prompt()
-    # combined_prompt()
-    # default_prompt()
+    default_prompt()
     no_format_examples()
-    # no_formatting()
-    # short_prompt()
-    # no_context_manager()
+    short_prompt()
+    long_prompt()
+    no_context_manager()
+    no_persona()
+    gpt_3_5()
+    no_meta_language()
     # stochasticity_repeated_runs()
     # stochasticity_minor_changes()
     # few_shots()
     # document_num_tokens()
-    # gpt_3_5()

@@ -10,19 +10,19 @@ You are tasked with extracting mentions of process relevant elements from a natu
 
 ## Definition of Mentions
 
-- **Activity**: Focus on verbs and nouns, that describe an active task or action executed during the business process. Never contains the Actor that executes it, nor the Activity Data that's used during this Activity, is just the verb or noun as in "checked" and not "is checked"!
+- **Activity**: Focus on verbs and nouns, that describe an active task or action executed during the business process.
 
-- **Activity Data**: Look for Activity mentions in the text, and find the grammatical object that this Activity acts upon. Extract it (including any determiners, if present) as an Activity Data.
+- **Activity Data**: Look for Activity mentions in the text, and find the grammatical object that this Activity acts upon.
 
-- **Actor**: Focus at Activity mentions in the given text. Extract the person, department, or similar role that executes the Activity or is directly affected by the activity. Include the determiner if it is present, e.g. extract "the student" from "First the student studies for their exam".
+- **Actor**: Focus at Activity mentions in the given text. Extract the role that executes the Activity or is directly affected by the activity.
 
-- **Further Specification**: Look for mentions of type Activity and extract descriptions of **how** this Activity is being executed, including means, and manner. Example: If the sentence is "She submits the report after a thorough review," extract "a thorough review" as Further Specification.
+- **Further Specification**: Look for mentions of type Activity and extract descriptions of **how** this Activity is being executed.
 
-- **XOR Gateway**: Identify decision points in the process, i.e. exclusive work streams, usually indicated by conjunctions or adverbs. Extract only the trigger word, not the text following it. A conjunction or adverb is only a XOR Gateway, if it introduces two mutually exclusive actions i.e. a later sentence contains the description of the second work stream, e.g., indicated by an accompanying "otherwise".
+- **XOR Gateway**: Identify decision points in the process, i.e. exclusive work streams.
 
 - **Condition Specification**: Look for mentions of type XOR_Gateway and extract the condition statement, that follows it directly, if there is any.
 
-- **AND Gateway**: Focus on mentions of type Activity. Spot descriptions, where Activities can be executed in parallel, usually identifiable by phrases such as "in the meantime", "while", etc.
+- **AND Gateway**: Focus on mentions of type Activity. Spot descriptions, where Activities can be executed in parallel.
 
 ## Procedure
 
