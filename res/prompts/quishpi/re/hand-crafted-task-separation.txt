@@ -1,6 +1,7 @@
 # Task Description
 
-You are a business process modelling expert, tasked with identifying constraints between actions in textual process descriptions. Processes consist of actions and, thus, textual process descriptions are sentences that describe a short sequence of actions. Ordering and existence of actions depend on constraints between them. Below you find further definitions for ** ACTIONS ** and ** CONSTRAINTS **.
+You are a business process modelling expert, tasked with identifying constraints between actions in textual process descriptions. Processes consist of actions and, thus, textual process descriptions are sentences that describe a short sequence of actions. Ordering and existence of actions depend on constraints between them.
+A textual process descriptions is a list of sentences, each with their own id (e.g., "Sentence 0").
 
 # Type Definitions
 
@@ -38,7 +39,7 @@ Please ensure the correct identification and formatting of constraints in the gi
 
 Print one constraint per line, where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the type of the constraint, and the extracted actions by tabs in the following form (<...> are placeholders):
 
-<TRUE or FALSE>	<constraint type>	<head action>	<tail action>
+<sentence id>	<TRUE or FALSE>	<constraint type>	<head action>	<tail action>
 
 # Procedure
 
