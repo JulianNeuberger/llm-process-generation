@@ -14,6 +14,7 @@ from format.listing import (
     PetEntityListingFormattingStrategy,
     PetRelationListingFormattingStrategy,
     IterativePetMentionListingFormattingStrategy,
+    PetIterativeRelationListingFormattingStrategy,
     VanDerAaMentionListingFormattingStrategy,
     IterativeVanDerAaRelationListingFormattingStrategy,
     IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy

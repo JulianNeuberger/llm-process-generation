@@ -725,25 +725,56 @@ class IterativeQuishpiMentionListingFormattingStrategy(
 class PetRelationListingFormattingStrategy(
     base.BaseFormattingStrategy[data.PetDocument]
 ):
-    def __init__(self, steps: typing.List[str]):
+    def __init__(
+        self,
+        steps: typing.List[str],
+        prompt: str = None,
+        only_tags: typing.Optional[typing.List[str]] = None,
+        context_tags: typing.Optional[typing.List[str]] = None,
+    ):
         super().__init__(steps)
         self._input_formatter = tags.PetTagFormattingStrategy(include_ids=True)
+        self._prompt_path = prompt
+        self._only_tags = only_tags
+        self._context_tags = context_tags
+        if self._prompt_path is None:
+            self._prompt_path = "pet/re/long.txt"
 
     def description(self) -> str:
-        return common.load_prompt_from_file("pet/re/long.txt")
+        return common.load_prompt_from_file(self._prompt_path)
 
     @property
     def args(self):
-        return {}
+        return {
+            "prompt": self._prompt_path,
+            "only_tags": self._only_tags,
+            "context_tags": self._context_tags,
+        }
 
-    def output(self, document: data.PetDocument) -> str:
+    def _format_relations(self, relations: typing.Iterable[data.PetRelation]) -> str:
         res = []
-        for r in document.relations:
+        for r in relations:
+            if self._only_tags is not None and r.type.lower() not in self._only_tags:
+                continue
             res.append(f"{r.type}\t{r.head_mention_index}\t{r.tail_mention_index}")
         return "\n".join(res)
 
+    def output(self, document: data.PetDocument) -> str:
+        return self._format_relations(document.relations)
+
     def input(self, document: data.PetDocument) -> str:
-        return self._input_formatter.output(document)
+        context_relations = []
+        for r in document.relations:
+            if self._context_tags is None:
+                continue
+            if r.type.lower() not in self._context_tags:
+                continue
+            context_relations.append(r)
+
+        relations = self._format_relations(context_relations)
+        text = self._input_formatter.output(document)
+
+        return f"{text}\n\n{relations}"
 
     def parse(self, document: data.PetDocument, string: str) -> base.ParseResult:
         document = document.copy(clear=["relations"])
@@ -769,6 +800,12 @@ class PetRelationListingFormattingStrategy(
                 )
             )
         return base.ParseResult(document, 0)
+
+
+class PetIterativeRelationListingFormattingStrategy(
+    PetRelationListingFormattingStrategy
+):
+    pass
 
 
 class PetEntityListingFormattingStrategy(base.BaseFormattingStrategy[data.PetDocument]):
