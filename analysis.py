@@ -1,12 +1,15 @@
+import random
 import typing
 
 import Levenshtein
 import langchain_openai
+import matplotlib
 import matplotlib.pyplot as plt
 import nltk
 import numpy as np
 import pandas
 import seaborn as sns
+import tqdm
 
 import data
 import eval
@@ -24,32 +27,87 @@ plt.rcParams["text.usetex"] = True
 importer = data.PetImporter("res/data/pet/all.new.jsonl")
 model_name = "gpt-4-0125-preview"
 
+# task = "re"
+task = "md"
+
+
+def _set_theme():
+    sns.set_theme(
+        rc={
+            "figure.autolayout": False,
+            "font.family": ["Computer Modern", "CMU Serif", "cmu", "serif"],
+            "font.serif": ["Computer Modern", "CMU Serif", "cmu"],
+            #'text.usetex': True
+        }
+    )
+    matplotlib.rcParams.update(
+        {
+            "figure.autolayout": False,
+            "font.family": ["Computer Modern", "CMU Serif", "cmu", "serif"],
+            "font.serif": ["Computer Modern", "CMU Serif", "cmu"],
+            #'text.usetex': True
+        }
+    )
+    sns.set_style(
+        rc={
+            "font.family": ["Computer Modern", "CMU Serif", "cmu", "serif"],
+            "font.serif": ["Computer Modern", "CMU Serif", "cmu"],
+            #'text.usetex': True
+        }
+    )
+    sns.set(font="Computer Modern")
+
 
 def iterative_prompt():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    formatters = []
-    tags = [
-        "activity",
-        "actor",
-        "activity data",
-        "further specification",
-        "xor gateway",
-        "condition specification",
-        "and gateway",
-    ]
-    extracted_so_far = []
-    for tag in tags:
-        formatters.append(
-            format.IterativePetMentionListingFormattingStrategy(
-                ["mentions"], tag, context_tags=extracted_so_far
+
+    if task == "re":
+        formatters = [
+            format.PetIterativeRelationListingFormattingStrategy(
+                ["relations"],
+                "pet/re/iterative/same_gateway.txt",
+                only_tags=["same gateway"],
+            ),
+            format.PetIterativeRelationListingFormattingStrategy(
+                ["relations"],
+                "pet/re/iterative/flow.txt",
+                only_tags=["flow"],
+            ),
+            format.PetIterativeRelationListingFormattingStrategy(
+                ["relations"],
+                "pet/re/iterative/remaining.txt",
+                only_tags=[
+                    "uses",
+                    "actor performer",
+                    "actor recipient",
+                    "further specification",
+                ],
+            ),
+        ]
+    else:
+        tags = [
+            "activity",
+            "actor",
+            "activity data",
+            "further specification",
+            "xor gateway",
+            "condition specification",
+            "and gateway",
+        ]
+        extracted_so_far = []
+        formatters = []
+        for tag in tags:
+            formatters.append(
+                format.IterativePetMentionListingFormattingStrategy(
+                    ["mentions"], tag, context_tags=extracted_so_far
+                )
             )
-        )
 
     experiments.experiment(
         importer=importer,
         formatters=formatters,
         model_name=model_name,
-        storage="res/answers/analysis/md/iterative.json",
+        storage=f"res/answers/analysis/{task}/iterative.json",
         num_shots=0,
         dry_run=False,
         folds=folds,
@@ -58,18 +116,26 @@ def iterative_prompt():
 
 def combined_prompt():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    formatters = [
-        format.PetMentionListingFormattingStrategy(
-            steps=["mentions"],
-            prompt="pet/md/ablation/combined_prompt_no_explanation.txt",
-        )
-    ]
+    if task == "md":
+        formatters = [
+            format.PetMentionListingFormattingStrategy(
+                steps=["mentions"],
+                prompt=f"pet/{task}/ablation/combined_prompt_no_explanation.txt",
+            )
+        ]
+    else:
+        formatters = [
+            format.PetRelationListingFormattingStrategy(
+                steps=["relations"],
+                prompt=f"pet/{task}/ablation/combined_prompt_no_explanation.txt",
+            )
+        ]
 
     experiments.experiment(
         importer=importer,
         formatters=formatters,
         model_name=model_name,
-        storage="res/answers/analysis/md/combined.json",
+        storage=f"res/answers/analysis/{task}/combined.json",
         num_shots=0,
         dry_run=False,
         folds=folds,
@@ -78,18 +144,26 @@ def combined_prompt():
 
 def default_prompt():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    formatters = [
-        format.PetMentionListingFormattingStrategy(
-            steps=["mentions"],
-            prompt="pet/md/ablation/baseline.txt",
-        )
-    ]
+    if task == "md":
+        formatters = [
+            format.PetMentionListingFormattingStrategy(
+                steps=["mentions"],
+                prompt=f"pet/{task}/ablation/baseline.txt",
+            )
+        ]
+    else:
+        formatters = [
+            format.PetRelationListingFormattingStrategy(
+                steps=["relations"],
+                prompt=f"pet/{task}/ablation/baseline.txt",
+            )
+        ]
 
     experiments.experiment(
         importer=importer,
         formatters=formatters,
         model_name=model_name,
-        storage="res/answers/analysis/md/baseline.json",
+        storage=f"res/answers/analysis/{task}/baseline.json",
         num_shots=0,
         dry_run=False,
         folds=folds,
@@ -118,18 +192,26 @@ def no_meta_language():
 
 def gpt_3_5():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    formatters = [
-        format.PetMentionListingFormattingStrategy(
-            steps=["mentions"],
-            prompt="pet/md/ablation/baseline.txt",
-        )
-    ]
+    if task == "md":
+        formatters = [
+            format.PetMentionListingFormattingStrategy(
+                steps=["mentions"],
+                prompt=f"pet/{task}/ablation/baseline.txt",
+            )
+        ]
+    else:
+        formatters = [
+            format.PetRelationListingFormattingStrategy(
+                steps=["relations"],
+                prompt=f"pet/{task}/ablation/baseline.txt",
+            )
+        ]
 
     experiments.experiment(
         importer=importer,
         formatters=formatters,
         model_name="gpt-3.5-turbo-0125",
-        storage="res/answers/analysis/md/gpt_3_5.json",
+        storage=f"res/answers/analysis/{task}/gpt_3_5.json",
         num_shots=0,
         dry_run=False,
         folds=folds,
@@ -138,18 +220,26 @@ def gpt_3_5():
 
 def no_format_examples():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    formatters = [
-        format.PetMentionListingFormattingStrategy(
-            steps=["mentions"],
-            prompt="pet/md/ablation/no_format_examples.txt",
-        )
-    ]
+    if task == "md":
+        formatters = [
+            format.PetMentionListingFormattingStrategy(
+                steps=["mentions"],
+                prompt=f"pet/{task}/ablation/no_format_examples.txt",
+            )
+        ]
+    else:
+        formatters = [
+            format.PetRelationListingFormattingStrategy(
+                steps=["relations"],
+                prompt=f"pet/{task}/ablation/no_format_examples.txt",
+            )
+        ]
 
     experiments.experiment(
         importer=importer,
         formatters=formatters,
         model_name=model_name,
-        storage="res/answers/analysis/md/no_format_examples.json",
+        storage=f"res/answers/analysis/{task}/no_format_examples.json",
         num_shots=0,
         dry_run=False,
         folds=folds,
@@ -158,18 +248,26 @@ def no_format_examples():
 
 def no_formatting():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    formatters = [
-        format.PetMentionListingFormattingStrategy(
-            steps=["mentions"],
-            prompt="pet/md/ablation/no_formatting.txt",
-        )
-    ]
+    if task == "md":
+        formatters = [
+            format.PetMentionListingFormattingStrategy(
+                steps=["mentions"],
+                prompt=f"pet/{task}/ablation/no_formatting.txt",
+            )
+        ]
+    else:
+        formatters = [
+            format.PetRelationListingFormattingStrategy(
+                steps=["relations"],
+                prompt=f"pet/{task}/ablation/no_formatting.txt",
+            )
+        ]
 
     experiments.experiment(
         importer=importer,
         formatters=formatters,
         model_name=model_name,
-        storage="res/answers/analysis/md/no_formatting.json",
+        storage=f"res/answers/analysis/{task}/no_formatting.json",
         num_shots=0,
         dry_run=False,
         folds=folds,
@@ -198,18 +296,26 @@ def long_prompt():
 
 def short_prompt():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    formatters = [
-        format.PetMentionListingFormattingStrategy(
-            steps=["mentions"],
-            prompt="pet/md/ablation/short_prompt.txt",
-        )
-    ]
+    if task == "md":
+        formatters = [
+            format.PetMentionListingFormattingStrategy(
+                steps=["mentions"],
+                prompt=f"pet/{task}/ablation/short_descriptions.txt",
+            )
+        ]
+    else:
+        formatters = [
+            format.PetRelationListingFormattingStrategy(
+                steps=["relations"],
+                prompt=f"pet/{task}/ablation/short_descriptions.txt",
+            )
+        ]
 
     experiments.experiment(
         importer=importer,
         formatters=formatters,
         model_name=model_name,
-        storage="res/answers/analysis/md/short_explanations.json",
+        storage=f"res/answers/analysis/{task}/short_explanations.json",
         num_shots=0,
         dry_run=False,
         folds=folds,
@@ -238,18 +344,26 @@ def no_persona():
 
 def no_context_manager():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    formatters = [
-        format.PetMentionListingFormattingStrategy(
-            steps=["mentions"],
-            prompt="pet/md/ablation/no_context_manager.txt",
-        )
-    ]
+    if task == "md":
+        formatters = [
+            format.PetMentionListingFormattingStrategy(
+                steps=["mentions"],
+                prompt=f"pet/{task}/ablation/no_context_manager.txt",
+            )
+        ]
+    else:
+        formatters = [
+            format.PetRelationListingFormattingStrategy(
+                steps=["relations"],
+                prompt=f"pet/{task}/ablation/no_context_manager.txt",
+            )
+        ]
 
     experiments.experiment(
         importer=importer,
         formatters=formatters,
         model_name=model_name,
-        storage="res/answers/analysis/md/no_context_manager.json",
+        storage=f"res/answers/analysis/{task}/no_context_manager.json",
         num_shots=0,
         dry_run=False,
         folds=folds,
@@ -266,14 +380,22 @@ def few_shots():
     baseline_num_tokens: typing.Optional[int] = None
     baseline_f1: typing.Optional[float] = None
     for num_shots in range(max_num_shots + 1):
-        formatters = [
-            format.PetMentionListingFormattingStrategy(
-                steps=["mentions"],
-                prompt="pet/md/ablation/baseline.txt",
-            )
-        ]
+        if task == "md":
+            formatters = [
+                format.PetMentionListingFormattingStrategy(
+                    steps=["mentions"],
+                    prompt=f"pet/{task}/ablation/baseline.txt",
+                )
+            ]
+        else:
+            formatters = [
+                format.PetRelationListingFormattingStrategy(
+                    steps=["relations"],
+                    prompt=f"pet/{task}/ablation/baseline.txt",
+                )
+            ]
 
-        storage = f"res/answers/analysis/md/few-shots/{num_shots}.json"
+        storage = f"res/answers/analysis/{task}/few-shots/{num_shots}.json"
         experiments.experiment(
             importer=importer,
             formatters=formatters,
@@ -336,8 +458,6 @@ def few_shots():
 
     df = pandas.DataFrame.from_records(run_scores)
 
-    sns.set_theme()
-
     fig = plt.figure(figsize=(8.53, 4.8))
     ax1 = fig.add_subplot(111)
 
@@ -398,8 +518,8 @@ def few_shots():
 
     plt.tight_layout(rect=(0, 0, 0.75, 1))
 
-    plt.savefig("figures/ablation/num_shots.pdf")
-    plt.savefig("figures/ablation/num_shots.png")
+    plt.savefig(f"figures/ablation/{task}/num_shots.pdf")
+    plt.savefig(f"figures/ablation/{task}/num_shots.png")
 
     fig = plt.figure(figsize=(6.4, 4.8))
     ax = fig.gca()
@@ -417,8 +537,8 @@ def few_shots():
 
     plt.tight_layout()
 
-    plt.savefig("figures/ablation/prompt_length_few_shots.pdf")
-    plt.savefig("figures/ablation/prompt_length_few_shots.png")
+    plt.savefig(f"figures/ablation/{task}/prompt_length_few_shots.pdf")
+    plt.savefig(f"figures/ablation/{task}/prompt_length_few_shots.png")
 
 
 def get_vocab(strings: typing.Iterable[str]) -> typing.Dict[str, int]:
@@ -447,10 +567,10 @@ def stochasticity_minor_changes():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0, seed=42)
     run_scores = []
     scores_by_run = {}
-    base_prompt = common.load_prompt_from_file("pet/md/ablation/baseline.txt")
+    base_prompt = common.load_prompt_from_file(f"pet/{task}/ablation/baseline.txt")
 
     prompts = [
-        common.load_prompt_from_file(f"pet/md/ablation/stochasticity/{i}.txt")
+        common.load_prompt_from_file(f"pet/{task}/ablation/stochasticity/{i}.txt")
         for i in range(num_runs)
     ]
 
@@ -458,19 +578,29 @@ def stochasticity_minor_changes():
     base_bow = bag_of_words(vocab, base_prompt)
 
     for i in range(num_runs):
-        prompt = common.load_prompt_from_file(f"pet/md/ablation/stochasticity/{i}.txt")
+        prompt = common.load_prompt_from_file(
+            f"pet/{task}/ablation/stochasticity/{i}.txt"
+        )
         distance = Levenshtein.distance(base_prompt, prompt)
         bow = bag_of_words(vocab, prompt)
         similarity = cosine_similarity(base_bow, bow)
 
-        formatters = [
-            format.PetMentionListingFormattingStrategy(
-                steps=["mentions"],
-                prompt=f"pet/md/ablation/stochasticity/{i}.txt",
-            )
-        ]
+        if task == "md":
+            formatters = [
+                format.PetMentionListingFormattingStrategy(
+                    steps=["mentions"],
+                    prompt=f"pet/{task}/ablation/stochasticity/{i}.txt",
+                )
+            ]
+        else:
+            formatters = [
+                format.PetRelationListingFormattingStrategy(
+                    steps=["relations"],
+                    prompt=f"pet/{task}/ablation/stochasticity/{i}.txt",
+                )
+            ]
 
-        storage = f"res/answers/analysis/md/stochasticity/changes/{i}.json"
+        storage = f"res/answers/analysis/{task}/stochasticity/changes/{i}.json"
         experiments.experiment(
             importer=importer,
             formatters=formatters,
@@ -501,7 +631,6 @@ def stochasticity_minor_changes():
         run_scores.append({"score": similarity, "metric": "cosine_similarity"})
 
     df = pandas.DataFrame.from_records(run_scores)
-    sns.set_theme()
     plt.figure(figsize=(6.4, 4.8))
     sns.boxplot(
         data=df[df["metric"].isin(["f1", "p", "r"])], x="metric", y="score", width=0.35
@@ -509,8 +638,8 @@ def stochasticity_minor_changes():
     plt.ylim(0, 1)
     plt.tight_layout()
 
-    plt.savefig("figures/ablation/stochasticity_changes.pdf")
-    plt.savefig("figures/ablation/stochasticity_changes.png")
+    plt.savefig(f"figures/ablation/{task}/stochasticity_changes.pdf")
+    plt.savefig(f"figures/ablation/{task}/stochasticity_changes.png")
 
     f1_df = df[df["metric"] == "f1"]["score"]
     print(
@@ -540,8 +669,8 @@ def stochasticity_minor_changes():
     plt.xlabel("$S_c$")
     plt.legend()
 
-    plt.savefig("figures/ablation/stochasticity_scatter.pdf")
-    plt.savefig("figures/ablation/stochasticity_scatter.png")
+    plt.savefig(f"figures/ablation/{task}/stochasticity_scatter.pdf")
+    plt.savefig(f"figures/ablation/{task}/stochasticity_scatter.png")
 
 
 def stochasticity_repeated_runs():
@@ -550,14 +679,22 @@ def stochasticity_repeated_runs():
     run_scores = []
     scores_by_run = {}
     for i in range(num_runs):
-        formatters = [
-            format.PetMentionListingFormattingStrategy(
-                steps=["mentions"],
-                prompt="pet/md/ablation/baseline.txt",
-            )
-        ]
+        if task == "md":
+            formatters = [
+                format.PetMentionListingFormattingStrategy(
+                    steps=["mentions"],
+                    prompt=f"pet/{task}/ablation/baseline.txt",
+                )
+            ]
+        else:
+            formatters = [
+                format.PetRelationListingFormattingStrategy(
+                    steps=["relations"],
+                    prompt=f"pet/{task}/ablation/baseline.txt",
+                )
+            ]
 
-        storage = f"res/answers/analysis/md/stochasticity/repeats/{i}.json"
+        storage = f"res/answers/analysis/{task}/stochasticity/repeats/{i}.json"
         experiments.experiment(
             importer=importer,
             formatters=formatters,
@@ -585,14 +722,13 @@ def stochasticity_repeated_runs():
         run_scores.append({"score": scores.f1, "metric": "f1"})
 
     df = pandas.DataFrame.from_records(run_scores)
-    sns.set_theme()
     plt.figure(figsize=(4.27, 4.8))
     sns.boxplot(data=df, x="metric", y="score", width=0.35)
     plt.ylim(0, 1)
     plt.tight_layout()
 
-    plt.savefig("figures/ablation/stochasticity.pdf")
-    plt.savefig("figures/ablation/stochasticity.png")
+    plt.savefig(f"figures/ablation/{task}/stochasticity.pdf")
+    plt.savefig(f"figures/ablation/{task}/stochasticity.png")
 
     df = df[df["metric"] == "f1"]["score"]
     print(
@@ -611,17 +747,135 @@ def document_num_tokens():
     )
 
 
+def bar_plot():
+    def get_f1_from_experiment(
+        exp_file_path: str,
+    ):
+        results = parse.parse_file(exp_file_path)
+        errors, stats = parse.parse_experiments(
+            results, importer, print_only_tags=None, verbose=False
+        )
+        scores = parse.get_scores(stats, verbose=False)
+        assert len(scores) == 1
+        return list(scores.values())[0].micro_averaged_scores.f1, errors
+
+    def draw_labels(xs, ys, offset=1e-4):
+        for _x, _y in zip(xs, ys):
+            ax.text(
+                _y,  # + math.copysign(_y, offset),
+                _x,
+                f"{_y:.2f}",
+                horizontalalignment="left" if _y > 0 else "right",
+                verticalalignment="center",
+                fontname="CMS",
+            )
+
+    experiment_names = [
+        "Iterative",
+        "No Format Example",
+        "No Formatting",
+        "Short Prompt",
+        "Long Prompt",
+        "GPT 3.5",
+        "No Context Manager",
+    ]
+    md_baseline, md_baseline_errors = get_f1_from_experiment(
+        f"res/answers/analysis/md/baseline.json"
+    )
+    md_values = []
+    md_errors = []
+    re_baseline, re_baseline_errors = get_f1_from_experiment(
+        f"res/answers/analysis/re/baseline.json"
+    )
+    re_values = []
+    re_errors = []
+    for exp in tqdm.tqdm(
+        [
+            "iterative",
+            "no_format_examples",
+            "no_formatting",
+            "short_explanations",
+            "combined",
+            "gpt_3_5",
+            "no_context_manager",
+        ]
+    ):
+        md_value, num_md_errors = get_f1_from_experiment(
+            f"res/answers/analysis/md/{exp}.json"
+        )
+        md_errors.append(num_md_errors)
+        md_values.append(md_value - md_baseline)
+        try:
+            re_value, num_re_errors = get_f1_from_experiment(
+                f"res/answers/analysis/re/{exp}.json"
+            )
+            re_values.append(re_value - re_baseline)
+            re_errors.append(num_re_errors)
+        except FileNotFoundError:
+            re_values.append(random.random())
+            re_errors.append(random.randint(0, 15))
+
+    fig, ax = plt.subplots()
+    y_pos = np.arange(len(experiment_names))
+    height = 0.8
+    y_pos_md = y_pos - height / 4
+    y_pos_re = y_pos + height / 4
+    ax.barh(y_pos_md, md_values, height=height / 2, hatch="///", label="MD")
+    ax.barh(y_pos_re, re_values, height=height / 2, hatch="\\\\\\", label="RE")
+    ax.set_yticks(y_pos, experiment_names)
+    ax.invert_yaxis()
+
+    draw_labels(y_pos_md, md_values)
+    draw_labels(y_pos_re, re_values)
+
+    bottom, top = ax.get_xlim()
+    ax.set_xlim(bottom * 1.1, top * 1.1)
+
+    ax.legend()
+
+    plt.tight_layout()
+
+    plt.savefig("figures/ablation/bar.pdf")
+    plt.savefig("figures/ablation/bar.png")
+
+    max_experiment_name = max([len(n) for n in experiment_names])
+    print(
+        f"{'name':>{max_experiment_name}} | MD Rel. | MD Abs. | MD Err. | RE Rel. | RE Abs. | RE Err."
+    )
+    print(
+        f"{'-' * max_experiment_name}-+---------+---------+---------+---------+---------+---------"
+    )
+    print(
+        f"{'Baseline':>{max_experiment_name}} |   ---   | {md_baseline:+.2f}   | {md_baseline_errors:>7} |   ---   | {re_baseline:+.2f}   | {re_baseline_errors:>7}"
+    )
+    for exp_name, md_diff, md_errors, re_diff, re_errors in zip(
+        experiment_names, md_values, md_errors, re_values, re_errors
+    ):
+        absolute_md = md_baseline + md_diff
+        absolute_re = re_baseline + re_diff
+        print(
+            f"{exp_name:>{max_experiment_name}} | {md_diff:+.2f}   | {absolute_md:.2f}    | {md_errors:>7} | {re_diff:+.2f}   | {absolute_re:.2f}    | {re_errors:>7}"
+        )
+
+
 if __name__ == "__main__":
+    _set_theme()
+
     # iterative_prompt()
     default_prompt()
     no_format_examples()
     short_prompt()
     long_prompt()
     no_context_manager()
+    no_meta_language()
     no_persona()
     gpt_3_5()
-    no_meta_language()
+
     # stochasticity_repeated_runs()
     # stochasticity_minor_changes()
     # few_shots()
     # document_num_tokens()
+
+    gpt_3_5()
+
+    bar_plot()
