@@ -18,9 +18,9 @@ if __name__ == "__main__":
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/pet-md/{date_formatted}.json"
-        # storage = f"res/answers/pet-md/2024-03-02_16-26-51.json"
+        # storage = f"res/answers/pet-md/2024-03-14_18-42-49.json"
 
-        num_shots = 3
+        num_shots = 1
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
@@ -41,18 +41,28 @@ if __name__ == "__main__":
 
         formatters = [
             format.IterativePetMentionListingFormattingStrategy(
-                ["mentions"], "activity", context_tags=[]
+                ["mentions"],
+                "activity",
+                context_tags=[],
+                prompt="pet/md/iterative/with_explanation/activity.txt",
             ),
             format.IterativePetMentionListingFormattingStrategy(
-                ["mentions"], "actor", context_tags=["activity"]
+                ["mentions"],
+                "actor",
+                context_tags=["activity"],
+                prompt="pet/md/iterative/with_explanation/actor.txt",
             ),
             format.IterativePetMentionListingFormattingStrategy(
-                ["mentions"], "activity data", context_tags=["activity", "actor"]
+                ["mentions"],
+                "activity data",
+                context_tags=["activity", "actor"],
+                prompt="pet/md/iterative/with_explanation/activity_data.txt",
             ),
             format.IterativePetMentionListingFormattingStrategy(
                 ["mentions"],
                 "further specification",
                 context_tags=["activity", "actor", "activity data"],
+                prompt="pet/md/iterative/with_explanation/further_specification.txt",
             ),
             format.IterativePetMentionListingFormattingStrategy(
                 ["mentions"],
@@ -63,6 +73,7 @@ if __name__ == "__main__":
                     "activity data",
                     "further specification",
                 ],
+                prompt="pet/md/iterative/with_explanation/xor_gateway.txt",
             ),
             format.IterativePetMentionListingFormattingStrategy(
                 ["mentions"],
@@ -74,6 +85,7 @@ if __name__ == "__main__":
                     "further specification",
                     "xor gateway",
                 ],
+                prompt="pet/md/iterative/with_explanation/condition_specification.txt",
             ),
             format.IterativePetMentionListingFormattingStrategy(
                 ["mentions"],
@@ -86,6 +98,7 @@ if __name__ == "__main__":
                     "xor gateway",
                     "condition specification",
                 ],
+                prompt="pet/md/iterative/with_explanation/and_gateway.txt",
             ),
         ]
 
@@ -94,7 +107,7 @@ if __name__ == "__main__":
         #         steps=["mentions"],
         #         only_tags=None,
         #         generate_descriptions=False,
-        #         prompt="pet/md/long_prompt_stepwise.txt",
+        #         prompt="pet/md/unified.txt",
         #     )
         # ]
 
@@ -114,8 +127,6 @@ if __name__ == "__main__":
             folds=folds,
         )
 
-        experiments.print_experiment_results(
-            storage, importer, verbose=True, print_only_tags=["Activity Data"]
-        )
+        experiments.print_experiment_results(storage, importer, verbose=True)
 
     main()

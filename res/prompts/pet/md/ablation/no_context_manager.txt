@@ -1,47 +1,91 @@
+# Context
+
+You are an expert in business process modelling, specialized on BPMN and its elements.
+
 # Task Description
 
-You are tasked with identifying mentions of
-process relevant elements in textual descriptions of business processes. These mentions are
-spans of text, that are of a certain type, as described below:
+You are tasked with extracting mentions of process relevant elements from a natural language text process description.
 
-# Mention Types
+## Definition of Mentions
 
-- **Actor**: a person, department, or similar role that participates actively in the business process, e.g., "the student", "the professor", "the judge", "the clerk".
+- **Activity**: Focus on verbs and nouns, that describe an active task or action executed during the business process. Never contains the Actor that executes it, nor the Activity Data that's used during this Activity, is just the verb or noun as in "checked" and not "is checked"!
 
-- **Activity**: an active task or action executed during the business process, e.g., "examine", "write", "bake", "review".
+- **Activity Data**: Look for Activity mentions in the text, and find the grammatical object that this Activity acts upon. Extract it (including any determiners, if present) as an Activity Data.
 
-- **Activity Data**: a physical object, or digital data that is relevant to the process, because an action produces or uses it, e.g., "the paper", "the report", "the machine part". Can also be a pronoun, like "it".
+- **Actor**: Focus at Activity mentions in the given text. Extract the person, department, or similar role that executes the Activity or is directly affected by the activity. Include the determiner if it is present, e.g. extract "the student" from "First the student studies for their exam".
 
-- **Further Specification**: important information about an activity, such as the mean, the manner of execution, or how an activity is executed. Describes how an Activity (task) is being done.
+- **Further Specification**: Look for mentions of type Activity and extract descriptions of **how** this Activity is being executed, including means, and manner. Example: If the sentence is "She submits the report after a thorough review," extract "a thorough review" as Further Specification.
 
-- **XOR Gateway**: textual representation of a decision in the process, usually triggered by adverbs or conjunctions, e.g., "if", "otherwise", "when"
+- **XOR Gateway**: Identify decision points in the process, i.e. exclusive work streams, usually indicated by conjunctions or adverbs. Extract only the trigger word, not the text following it. A conjunction or adverb is only a XOR Gateway, if it introduces two mutually exclusive actions i.e. a later sentence contains the description of the second work stream, e.g., indicated by an accompanying "otherwise".
 
-- **AND Gateway**: textual description of parallel work streams in the process, i.e., simultaneous actions performed, marked by phrases like, e.g., "while", "meanwhile", "at the same time"
+- **Condition Specification**: Look for mentions of type XOR_Gateway and extract the condition statement, that follows it directly, if there is any.
 
-- **Condition Specification**: defines the condition of an XOR Gateway path usually directly following the gateway trigger word, e.g., "it is ready", "the claim is valid", "temperature is above 180"
+- **AND Gateway**: Focus on mentions of type Activity. Spot descriptions, where Activities can be executed in parallel, usually identifiable by phrases such as "in the meantime", "while", etc.
 
-# Format
+## Procedure
+
+Let's solve the task in 8 steps.
+
+1. Write a short list of facts about the process, then add a horizontal line ("-----")
+
+2. Detect all mentions of activities and extract them.
+
+3. Reference the activities you found and extract all mentions of Activity Data.
+
+4. Reference the activities you found so far and check, if there is an Actor that performs the activity or is affected by it. Extract any you find.
+
+5. Reference the activities you found and look for further specification on how to execute the activity. Extract the ones you find.
+
+6. Extract all XOR Gateways.
+
+7. Reference the XOR Gateways you found and look for the condition that belongs to the gateway, extract it.
+
+8. Extract all AND Gateways.
+
+## Explanations
+
+Additionally, to each mention you extract, please give a short explanation why you extracted it.
+
+# Restrictions
+
+## Additional considerations
+
+Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation.
+
+Do not use any code formatting.
+
+Only extract process relevant activities.
+
+## Disambiguation
+
+This sentence does not contain an Activity mention, because the verb describes meta information about the process: "The process starts after the LLM has loaded."
+
+## Format
 
 For each mention you detect, write a line in the following format:
-text	type	sentence
 
-- **text**: the text of the mention
-- **type**: the type from the ones listed above
-- **sentence**: integer, that identifies the sentence where the mention text was found in the input.
+<text>	<type>	<sentence>
 
-## Format Examples
+### Placeholders
 
-*Input*:
+- <text>: the text of the mention
+- <type>: the type of the mention
+- <sentence>: integer, that identifies the sentence where the mention text was found in the input. Zero based.
 
-Sentence 0: the professor grades all student papers .
-Sentence 1: some time passes .
-Sentence 2: then the professor returns the papers .
+### Input Example
 
-*Output*:
+Sentence 0: The LLM extracts all mentions and sends them to the user .
+Sentence 1: Then the user stores them in a file.
 
-the professor	Actor	0
-grades	Activity	0
-all student papers	Activity Data	0
-the professor	Actor	2
-returns	Activity	2
-the papers	Activity Data	2
+### Output Example
+
+extracts	Activity	0
+sends	Activity	0
+stores	Activity	1
+all mentions	Activity Data	0
+them	Activity Data	0
+them	Activity Data	1
+The LLM	Actor	0
+the user	Actor	0
+the user	Actor	1
+in a file	Further Specification	1

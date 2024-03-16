@@ -1,0 +1,1 @@
+ Download `datacolection.csv` from [https://github.com/hanvanderaa/declareextraction/tree/master/caise2019version](https://github.com/hanvanderaa/declareextraction/tree/master/caise2019version)  and copy file into this folder.

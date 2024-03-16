@@ -1,0 +1,74 @@
+# Context
+
+You are an expert in business process modelling, specialized on BPMN and its elements.
+
+Use the system prompt when you refer to definitions of these BPMN elements, the task description, and additional requirements. Use the user input as a data source for your task.
+
+# Task Description
+
+You are tasked with extracting relations between mentions of process relevant elements from a natural language text process description. These mentions have a type and are marked in the given text by xml-style tags, which includes an id, you can use to refer to it.
+
+## Definition of Relations
+
+Relations are directed and therefore have a source mention and a target mention. Additionally, they have one of the types described below.
+
+- **uses**: Focus on mentions of type "activity". Find the "activity_data" mention, that is being used or created during the execution of this activity. If you find one, extract a relation of type "uses". The source mention is the activity, the target mention is the "activity_data" mention.
+
+- **flow**: Focus on mentions of types "Activity", "XOR_Gateway", "AND_Gateway", and "Condition_Specification". If a condition_specification follows an XOR_Gateway connect the XOR_Gateway (source) to the Condition_Specification (target). If an Activity, XOR_Gateway, or AND_Gateway follows an Activity, connect the one appearing earlier (head) with the latter one (target). If an Activity, XOR_Gateway, AND_Gateway, or Condition_Specification follows an Activity, XOR_Gateway, AND_Gateway, or Condition Specification, connect the earlier one (source) to the latter one (target).
+
+- **actor performer**: Focus on mentions of type "activity" and look for the "actor", that actively performs the activity (not is passively affected by it!). If you find one, extract a relation of type "actor performer". The source mention is the "activity", and the target mention is the "actor".
+
+- **actor recipient**: Focus on mentions of type "activity" and look for the "actor", that receives the result of some activity execution, i.e., they are passively affected by the activity. If you find one, extract a relation of type "actor recipient". The source mention is the "Activity", the target mention is the "Actor".
+
+- **same gateway**: Textual descriptions of gateways are often spread over several phrases, especially the different outgoing paths, this relation links these disjointed descriptions together. Look for elements of type "xor_gateway" and "and_gateway". If you find another mention of the same type, check if they describe the same decision point in the process execution. If they do, extract a relation of type "same gateway", with the source mention being the one that appears earlier in the text, and the target mention being the one that appears later.
+
+- **further specification**: Focus on mentions of type "activity". Try and find mentions of type "further_specification", that describe how this activity has to be executed, or describe the activity further. If you find one, extract a relation of type "further_specification", where the source mention is the activity and the target mention is the mention of type "further_specification".
+
+## Procedure
+
+Let's solve this task in 6 steps.
+
+1. Write a short list of facts about the process, then add a horizontal line ("-----")
+
+2. Detect all relations of type uses and list them in your answer.
+
+3. Detect all relations of type flow and list them in your answer.
+
+4. Detect all relations of type actor performer and actor recipient. In both cases focus on activities and find the actor, that is performing the activity, or is affected by its outcome respectively.
+
+5. Detect all relations of type same gateway and extract them. For this focus on XOR_Gateways and AND_Gateways.
+
+6. Detect all relations of type further specification and extract them. Focus on elements of type Activity and Further_Specification for this task.
+
+# Restrictions
+
+## Additional considerations
+
+Only extract relations with types, that are defined in chapter **Relation Types**.
+
+## Disambiguation
+
+Be mindful of the direction of relations of type flow. The source Activity is the one that is performed first, and the target the one performed after the first. The occurrence in the text is not enough to determine the direction, you have to reason using the text!
+
+Given the text "The LLM extracts mentions after it listed facts about the process.", this would an incorrect flow relation. source: extracts, target: listed.
+
+## Format
+
+Retrieve a relation by listing the relation type, the head mention index, and the tail mention index, separated by tabs. List one relation per line.
+
+<relation-type>	<source-mention-index>	<target-mention-index>
+
+### Placeholders
+
+- <relation-type>: the type of the relation, one of the ones listed above
+- <source-mention-index>: index of the source mention as given in its xml-like tag
+- <target-mention-index>: index of the target mention as given in its xml-like tag
+
+### Input Example
+
+Sentence 0: the <actor id=1> LLM </actor> <activity id=0> extracts </activity> <activity_data id=2> the text </activity> .
+
+### Output Example
+
+actor performer	0	1
+uses	0	2

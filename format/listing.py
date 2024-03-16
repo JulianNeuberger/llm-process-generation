@@ -34,19 +34,19 @@ class VanDerAaMentionListingFormattingStrategy(
             if mention_text == "":
                 continue
             document.mentions.append(data.VanDerAaMention(text=mention_text))
-        return document
+        return base.ParseResult(document, 0)
 
 
 class VanDerAaRelationListingFormattingStrategy(
     base.BaseFormattingStrategy[data.VanDerAaDocument]
 ):
     def __init__(
-            self,
-            steps: typing.List[typing.Literal["constraints"]],
-            prompt_path: str,
-            separate_tasks: bool,
-            context_tags: typing.List[str] = None,
-            only_tags: typing.List[str] = None,
+        self,
+        steps: typing.List[typing.Literal["constraints"]],
+        prompt_path: str,
+        separate_tasks: bool,
+        context_tags: typing.List[str] = None,
+        only_tags: typing.List[str] = None,
     ):
         super().__init__(steps)
         self._only_tags = only_tags
@@ -71,7 +71,7 @@ class VanDerAaRelationListingFormattingStrategy(
         }
 
     def _dump_constraints(
-            self, constraints: typing.List[data.VanDerAaConstraint], sentence_id: int
+        self, constraints: typing.List[data.VanDerAaConstraint], sentence_id: int
     ) -> str:
         res = []
         for c in constraints:
@@ -224,19 +224,21 @@ class VanDerAaRelationListingFormattingStrategy(
 
 class QuishpiREListingFormattingStrategy(VanDerAaRelationListingFormattingStrategy):
     def __init__(self, steps):
-        super().__init__(steps, prompt_path='quishpi/re/standardized.txt', separate_tasks=True)
+        super().__init__(
+            steps, prompt_path="quishpi/re/standardized.txt", separate_tasks=True
+        )
 
 
 class IterativeVanDerAaRelationListingFormattingStrategy(
     base.BaseFormattingStrategy[data.VanDerAaDocument]
 ):
     def __init__(
-            self,
-            steps: typing.List[typing.Literal["constraints"]],
-            prompt_path: str,
-            separate_tasks: bool,
-            context_tags: typing.List[str] = None,
-            only_tags: typing.List[str] = None,
+        self,
+        steps: typing.List[typing.Literal["constraints"]],
+        prompt_path: str,
+        separate_tasks: bool,
+        context_tags: typing.List[str] = None,
+        only_tags: typing.List[str] = None,
     ):
         super().__init__(steps)
         self._only_tags = only_tags
@@ -261,7 +263,7 @@ class IterativeVanDerAaRelationListingFormattingStrategy(
         }
 
     def _dump_constraints(
-            self, constraints: typing.List[data.VanDerAaConstraint]
+        self, constraints: typing.List[data.VanDerAaConstraint]
     ) -> str:
         res = []
         for c in constraints:
@@ -281,8 +283,8 @@ class IterativeVanDerAaRelationListingFormattingStrategy(
 
     @staticmethod
     def _filter_constraints(
-            tags_of_interest: typing.List[str],
-            constraints: typing.List[data.VanDerAaConstraint],
+        tags_of_interest: typing.List[str],
+        constraints: typing.List[data.VanDerAaConstraint],
     ) -> typing.List[data.VanDerAaConstraint]:
         relevant_constraints = []
         for c in constraints:
@@ -425,12 +427,12 @@ class IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy(
     base.BaseFormattingStrategy[data.VanDerAaDocument]
 ):
     def __init__(
-            self,
-            steps: typing.List[typing.Literal["constraints"]],
-            prompt_path: str,
-            separate_tasks: bool,
-            context_tags: typing.List[str] = None,
-            only_tags: typing.List[str] = None,
+        self,
+        steps: typing.List[typing.Literal["constraints"]],
+        prompt_path: str,
+        separate_tasks: bool,
+        context_tags: typing.List[str] = None,
+        only_tags: typing.List[str] = None,
     ):
         super().__init__(steps)
         self._only_tags = only_tags
@@ -455,7 +457,7 @@ class IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy(
         }
 
     def _dump_constraints(
-            self, constraints: typing.List[data.VanDerAaConstraint]
+        self, constraints: typing.List[data.VanDerAaConstraint]
     ) -> str:
         res = []
         for c in constraints:
@@ -475,8 +477,8 @@ class IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy(
 
     @staticmethod
     def _filter_constraints(
-            tags_of_interest: typing.List[str],
-            constraints: typing.List[data.VanDerAaConstraint],
+        tags_of_interest: typing.List[str],
+        constraints: typing.List[data.VanDerAaConstraint],
     ) -> typing.List[data.VanDerAaConstraint]:
         relevant_constraints = []
         for c in constraints:
@@ -616,10 +618,10 @@ class QuishpiMentionListingFormattingStrategy(
     base.BaseFormattingStrategy[data.QuishpiDocument]
 ):
     def __init__(
-            self,
-            steps: typing.List[typing.Literal["mentions"]],
-            only_tags: typing.Optional[typing.List[str]] = None,
-            prompt: str = None,
+        self,
+        steps: typing.List[typing.Literal["mentions"]],
+        only_tags: typing.Optional[typing.List[str]] = None,
+        prompt: str = None,
     ):
         super().__init__(steps)
         if prompt is None:
@@ -684,10 +686,10 @@ class IterativeQuishpiMentionListingFormattingStrategy(
     QuishpiMentionListingFormattingStrategy
 ):
     def __init__(
-            self,
-            steps: typing.List[typing.Literal["mentions"]],
-            tag: str,
-            context_tags: typing.List[str],
+        self,
+        steps: typing.List[typing.Literal["mentions"]],
+        tag: str,
+        context_tags: typing.List[str],
     ):
         prompt = f"quishpi/md/iterative/{tag.replace(' ', '_')}.txt"
         super().__init__(steps, only_tags=[tag], prompt=prompt)
@@ -723,9 +725,9 @@ class IterativeQuishpiMentionListingFormattingStrategy(
                     continue
 
                 text = (
-                        text[: right_index + len(mention.text)]
-                        + f" </{mention.type}>"
-                        + text[right_index + len(mention.text):]
+                    text[: right_index + len(mention.text)]
+                    + f" </{mention.type}>"
+                    + text[right_index + len(mention.text) :]
                 )
                 text = text[:right_index] + f"<{mention.type}> " + text[right_index:]
                 break
@@ -736,11 +738,11 @@ class PetRelationListingFormattingStrategy(
     base.BaseFormattingStrategy[data.PetDocument]
 ):
     def __init__(
-            self,
-            steps: typing.List[str],
-            prompt: str = None,
-            only_tags: typing.Optional[typing.List[str]] = None,
-            context_tags: typing.Optional[typing.List[str]] = None,
+        self,
+        steps: typing.List[str],
+        prompt: str = None,
+        only_tags: typing.Optional[typing.List[str]] = None,
+        context_tags: typing.Optional[typing.List[str]] = None,
     ):
         super().__init__(steps)
         self._input_formatter = tags.PetTagFormattingStrategy(include_ids=True)
@@ -794,13 +796,16 @@ class PetRelationListingFormattingStrategy(
                 print(f"Skipping non-tab-separated line {line}.")
                 continue
             split_line = line.split("\t")
-            if len(split_line) != 3:
+            if len(split_line) == 3 or len(split_line) > 4:
+                relation_type, head_index, tail_index = split_line
+            elif len(split_line) == 4:
+                relation_type, head_index, tail_index, explanation = split_line
+            else:
                 print(
-                    f"Expected exactly 3 arguments in line {line}, got {len(split_line)}. Skipping."
+                    f"Expected exactly 3-4 arguments in line {line}, got {len(split_line)}. Skipping."
                 )
                 total_errors += 1
                 continue
-            relation_type, head_index, tail_index = split_line
             relation_type = relation_type.lower().strip()
             try:
                 head_index = int(head_index)
@@ -874,11 +879,11 @@ class PetMentionListingFormattingStrategy(
     base.BaseFormattingStrategy[data.PetDocument]
 ):
     def __init__(
-            self,
-            steps: typing.List[str],
-            only_tags: typing.Optional[typing.List[str]] = None,
-            generate_descriptions: bool = False,
-            prompt: str = None,
+        self,
+        steps: typing.List[str],
+        only_tags: typing.Optional[typing.List[str]] = None,
+        generate_descriptions: bool = False,
+        prompt: str = None,
     ):
         super().__init__(steps)
         self._generate_descriptions = generate_descriptions
@@ -953,7 +958,7 @@ class PetMentionListingFormattingStrategy(
         return text
 
     def parse_line(
-            self, line: str, document: data.PetDocument
+        self, line: str, document: data.PetDocument
     ) -> typing.Optional[typing.List[data.PetMention]]:
         split_line = line.split("\t")
         split_line = tuple(e for e in split_line if e.strip() != "")
@@ -982,7 +987,7 @@ class PetMentionListingFormattingStrategy(
 
         res = []
         for i, token in enumerate(sentence):
-            candidates = sentence[i: i + len(mention_tokens)]
+            candidates = sentence[i : i + len(mention_tokens)]
             candidate_text = " ".join(c.text.lower() for c in candidates)
 
             if candidate_text.lower() != mention_text.lower():
@@ -1057,7 +1062,11 @@ class PetActivityListingFormattingStrategy(PetMentionListingFormattingStrategy):
 
 class IterativePetMentionListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(
-            self, steps: typing.List[str], tag: str, context_tags: typing.List[str]
+        self,
+        steps: typing.List[str],
+        tag: str,
+        context_tags: typing.List[str],
+        prompt: str = None,
     ):
         super().__init__(steps, only_tags=[tag], generate_descriptions=False)
         self._tag = tag.lower()
@@ -1065,15 +1074,18 @@ class IterativePetMentionListingFormattingStrategy(PetMentionListingFormattingSt
         self._input_formatter = tags.PetTagFormattingStrategy(
             include_ids=False, only_tags=self._context_tags
         )
+        self._prompt_path = prompt
+        if prompt is None:
+            self._prompt_path = (
+                f"pet/md/iterative/no_explanation/{self._tag.replace(' ', '_')}.txt"
+            )
 
     @property
     def args(self):
         return {"tag": self._tag, "context_tags": self._context_tags}
 
     def description(self) -> str:
-        return common.load_prompt_from_file(
-            f"pet/md/iterative/no_explanation/{self._tag.replace(' ', '_')}.txt"
-        )
+        return common.load_prompt_from_file(self._prompt_path)
 
     def input(self, document: data.PetDocument) -> str:
         res = []
@@ -1264,6 +1276,5 @@ if __name__ == "__main__":
             print("-------")
             print()
             formatter.parse(d, formatter.output(d))
-
 
     main()
