@@ -1,0 +1,1 @@
+Download folder `input` from [https://github.com/PADS-UPC/atdp-extractor/tree/bpm2020](https://github.com/PADS-UPC/atdp-extractor/tree/bpm2020) and copy into this folder.

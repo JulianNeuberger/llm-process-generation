@@ -345,8 +345,6 @@ def main():
     }
 
     answer_file = f"res/answers/analysis/re/no_disambiguation.json"
-    # answer_file = f"res/answers/pet-md/2024-03-14_18-28-57.json"
-    # answer_file = f"res/answers/pet-md/2024-03-14_18-42-49.json"
 
     importer = None
     for k, v in importers.items():
