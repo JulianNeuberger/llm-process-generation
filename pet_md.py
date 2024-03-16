@@ -18,9 +18,9 @@ if __name__ == "__main__":
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/pet-md/{date_formatted}.json"
-        # storage = f"res/answers/pet-md/2024-03-02_16-26-51.json"
+        # storage = f"res/answers/pet-md/2024-03-14_18-42-49.json"
 
-        num_shots = 0
+        num_shots = 1
         model_name = "gpt-4-0125-preview"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
@@ -39,64 +39,77 @@ if __name__ == "__main__":
         #     format.PetAndListingFormattingStrategy(["mentions"]),
         # ]
 
-        # formatters = [
-        #     format.IterativePetMentionListingFormattingStrategy(
-        #         ["mentions"], "activity", context_tags=[]
-        #     ),
-        #     format.IterativePetMentionListingFormattingStrategy(
-        #         ["mentions"], "actor", context_tags=["activity"]
-        #     ),
-        #     format.IterativePetMentionListingFormattingStrategy(
-        #         ["mentions"], "activity data", context_tags=["activity", "actor"]
-        #     ),
-        #     format.IterativePetMentionListingFormattingStrategy(
-        #         ["mentions"],
-        #         "further specification",
-        #         context_tags=["activity", "actor", "activity data"],
-        #     ),
-        #     format.IterativePetMentionListingFormattingStrategy(
-        #         ["mentions"],
-        #         "xor gateway",
-        #         context_tags=[
-        #             "activity",
-        #             "actor",
-        #             "activity data",
-        #             "further specification",
-        #         ],
-        #     ),
-        #     format.IterativePetMentionListingFormattingStrategy(
-        #         ["mentions"],
-        #         "condition specification",
-        #         context_tags=[
-        #             "activity",
-        #             "actor",
-        #             "activity data",
-        #             "further specification",
-        #             "xor gateway",
-        #         ],
-        #     ),
-        #     format.IterativePetMentionListingFormattingStrategy(
-        #         ["mentions"],
-        #         "and gateway",
-        #         context_tags=[
-        #             "activity",
-        #             "actor",
-        #             "activity data",
-        #             "further specification",
-        #             "xor gateway",
-        #             "condition specification",
-        #         ],
-        #     ),
-        # ]
-
         formatters = [
-            format.PetMentionListingFormattingStrategy(
-                steps=["mentions"],
-                only_tags=None,
-                generate_descriptions=False,
-                prompt="pet/md/unified.txt",
-            )
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"],
+                "activity",
+                context_tags=[],
+                prompt="pet/md/iterative/with_explanation/activity.txt",
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"],
+                "actor",
+                context_tags=["activity"],
+                prompt="pet/md/iterative/with_explanation/actor.txt",
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"],
+                "activity data",
+                context_tags=["activity", "actor"],
+                prompt="pet/md/iterative/with_explanation/activity_data.txt",
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"],
+                "further specification",
+                context_tags=["activity", "actor", "activity data"],
+                prompt="pet/md/iterative/with_explanation/further_specification.txt",
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"],
+                "xor gateway",
+                context_tags=[
+                    "activity",
+                    "actor",
+                    "activity data",
+                    "further specification",
+                ],
+                prompt="pet/md/iterative/with_explanation/xor_gateway.txt",
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"],
+                "condition specification",
+                context_tags=[
+                    "activity",
+                    "actor",
+                    "activity data",
+                    "further specification",
+                    "xor gateway",
+                ],
+                prompt="pet/md/iterative/with_explanation/condition_specification.txt",
+            ),
+            format.IterativePetMentionListingFormattingStrategy(
+                ["mentions"],
+                "and gateway",
+                context_tags=[
+                    "activity",
+                    "actor",
+                    "activity data",
+                    "further specification",
+                    "xor gateway",
+                    "condition specification",
+                ],
+                prompt="pet/md/iterative/with_explanation/and_gateway.txt",
+            ),
         ]
+
+        # formatters = [
+        #     format.PetMentionListingFormattingStrategy(
+        #         steps=["mentions"],
+        #         only_tags=None,
+        #         generate_descriptions=False,
+        #         prompt="pet/md/unified.txt",
+        #     )
+        # ]
 
         print("Using folds:")
         print("------------")

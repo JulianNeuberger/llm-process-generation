@@ -1,5 +1,4 @@
 import re
-import traceback
 import typing
 
 import data
@@ -372,13 +371,16 @@ class PetRelationListingFormattingStrategy(
                 print(f"Skipping non-tab-separated line {line}.")
                 continue
             split_line = line.split("\t")
-            if len(split_line) != 3:
+            if len(split_line) == 3 or len(split_line) > 4:
+                relation_type, head_index, tail_index = split_line
+            elif len(split_line) == 4:
+                relation_type, head_index, tail_index, explanation = split_line
+            else:
                 print(
-                    f"Expected exactly 3 arguments in line {line}, got {len(split_line)}. Skipping."
+                    f"Expected exactly 3-4 arguments in line {line}, got {len(split_line)}. Skipping."
                 )
                 total_errors += 1
                 continue
-            relation_type, head_index, tail_index = split_line
             relation_type = relation_type.lower().strip()
             try:
                 head_index = int(head_index)
@@ -635,7 +637,11 @@ class PetActivityListingFormattingStrategy(PetMentionListingFormattingStrategy):
 
 class IterativePetMentionListingFormattingStrategy(PetMentionListingFormattingStrategy):
     def __init__(
-        self, steps: typing.List[str], tag: str, context_tags: typing.List[str]
+        self,
+        steps: typing.List[str],
+        tag: str,
+        context_tags: typing.List[str],
+        prompt: str = None,
     ):
         super().__init__(steps, only_tags=[tag], generate_descriptions=False)
         self._tag = tag.lower()
@@ -643,15 +649,18 @@ class IterativePetMentionListingFormattingStrategy(PetMentionListingFormattingSt
         self._input_formatter = tags.PetTagFormattingStrategy(
             include_ids=False, only_tags=self._context_tags
         )
+        self._prompt_path = prompt
+        if prompt is None:
+            self._prompt_path = (
+                f"pet/md/iterative/no_explanation/{self._tag.replace(' ', '_')}.txt"
+            )
 
     @property
     def args(self):
         return {"tag": self._tag, "context_tags": self._context_tags}
 
     def description(self) -> str:
-        return common.load_prompt_from_file(
-            f"pet/md/iterative/no_explanation/{self._tag.replace(' ', '_')}.txt"
-        )
+        return common.load_prompt_from_file(self._prompt_path)
 
     def input(self, document: data.PetDocument) -> str:
         res = []

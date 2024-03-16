@@ -2,6 +2,8 @@
 
 You are an expert in business process modelling, specialized on BPMN and its elements.
 
+Use the system prompt when you refer to definitions of these BPMN elements, the task description, and additional requirements. Use the user input as a data source for your task.
+
 # Task Description
 
 You are tasked with extracting relations between mentions of process relevant elements from a natural language text process description. These mentions have a type and are marked in the given text by xml-style tags, which includes an id, you can use to refer to it.
@@ -21,22 +23,6 @@ Relations are directed and therefore have a source mention and a target mention.
 - **same gateway**: Textual descriptions of gateways are often spread over several phrases, especially the different outgoing paths, this relation links these disjointed descriptions together. Look for elements of type "xor_gateway" and "and_gateway". If you find another mention of the same type, check if they describe the same decision point in the process execution. If they do, extract a relation of type "same gateway", with the source mention being the one that appears earlier in the text, and the target mention being the one that appears later.
 
 - **further specification**: Focus on mentions of type "activity". Try and find mentions of type "further_specification", that describe how this activity has to be executed, or describe the activity further. If you find one, extract a relation of type "further_specification", where the source mention is the activity and the target mention is the mention of type "further_specification".
-
-## Procedure
-
-Let's solve this task in 6 steps.
-
-1. Write a short list of facts about the process, then add a horizontal line ("-----")
-
-2. Detect all relations of type uses and list them in your answer.
-
-3. Detect all relations of type flow and list them in your answer.
-
-4. Detect all relations of type actor performer and actor recipient. In both cases focus on activities and find the actor, that is performing the activity, or is affected by its outcome respectively.
-
-5. Detect all relations of type same gateway and extract them. For this focus on XOR_Gateways and AND_Gateways.
-
-6. Detect all relations of type further specification and extract them. Focus on elements of type Activity and Further_Specification for this task.
 
 ## Explanations
 

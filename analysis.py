@@ -1,4 +1,3 @@
-import random
 import typing
 
 import Levenshtein
@@ -55,7 +54,7 @@ def _set_theme():
             #'text.usetex': True
         }
     )
-    sns.set(font="Computer Modern")
+    sns.set(font="Computer Modern", font_scale=1.25)
 
 
 def iterative_prompt():
@@ -114,34 +113,6 @@ def iterative_prompt():
     )
 
 
-def combined_prompt():
-    folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    if task == "md":
-        formatters = [
-            format.PetMentionListingFormattingStrategy(
-                steps=["mentions"],
-                prompt=f"pet/{task}/ablation/combined_prompt_no_explanation.txt",
-            )
-        ]
-    else:
-        formatters = [
-            format.PetRelationListingFormattingStrategy(
-                steps=["relations"],
-                prompt=f"pet/{task}/ablation/combined_prompt_no_explanation.txt",
-            )
-        ]
-
-    experiments.experiment(
-        importer=importer,
-        formatters=formatters,
-        model_name=model_name,
-        storage=f"res/answers/analysis/{task}/combined.json",
-        num_shots=0,
-        dry_run=False,
-        folds=folds,
-    )
-
-
 def default_prompt():
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
     if task == "md":
@@ -165,26 +136,6 @@ def default_prompt():
         model_name=model_name,
         storage=f"res/answers/analysis/{task}/baseline.json",
         num_shots=0,
-        dry_run=False,
-        folds=folds,
-    )
-
-
-def no_meta_language():
-    folds = sampling.generate_folds(importer.do_import(), num_examples=1)
-    formatters = [
-        format.PetMentionListingFormattingStrategy(
-            steps=["mentions"],
-            prompt="pet/md/ablation/no_meta_language.txt",
-        )
-    ]
-
-    experiments.experiment(
-        importer=importer,
-        formatters=formatters,
-        model_name=model_name,
-        storage="res/answers/analysis/md/no_meta_language.json",
-        num_shots=1,
         dry_run=False,
         folds=folds,
     )
@@ -218,20 +169,21 @@ def gpt_3_5():
     )
 
 
-def no_format_examples():
+def run_ablation(prompt_name: str):
     folds = sampling.generate_folds(importer.do_import(), num_examples=0)
+
     if task == "md":
         formatters = [
             format.PetMentionListingFormattingStrategy(
                 steps=["mentions"],
-                prompt=f"pet/{task}/ablation/no_format_examples.txt",
+                prompt=f"pet/{task}/ablation/{prompt_name}.txt",
             )
         ]
     else:
         formatters = [
             format.PetRelationListingFormattingStrategy(
                 steps=["relations"],
-                prompt=f"pet/{task}/ablation/no_format_examples.txt",
+                prompt=f"pet/{task}/ablation/{prompt_name}.txt",
             )
         ]
 
@@ -239,131 +191,7 @@ def no_format_examples():
         importer=importer,
         formatters=formatters,
         model_name=model_name,
-        storage=f"res/answers/analysis/{task}/no_format_examples.json",
-        num_shots=0,
-        dry_run=False,
-        folds=folds,
-    )
-
-
-def no_formatting():
-    folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    if task == "md":
-        formatters = [
-            format.PetMentionListingFormattingStrategy(
-                steps=["mentions"],
-                prompt=f"pet/{task}/ablation/no_formatting.txt",
-            )
-        ]
-    else:
-        formatters = [
-            format.PetRelationListingFormattingStrategy(
-                steps=["relations"],
-                prompt=f"pet/{task}/ablation/no_formatting.txt",
-            )
-        ]
-
-    experiments.experiment(
-        importer=importer,
-        formatters=formatters,
-        model_name=model_name,
-        storage=f"res/answers/analysis/{task}/no_formatting.json",
-        num_shots=0,
-        dry_run=False,
-        folds=folds,
-    )
-
-
-def long_prompt():
-    folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    formatters = [
-        format.PetMentionListingFormattingStrategy(
-            steps=["mentions"],
-            prompt="pet/md/ablation/long_descriptions.txt",
-        )
-    ]
-
-    experiments.experiment(
-        importer=importer,
-        formatters=formatters,
-        model_name=model_name,
-        storage="res/answers/analysis/md/long_descriptions.json",
-        num_shots=0,
-        dry_run=False,
-        folds=folds,
-    )
-
-
-def short_prompt():
-    folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    if task == "md":
-        formatters = [
-            format.PetMentionListingFormattingStrategy(
-                steps=["mentions"],
-                prompt=f"pet/{task}/ablation/short_descriptions.txt",
-            )
-        ]
-    else:
-        formatters = [
-            format.PetRelationListingFormattingStrategy(
-                steps=["relations"],
-                prompt=f"pet/{task}/ablation/short_descriptions.txt",
-            )
-        ]
-
-    experiments.experiment(
-        importer=importer,
-        formatters=formatters,
-        model_name=model_name,
-        storage=f"res/answers/analysis/{task}/short_explanations.json",
-        num_shots=0,
-        dry_run=False,
-        folds=folds,
-    )
-
-
-def no_persona():
-    folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    formatters = [
-        format.PetMentionListingFormattingStrategy(
-            steps=["mentions"],
-            prompt="pet/md/ablation/no_persona.txt",
-        )
-    ]
-
-    experiments.experiment(
-        importer=importer,
-        formatters=formatters,
-        model_name=model_name,
-        storage="res/answers/analysis/md/no_persona.json",
-        num_shots=0,
-        dry_run=False,
-        folds=folds,
-    )
-
-
-def no_context_manager():
-    folds = sampling.generate_folds(importer.do_import(), num_examples=0)
-    if task == "md":
-        formatters = [
-            format.PetMentionListingFormattingStrategy(
-                steps=["mentions"],
-                prompt=f"pet/{task}/ablation/no_context_manager.txt",
-            )
-        ]
-    else:
-        formatters = [
-            format.PetRelationListingFormattingStrategy(
-                steps=["relations"],
-                prompt=f"pet/{task}/ablation/no_context_manager.txt",
-            )
-        ]
-
-    experiments.experiment(
-        importer=importer,
-        formatters=formatters,
-        model_name=model_name,
-        storage=f"res/answers/analysis/{task}/no_context_manager.json",
+        storage=f"res/answers/analysis/{task}/{prompt_name}.json",
         num_shots=0,
         dry_run=False,
         folds=folds,
@@ -371,6 +199,9 @@ def no_context_manager():
 
 
 def few_shots():
+    if task == "re":
+        return
+
     max_num_shots = 10
     seed = 42
     folds = sampling.generate_folds(
@@ -380,20 +211,12 @@ def few_shots():
     baseline_num_tokens: typing.Optional[int] = None
     baseline_f1: typing.Optional[float] = None
     for num_shots in range(max_num_shots + 1):
-        if task == "md":
-            formatters = [
-                format.PetMentionListingFormattingStrategy(
-                    steps=["mentions"],
-                    prompt=f"pet/{task}/ablation/baseline.txt",
-                )
-            ]
-        else:
-            formatters = [
-                format.PetRelationListingFormattingStrategy(
-                    steps=["relations"],
-                    prompt=f"pet/{task}/ablation/baseline.txt",
-                )
-            ]
+        formatters = [
+            format.PetMentionListingFormattingStrategy(
+                steps=["mentions"],
+                prompt=f"pet/{task}/ablation/baseline.txt",
+            )
+        ]
 
         storage = f"res/answers/analysis/{task}/few-shots/{num_shots}.json"
         experiments.experiment(
@@ -468,6 +291,7 @@ def few_shots():
         df_as_dict["score"],
         color=sns.color_palette()[0],
         linestyle="dashed",
+        linewidth=2,
         label="$P$",
     )
 
@@ -477,6 +301,7 @@ def few_shots():
         df_as_dict["score"],
         color=sns.color_palette()[1],
         linestyle="dashdot",
+        linewidth=2,
         label="$R$",
     )
 
@@ -486,6 +311,7 @@ def few_shots():
         df_as_dict["score"],
         color=sns.color_palette()[2],
         linestyle="solid",
+        linewidth=2,
         label="$F_1$",
     )
     ax1.set_ylabel("$F_1$ score")
@@ -499,9 +325,10 @@ def few_shots():
         df_as_dict["score"],
         color=sns.color_palette()[3],
         linestyle="dotted",
+        linewidth=2,
         label="Token Eff.",
     )
-    ax2.set_ylabel("$F_1$ improvement per 1,000 tokens")
+    ax2.set_ylabel("$\\Delta F_1$ / 1,000 tokens")
 
     ax1.set_yticks(np.linspace(ax1.get_ybound()[0], ax1.get_ybound()[1], 5))
     ax2.set_yticks(np.linspace(ax2.get_ybound()[0], ax2.get_ybound()[1], 5))
@@ -748,16 +575,18 @@ def document_num_tokens():
 
 
 def bar_plot():
-    def get_f1_from_experiment(
+    def get_statistics_from_experiment(
         exp_file_path: str,
     ):
         results = parse.parse_file(exp_file_path)
+        print(f"NUM RESULTS: {len(results)}")
         errors, stats = parse.parse_experiments(
             results, importer, print_only_tags=None, verbose=False
         )
         scores = parse.get_scores(stats, verbose=False)
+        num_tokens = parse.get_num_tokens(results) / len(results)
         assert len(scores) == 1
-        return list(scores.values())[0].micro_averaged_scores.f1, errors
+        return list(scores.values())[0].micro_averaged_scores.f1, errors, num_tokens
 
     def draw_labels(xs, ys, offset=1e-4):
         for _x, _y in zip(xs, ys):
@@ -770,66 +599,96 @@ def bar_plot():
                 fontname="CMS",
             )
 
-    experiment_names = [
-        "Iterative",
-        "No Format Example",
-        "No Formatting",
-        "Short Prompt",
-        "Long Prompt",
-        "GPT 3.5",
-        "No Context Manager",
+    experiment_names = {
+        # "": "Iterative",
+        "no_format_examples": "No Format Example",
+        # "": "No Formatting",
+        "short_descriptions": "Short Prompt",
+        # "long_descriptions": "Long Prompt",
+        "gpt_3_5": "GPT 3.5",
+        "no_context_manager": "No Context Manager",
+        "no_persona": "No Persona",
+        "no_meta_language": "No Meta Language",
+        "no_cot": "No Chain of Thoughts",
+        "no_disambiguation": "No Disambiguation",
+        "no_explanations": "No Explanation Generation",
+        "no_facts": "No Fact Generation",
+    }
+    plot_experiments = [
+        "no_format_examples",
+        "short_descriptions",
+        "gpt_3_5",
+        "no_meta_language",
+        "no_explanations",
     ]
-    md_baseline, md_baseline_errors = get_f1_from_experiment(
-        f"res/answers/analysis/md/baseline.json"
+    md_baseline, md_baseline_errors, md_baseline_tokens = (
+        get_statistics_from_experiment(f"res/answers/analysis/md/baseline.json")
     )
     md_values = []
     md_errors = []
-    re_baseline, re_baseline_errors = get_f1_from_experiment(
-        f"res/answers/analysis/re/baseline.json"
+    md_tokens = []
+    re_baseline, re_baseline_errors, re_baseline_tokens = (
+        get_statistics_from_experiment(f"res/answers/analysis/re/baseline.json")
     )
     re_values = []
     re_errors = []
-    for exp in tqdm.tqdm(
-        [
-            "iterative",
-            "no_format_examples",
-            "no_formatting",
-            "short_explanations",
-            "combined",
-            "gpt_3_5",
-            "no_context_manager",
-        ]
-    ):
-        md_value, num_md_errors = get_f1_from_experiment(
+    re_tokens = []
+    for exp in tqdm.tqdm(list(experiment_names.keys())):
+        md_value, num_md_errors, md_num_tokens = get_statistics_from_experiment(
             f"res/answers/analysis/md/{exp}.json"
         )
         md_errors.append(num_md_errors)
         md_values.append(md_value - md_baseline)
+        md_tokens.append(md_num_tokens - md_baseline_tokens)
         try:
-            re_value, num_re_errors = get_f1_from_experiment(
+            re_value, num_re_errors, re_num_tokens = get_statistics_from_experiment(
                 f"res/answers/analysis/re/{exp}.json"
             )
             re_values.append(re_value - re_baseline)
             re_errors.append(num_re_errors)
+            re_tokens.append(re_num_tokens - re_baseline_tokens)
         except FileNotFoundError:
-            re_values.append(random.random())
-            re_errors.append(random.randint(0, 15))
+            print(f"missing file 'res/answers/analysis/re/{exp}.json'")
+            re_values.append(-10)
+            re_errors.append(-1)
+            re_tokens.append(-1)
 
     fig, ax = plt.subplots()
-    y_pos = np.arange(len(experiment_names))
+
+    data_points = {"experiment_names": [], "md_values": [], "re_values": []}
+
+    for exp_name, md_value, re_value in zip(
+        experiment_names.keys(), md_values, re_values
+    ):
+        if exp_name not in plot_experiments:
+            continue
+        data_points["experiment_names"].append(exp_name)
+        data_points["md_values"].append(md_value)
+        data_points["re_values"].append(re_value)
+
+    y_pos = np.arange(len(data_points["experiment_names"]))
     height = 0.8
     y_pos_md = y_pos - height / 4
     y_pos_re = y_pos + height / 4
-    ax.barh(y_pos_md, md_values, height=height / 2, hatch="///", label="MD")
-    ax.barh(y_pos_re, re_values, height=height / 2, hatch="\\\\\\", label="RE")
-    ax.set_yticks(y_pos, experiment_names)
+    ax.barh(
+        y_pos_md, data_points["md_values"], height=height / 2, hatch="///", label="MD"
+    )
+    ax.barh(
+        y_pos_re,
+        data_points["re_values"],
+        height=height / 2,
+        hatch="\\\\\\",
+        label="RE",
+    )
+    ax.set_yticks(y_pos, [experiment_names[k] for k in data_points["experiment_names"]])
     ax.invert_yaxis()
 
-    draw_labels(y_pos_md, md_values)
-    draw_labels(y_pos_re, re_values)
+    draw_labels(y_pos_md, data_points["md_values"])
+    draw_labels(y_pos_re, data_points["re_values"])
 
     bottom, top = ax.get_xlim()
     ax.set_xlim(bottom * 1.1, top * 1.1)
+    ax.set_xlabel("$\\Delta F_1$")
 
     ax.legend()
 
@@ -840,7 +699,7 @@ def bar_plot():
 
     max_experiment_name = max([len(n) for n in experiment_names])
     print(
-        f"{'name':>{max_experiment_name}} | MD Rel. | MD Abs. | MD Err. | RE Rel. | RE Abs. | RE Err."
+        f"{'name':>{max_experiment_name}} | MD Rel. | MD Abs. | MD Err. | RE Rel. | RE Abs. | RE Err. "
     )
     print(
         f"{'-' * max_experiment_name}-+---------+---------+---------+---------+---------+---------"
@@ -848,8 +707,22 @@ def bar_plot():
     print(
         f"{'Baseline':>{max_experiment_name}} |   ---   | {md_baseline:+.2f}   | {md_baseline_errors:>7} |   ---   | {re_baseline:+.2f}   | {re_baseline_errors:>7}"
     )
-    for exp_name, md_diff, md_errors, re_diff, re_errors in zip(
-        experiment_names, md_values, md_errors, re_values, re_errors
+    for (
+        exp_name,
+        md_diff,
+        md_errors,
+        md_num_tokens,
+        re_diff,
+        re_errors,
+        re_num_tokens,
+    ) in zip(
+        experiment_names,
+        md_values,
+        md_errors,
+        md_tokens,
+        re_values,
+        re_errors,
+        re_tokens,
     ):
         absolute_md = md_baseline + md_diff
         absolute_re = re_baseline + re_diff
@@ -861,21 +734,23 @@ def bar_plot():
 if __name__ == "__main__":
     _set_theme()
 
-    # iterative_prompt()
-    default_prompt()
-    no_format_examples()
-    short_prompt()
-    long_prompt()
-    no_context_manager()
-    no_meta_language()
-    no_persona()
-    gpt_3_5()
+    # default_prompt()
+    #
+    # run_ablation("no_context_manager")
+    # run_ablation("no_cot")
+    # run_ablation("no_disambiguation")
+    # run_ablation("no_explanations")
+    # run_ablation("no_facts")
+    # run_ablation("no_format_examples")
+    # run_ablation("no_meta_language")
+    # run_ablation("no_persona")
+    # run_ablation("short_descriptions")
+    #
+    # gpt_3_5()
 
     # stochasticity_repeated_runs()
     # stochasticity_minor_changes()
     # few_shots()
     # document_num_tokens()
-
-    gpt_3_5()
 
     bar_plot()

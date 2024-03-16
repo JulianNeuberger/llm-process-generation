@@ -44,10 +44,6 @@ Let's solve the task in 8 steps.
 
 8. Extract all AND Gateways.
 
-## Explanations
-
-Additionally, to each mention you extract, please give a short explanation why you extracted it.
-
 # Restrictions
 
 ## Additional considerations
@@ -82,13 +78,13 @@ Sentence 1: Then the user stores them in a file.
 
 ### Output Example
 
-extracts	Activity	0	extracts is a process relevant activity as it generates data (mentions)
-sends	Activity	0	sends is process relevant since it uses the data mentions and moves them
-stores	Activity	1	stores is an activity which is process relevant, because it describes the task of writing data to a file
-all mentions	Activity Data	0	process relevant data which is created by the extracts activity and used by sends and stores
-them	Activity Data	0	them refers to the mentions (data), a process relevant activity data mention
-them	Activity Data	1	them is co-referent with the mentions, which is a process relevant activity data mention
-The LLM	Actor	0	this is a system that is actively participating in the process by extracting and sending data
-the user	Actor	0	a person that is involved in the process by receiving data and storing it
-the user	Actor	1	a process relevant actor, as it is a person that works together with the LLM
-in a file	Further Specification	1	this phrase further specifies how the action stores is performed
+extracts	Activity	0
+sends	Activity	0
+stores	Activity	1
+all mentions	Activity Data	0
+them	Activity Data	0
+them	Activity Data	1
+The LLM	Actor	0
+the user	Actor	0
+the user	Actor	1
+in a file	Further Specification	1

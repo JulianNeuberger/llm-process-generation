@@ -26,23 +26,21 @@ You are tasked with extracting mentions of process relevant elements from a natu
 
 ## Procedure
 
-Let's solve the task in 8 steps.
+Let's solve the task in 7 steps.
 
-1. Write a short list of facts about the process, then add a horizontal line ("-----")
+1. Detect all mentions of activities and extract them.
 
-2. Detect all mentions of activities and extract them.
+2. Reference the activities you found and extract all mentions of Activity Data.
 
-3. Reference the activities you found and extract all mentions of Activity Data.
+3. Reference the activities you found so far and check, if there is an Actor that performs the activity or is affected by it. Extract any you find.
 
-4. Reference the activities you found so far and check, if there is an Actor that performs the activity or is affected by it. Extract any you find.
+4. Reference the activities you found and look for further specification on how to execute the activity. Extract the ones you find.
 
-5. Reference the activities you found and look for further specification on how to execute the activity. Extract the ones you find.
+5. Extract all XOR Gateways.
 
-6. Extract all XOR Gateways.
+6. Reference the XOR Gateways you found and look for the condition that belongs to the gateway, extract it.
 
-7. Reference the XOR Gateways you found and look for the condition that belongs to the gateway, extract it.
-
-8. Extract all AND Gateways.
+7. Extract all AND Gateways.
 
 ## Explanations
 

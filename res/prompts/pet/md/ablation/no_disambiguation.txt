@@ -58,10 +58,6 @@ Do not use any code formatting.
 
 Only extract process relevant activities.
 
-## Disambiguation
-
-This sentence does not contain an Activity mention, because the verb describes meta information about the process: "The process starts after the LLM has loaded."
-
 ## Format
 
 For each mention you detect, write a line in the following format:

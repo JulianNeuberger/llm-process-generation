@@ -189,6 +189,10 @@ def sum_stats(
     return total_stats_by_step
 
 
+def get_num_tokens(results: typing.List[experiments.ExperimentResult]):
+    return sum([r.input_tokens + r.output_tokens for e in results for r in e.results])
+
+
 def get_scores(
     experiment_stats: typing.List[ExperimentStats], verbose: bool
 ) -> typing.Dict[str, PrintableScores]:
@@ -322,8 +326,10 @@ def main():
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = f"res/answers/pet-md/2024-03-14_12-38-33.json"
-    # answer_file = f"res/answers/pet-re/2024-03-11_12-07-58.json"
+    answer_file = f"res/answers/analysis/re/no_disambiguation.json"
+    # answer_file = f"res/answers/pet-md/2024-03-14_18-28-57.json"
+    # answer_file = f"res/answers/pet-md/2024-03-14_18-42-49.json"
+
     importer = None
     for k, v in importers.items():
         if k in answer_file:
@@ -335,6 +341,7 @@ def main():
         answer_file,
         importer,
         print_only_tags=["action"],
+        # only_document_ids=["doc-6.2", "doc-8.3", "doc-6.3", "doc-3.3", "doc-3.7"],
         verbose=True,
     )
 
