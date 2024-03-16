@@ -338,13 +338,16 @@ def main():
         "pet": data.PetImporter("res/data/pet/all.new.jsonl"),
         "quishpi-re": data.VanDerAaImporter("res/data/quishpi/csv"),
         "quishpi-md": data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
-        "van-der-aa": data.VanDerAaSentenceImporter(
+        "van-der-aa-re": data.VanDerAaSentenceImporter(
+            "res/data/van-der-aa/datacollection.csv"
+        ),
+        "van-der-aa-md": data.VanDerAaImporter(
             "res/data/van-der-aa/datacollection.csv"
         ),
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = f"res/answers/analysis/re/no_disambiguation.json"
+    answer_file = f"res/answers/analysis/md/baseline.json"
 
     importer = None
     for k, v in importers.items():

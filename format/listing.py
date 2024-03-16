@@ -34,7 +34,7 @@ class VanDerAaMentionListingFormattingStrategy(
             if mention_text == "":
                 continue
             document.mentions.append(data.VanDerAaMention(text=mention_text))
-        return document
+        return base.ParseResult(document, 0)
 
 
 class VanDerAaRelationListingFormattingStrategy(
