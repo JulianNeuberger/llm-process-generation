@@ -6,6 +6,7 @@ import data
 import eval
 import experiments
 import format
+from format import listing
 
 TDocument = typing.TypeVar("TDocument", bound=data.DocumentBase)
 ExperimentStats = typing.Dict[str, typing.Dict[str, eval.Stats]]
@@ -81,6 +82,14 @@ def parse_experiment(
         predicted_doc: typing.Optional[data.DocumentBase] = None
         input_doc = documents_by_id[result.original_id]
 
+        # If a refinement strategy is used, partial results are not considered.
+        refinement_result_only = False
+        if (
+            listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__
+            in result.formatters
+        ):
+            refinement_result_only = True
+
         for formatter_class_name, steps, answer, prompt, args in zip(
             result.formatters,
             result.steps,
@@ -88,6 +97,13 @@ def parse_experiment(
             result.prompts,
             result.formatter_args,
         ):
+            if (
+                refinement_result_only
+                and formatter_class_name
+                != listing.IterativeVanDerAaSelectiveRelationExtractionRefinementStrategy.__name__
+            ):
+                continue
+
             if overall_steps is None:
                 overall_steps = steps
             assert overall_steps == steps
@@ -322,7 +338,9 @@ def main():
         "pet": data.PetImporter("res/data/pet/all.new.jsonl"),
         "quishpi-re": data.VanDerAaImporter("res/data/quishpi/csv"),
         "quishpi-md": data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
-        "van-der-aa": data.VanDerAaImporter("res/data/van-der-aa/datacollection.csv"),
+        "van-der-aa": data.VanDerAaSentenceImporter(
+            "res/data/van-der-aa/datacollection.csv"
+        ),
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
@@ -340,8 +358,8 @@ def main():
     print_experiment_results(
         answer_file,
         importer,
-        print_only_tags=["action"],
-        # only_document_ids=["doc-6.2", "doc-8.3", "doc-6.3", "doc-3.3", "doc-3.7"],
+        # only_document_ids=["1-1_bicycle_manufacturing"],
+        # print_only_tags=["action"],
         verbose=True,
     )
 

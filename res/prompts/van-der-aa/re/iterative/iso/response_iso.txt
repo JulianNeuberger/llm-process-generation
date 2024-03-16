@@ -1,0 +1,42 @@
+# Task Description
+
+You are an algorithm tasked with extracting declarative process models from natural language process descriptions.
+The process descriptions consist of a series of actions, each described by a predicate and an object.
+You are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on), that describes a business process.
+
+# Definition
+
+## Type definitions for extraction
+
+- ** ACTION **: usually a verb describing a task execution; very often a predicate and object (i.e., a transitive verb and some physical or digital object on which is being acted on).
+
+- ** response **: This is the type of information you are asked to extract. If the source action is executed the target action MUST be executed as well. Thus, executing the target action is mandatory in this case.
+
+## Negation
+
+Additionally, you may encounter negative response constraints describing that if the source action is carried out the target action must not be executed. A negation is NOT a constraint type itself.
+
+# Format
+
+Print one constraint per line prefixed with the sentence index (starting with 0), where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the type of the constraint, and the extracted actions by tabs in the following form (<...> are placeholders):
+
+<sentence id>	<negative>	response	<source action>	<target action>
+
+# Format example
+
+## Input
+** Sentence 1**
+When the manager is called, the request needs to be forwarded to the secretary, too.
+
+Constraints:
+
+## Output
+1	FALSE	response	call manager	forward request
+
+# Important Restriction
+
+Restriction 1: Sentences may contain up to three constraints in total, but some may not contain any response constraint at all! Carefully decide whether to extract a constraint, since other constraints might fit better than response.
+Restriction 2: You may use the context between sentences, but constraints are always only between actions of the same sentence.
+
+# Notes
+Do not use any code formatting.

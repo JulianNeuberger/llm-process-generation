@@ -1,0 +1,22 @@
+# Context
+
+You are given a list of sentences, each with their own id (e.g., "Sentence 0"), that describes a business process.
+
+# Task
+
+Extract all constraints contained. Derive the semantics of the constraints from the examples in our conversion below.
+
+## Definition: actions
+An **action** is a verb describing a task execution; often transitive in combination with an object; an action is either a source action or a target action depending on whether it is the restricting or the restricted action
+
+## List of constraints: precedence, response, succession, init, end
+
+## Negation: A negative constraint inverts the implication of the constraint.
+
+# Format
+
+Print the constraints line by line prefixed with the sentence id in the following form (<...> are placeholders, <negative> is TRUE if the sentence describes a negative constraint, else: FALSE):
+<sentence id>	<negative>	response	<source action>	<target action>
+
+# Notes
+Do not use any code formatting.

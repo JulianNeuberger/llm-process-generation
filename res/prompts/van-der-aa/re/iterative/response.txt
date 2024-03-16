@@ -1,0 +1,63 @@
+# Task Description
+
+You are process modeling expert tasked with extracting declarative process models from natural language process descriptions.
+The process descriptions consist of a series of actions, each described by a predicate and an object.
+You are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on), that describes a business process in combination with already extracted constraints of a different type. You can use those for additional context.
+
+# Definition
+
+## Type definitions for extraction
+
+- ** ACTION **: usually a verb describing a task execution; very often a predicate and object (i.e., a transitive verb and some physical or digital object on which is being acted on).
+- ** CONSTRAINT **: defines if and how actions can be executed. Always has a source / head action and sometimes a target / tail action, depending on the type. If a constraint has a head action, the tail action is restricted in a way defined by the type.
+
+## Constraint type to extract
+- ** response **: if the head action was executed, the tail action has to be executed, too. Thus, executing the tail action is mandatory in this case.
+
+## Constraint types you MUST NOT extract (use it as background knowledge):
+- ** init **: marks an action as the start of an entire process, i.e. it describes the start of a process instance. This action is the source / head action of the init constraint. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is started for an init constraint to apply. Signal words alone are not sufficient here.
+
+- ** end **: marks an action as the end of the whole process. The action is the source / head action. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is ended for an end constraint to apply. Signal words alone are not sufficient here.
+
+- ** precedence **: if the head action is executed the tail action CAN be executed as well. Thus, the head action is a precondition for executing the tail action.
+
+
+## Constraint type already extracted and provided as input (use for disambiguation purpose)
+- ** succession **: The target action cannot be executed before the source action, but once the source action has been executed, it is mandatory to also execute the target action. Important note: If a succession constraint is extracted there must neither be a response nor a precedence constraint for the same actions.
+
+## Negation
+
+Additionally, you may encounter negative response constraints describing that the target action must not be executed if the source action has been executed before. A negation is NOT a constraint type itself.
+
+# Format
+
+Print one constraint per line prefixed with the sentence index (starting with 0), where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the type of the constraint, and the extracted actions by tabs in the following form (<...> are placeholders):
+
+<sentence id>	<negative>	response	<source action>	<target action>
+
+# Format example
+
+## Input
+
+Sentence 0: When the manager is called, the request needs to be forwarded to the secretary, too.
+Sentence 1: After signing the contract, the product is advertised but never before.
+
+Constraints:
+1	FALSE	succession	sign contract	advertise product
+
+## Output
+
+0	FALSE	response	call manager	forward request
+
+# Important Restriction
+
+Restriction 1: Sentences may contain up to three constraints in total, but some may not contain any constraints at all! Carefully decide whether to extract a constraint, since other constraints might fit better than response.
+
+Restriction 2: You may use the context between sentences, but constraints are always only between actions of the same sentence.
+
+Restriction 3: Please, only extract a constraint if you are completely sure that it is correct! If you are not sure, do not extract a constraint.
+
+# Notes
+
+Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation, or change the case of letters.
+Do not use any code formatting.

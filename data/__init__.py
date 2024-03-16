@@ -14,6 +14,7 @@ from data.vanderaa import (
     VanDerAaDocument,
     VanDerAaConstraint,
     VanDerAaImporter,
+    VanDerAaSentenceImporter,
     VanDerAaMention,
 )
 from data.base import (
