@@ -338,7 +338,7 @@ def main():
         "van-der-aa-md": data.VanDerAaImporter(
             "res/data/van-der-aa/datacollection.csv"
         ),
-        "analysis": data.PetImporter("res/data/quishpi/csv/2024-03-14_13-37-53.json"),
+        "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
     answer_file = f"res/answers/analysis/md/baseline.json"
