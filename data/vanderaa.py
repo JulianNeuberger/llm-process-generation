@@ -200,6 +200,7 @@ class VanDerAaImporter(base.BaseImporter[VanDerAaDocument]):
 
                     # quishpi uses 1 for all rows and files, this would not be unique...
                     doc_id = f"{file_name}-{doc_id}"
+                    # doc_id = f"{file_name}"
                     if self._sentence_wise:
                         doc_id = f"{doc_id}-{row_id}"
 

@@ -76,7 +76,6 @@ def parse_experiment(
     documents_by_id = {d.id: d for d in documents}
 
     num_parse_errors = 0
-    errors_by_doc = {}
     overall_steps: typing.Optional[typing.List[str]] = None
     for result in experiment_result.results:
         predicted_doc: typing.Optional[data.DocumentBase] = None
@@ -113,11 +112,6 @@ def parse_experiment(
             formatter = formatter_class(steps, **args)
             partial_prediction = formatter.parse(input_doc, answer)
             num_parse_errors += partial_prediction.num_parse_errors
-            if partial_prediction.document.id not in errors_by_doc:
-                errors_by_doc[partial_prediction.document.id] = 0
-            errors_by_doc[
-                partial_prediction.document.id
-            ] += partial_prediction.num_parse_errors
             if predicted_doc is None:
                 predicted_doc = partial_prediction.document
             else:
@@ -336,7 +330,7 @@ def print_experiment_results(
 def main():
     importers = {
         "pet": data.PetImporter("res/data/pet/all.new.jsonl"),
-        "quishpi-re": data.VanDerAaImporter("res/data/quishpi/csv"),
+        "quishpi-re": data.VanDerAaSentenceImporter("res/data/quishpi/csv"),
         "quishpi-md": data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
         "van-der-aa-re": data.VanDerAaSentenceImporter(
             "res/data/van-der-aa/datacollection.csv"
@@ -344,7 +338,7 @@ def main():
         "van-der-aa-md": data.VanDerAaImporter(
             "res/data/van-der-aa/datacollection.csv"
         ),
-        "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
+        "analysis": data.PetImporter("res/data/quishpi/csv/2024-03-14_13-37-53.json"),
     }
 
     answer_file = f"res/answers/analysis/md/baseline.json"
