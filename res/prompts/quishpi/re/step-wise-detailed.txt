@@ -28,7 +28,7 @@ constraints between them. Below you find further definitions for ACTIONS and CON
         constraint.
     - noncooccurrence: requires the head action is not executed if the tail action is executed and vice versa.
 
-Additionally you can determine if the given document describes a negation of constraints,
+Additionally, you can determine if the given document describes a negation of constraints,
 e.g., "when something happens, then we DO something" describes a positive constraint,
 while "when something happens, then we DON'T DO something" describes a negation.
 
