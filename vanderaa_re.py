@@ -61,12 +61,11 @@ if __name__ == "__main__":
         except LookupError:
             nltk.download("punkt")
 
-        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/van-der-aa-re/{date_formatted}.json"
-        # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
-
         num_shots = 3
         model_name = "gpt-4-0125-preview"
+
+        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        storage = f"res/answers/{model_name}/van-der-aa-re/{date_formatted}.json"
 
         formatters = [
             format.VanDerAaRelationListingFormattingStrategy(

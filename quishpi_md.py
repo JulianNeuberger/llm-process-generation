@@ -18,12 +18,12 @@ if __name__ == "__main__":
         except LookupError:
             nltk.download("punkt")
 
-        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        # storage = f"res/answers/quishpi-md/{date_formatted}.json"
-        storage = f"res/answers/quishpi-md/2024-03-11_16-51-51.json"
-
         num_shots = 1
         model_name = "gpt-4-0125-preview"
+
+        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        storage = f"res/answers/{model_name}/quishpi-md/{date_formatted}.json"
+        # storage = f"res/answers/{model_name}/quishpi-md/2024-03-11_16-51-51.json"
 
         importer = data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"])
         # folds = [{"train": [], "test": ["20818304_rev1"]}]

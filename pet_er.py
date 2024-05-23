@@ -18,12 +18,12 @@ if __name__ == "__main__":
         except LookupError:
             nltk.download("punkt")
 
-        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/pet-er/{date_formatted}.json"
-        # storage = f"res/answers/pet-er/2024-03-01_10-11-43.json"
-
         num_shots = 0
         model_name = "gpt-4-0125-preview"
+
+        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        storage = f"res/answers/{model_name}/pet-er/{date_formatted}.json"
+        # storage = f"res/answers/{model_name}/pet-er/2024-03-01_10-11-43.json"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         importer = data.PetImporter("res/data/pet/all.new.jsonl")

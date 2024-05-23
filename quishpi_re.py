@@ -18,12 +18,12 @@ if __name__ == "__main__":
         except LookupError:
             nltk.download("punkt")
 
-        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        # storage = f"res/answers/quishpi-re/{date_formatted}.json"
-        storage = f"res/answers/quishpi-re/2024-03-14_16-45-25.json"
-
         num_shots = 3
         model_name = "gpt-4-0125-preview"
+
+        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        storage = f"res/answers/{model_name}/quishpi-re/{date_formatted}.json"
+        # storage = f"res/answers/{model_name}/quishpi-re/2024-03-14_16-45-25.json"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         # formatter = format.PetTagFormattingStrategy()

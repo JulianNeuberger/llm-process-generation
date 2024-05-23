@@ -14,6 +14,7 @@ def run_iterative_document_prompt(
     formatters: typing.List[format.BaseFormattingStrategy[TDocument]],
     example_docs: typing.List[TDocument],
     chat_model: BaseChatModel,
+    model_name: str,
     dry_run: bool,
 ) -> model.PromptResult:
     merged_result: typing.Optional[model.PromptResult] = None
@@ -29,6 +30,7 @@ def run_iterative_document_prompt(
             formatter,
             example_docs,
             chat_model,
+            model_name,
             dry_run,
         )
         for answer in result.answers:
@@ -50,9 +52,10 @@ def run_multiple_iterative_document_prompts(
     formatters: typing.List[format.BaseFormattingStrategy[TDocument]],
     example_docs: typing.List[TDocument],
     chat_model: BaseChatModel,
+    model_name: str,
     dry_run: bool,
 ) -> typing.Generator[model.PromptResult, None, None]:
     for d in input_documents:
         yield run_iterative_document_prompt(
-            d, formatters, example_docs, chat_model, dry_run
+            d, formatters, example_docs, chat_model, model_name, dry_run
         )
