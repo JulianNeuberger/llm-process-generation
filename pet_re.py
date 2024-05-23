@@ -1,6 +1,8 @@
 import datetime
 
+import langchain_openai
 import nltk
+from langchain_core.language_models import BaseChatModel
 
 import data
 import experiments
@@ -63,10 +65,15 @@ if __name__ == "__main__":
             print(fold)
         print("------------")
 
+        chat_model: BaseChatModel = langchain_openai.ChatOpenAI(
+            model_name=model_name, temperature=0
+        )
+
         experiments.experiment(
             importer=importer,
             formatters=formatters,
             model_name=model_name,
+            chat_model=chat_model,
             storage=storage,
             num_shots=num_shots,
             dry_run=False,

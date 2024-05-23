@@ -6,6 +6,7 @@ import langchain_community.callbacks
 import langchain_openai
 import tqdm
 from langchain_core import prompts
+from langchain_core.language_models import BaseChatModel
 
 import format
 from data import base
@@ -56,7 +57,7 @@ def run_single_document_prompt(
     current_prediction: TDocument,
     formatter: format.BaseFormattingStrategy[TDocument],
     example_docs: typing.List[TDocument],
-    chat_model: langchain_openai.ChatOpenAI,
+    chat_model: BaseChatModel,
     dry_run: bool,
 ) -> model.PromptResult:
     print(f"Running prompt for {input_document.id} ...")
@@ -126,15 +127,13 @@ def experiment(
     formatters: typing.List[format.BaseFormattingStrategy[TDocument]],
     *,
     model_name: str,
+    chat_model: BaseChatModel,
     storage: str,
     num_shots: int,
     dry_run: bool,
     folds: typing.List[typing.Dict[str, typing.List[str]]] = None,
 ):
     documents = importer.do_import()
-    chat_model: langchain_openai.ChatOpenAI = langchain_openai.ChatOpenAI(
-        model_name=model_name, temperature=0
-    )
 
     saved_experiment_results: typing.List[model.ExperimentResult]
     if not os.path.isfile(storage):

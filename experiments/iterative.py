@@ -1,9 +1,9 @@
 import typing
 
-import langchain_openai
+from langchain_core.language_models import BaseChatModel
 
-from data import base
 import format
+from data import base
 from experiments import model, common
 
 TDocument = typing.TypeVar("TDocument", bound=base.DocumentBase)
@@ -13,7 +13,7 @@ def run_iterative_document_prompt(
     input_document: TDocument,
     formatters: typing.List[format.BaseFormattingStrategy[TDocument]],
     example_docs: typing.List[TDocument],
-    chat_model: langchain_openai.ChatOpenAI,
+    chat_model: BaseChatModel,
     dry_run: bool,
 ) -> model.PromptResult:
     merged_result: typing.Optional[model.PromptResult] = None
@@ -49,7 +49,7 @@ def run_multiple_iterative_document_prompts(
     input_documents: typing.List[TDocument],
     formatters: typing.List[format.BaseFormattingStrategy[TDocument]],
     example_docs: typing.List[TDocument],
-    chat_model: langchain_openai.ChatOpenAI,
+    chat_model: BaseChatModel,
     dry_run: bool,
 ) -> typing.Generator[model.PromptResult, None, None]:
     for d in input_documents:
