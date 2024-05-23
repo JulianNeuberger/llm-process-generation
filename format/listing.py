@@ -946,6 +946,8 @@ class PetMentionListingFormattingStrategy(
             formatted_mentions.append(
                 f"{m.text(document)}\t{m.type}\t{first_token.sentence_index}\t{description}"
             )
+        if len(formatted_mentions) == 0:
+            return "No mentions found."
         return "\n".join(formatted_mentions)
 
     def input(self, document: data.PetDocument) -> str:

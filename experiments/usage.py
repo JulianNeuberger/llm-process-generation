@@ -10,7 +10,11 @@ class Price:
 
 prices: typing.Dict[str, Price] = {
     "gpt-4-0125-preview": Price(prompt=0.01, completion=0.03),
+    "gpt-4o-2024-05-13": Price(prompt=0.005, completion=0.015),
     "gpt-3.5-turbo-0125": Price(prompt=0.0005, completion=0.0015),
+    "claude-3-opus-20240229": Price(prompt=0.015, completion=0.075),
+    "claude-3-sonnet-20240229": Price(prompt=0.003, completion=0.015),
+    "gpt-4-turbo-2024-04-09": Price(prompt=0.01, completion=0.03),
 }
 
 

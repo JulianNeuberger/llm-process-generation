@@ -1,6 +1,9 @@
 import datetime
 
+import langchain_openai
+import langchain_anthropic
 import nltk
+from langchain_core.language_models import BaseChatModel
 
 import data
 import experiments
@@ -16,18 +19,18 @@ if __name__ == "__main__":
         except LookupError:
             nltk.download("punkt")
 
-        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/pet-md/{date_formatted}.json"
-        # storage = f"res/answers/pet-md/2024-03-14_18-42-49.json"
-
         num_shots = 1
-        model_name = "gpt-4-0125-preview"
+        model_name = "claude-3-sonnet-20240229"
+
+        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        storage = f"res/answers/{model_name}/pet-md/{date_formatted}.json"
+        # storage = f"res/answers/{model_name}/pet-md/2024-03-14_18-42-49.json"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         importer = data.PetImporter("res/data/pet/all.new.jsonl")
         train_docs = [d.id for d in importer.do_import() if d.id != "doc-6.1"]
         # folds = [{"train": train_docs, "test": ["doc-6.1"]}]
-        folds = sampling.generate_folds(importer.do_import(), num_shots)
+        folds = sampling.generate_folds(importer.do_import(), num_shots)[0:1]
 
         # formatters = [
         #     format.PetActivityListingFormattingStrategy(["mentions"]),
@@ -117,10 +120,18 @@ if __name__ == "__main__":
             print(fold)
         print("------------")
 
+        # chat_model: BaseChatModel = langchain_openai.ChatOpenAI(
+        #     model_name=model_name, temperature=0
+        # )
+        chat_model: BaseChatModel = langchain_anthropic.ChatAnthropic(
+            model_name=model_name, temperature=0
+        )
+
         experiments.experiment(
             importer=importer,
             formatters=formatters,
             model_name=model_name,
+            chat_model=chat_model,
             storage=storage,
             num_shots=num_shots,
             dry_run=False,

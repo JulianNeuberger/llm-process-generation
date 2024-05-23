@@ -1,7 +1,9 @@
 import datetime
 import typing
 
+import langchain_openai
 import nltk
+from langchain_core.language_models import BaseChatModel
 
 import data
 import experiments
@@ -59,12 +61,11 @@ if __name__ == "__main__":
         except LookupError:
             nltk.download("punkt")
 
-        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/van-der-aa-re/{date_formatted}.json"
-        # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
-
         num_shots = 3
         model_name = "gpt-4-0125-preview"
+
+        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        storage = f"res/answers/{model_name}/van-der-aa-re/{date_formatted}.json"
 
         formatters = [
             format.VanDerAaRelationListingFormattingStrategy(
@@ -89,10 +90,15 @@ if __name__ == "__main__":
             print(fold)
         print("------------")
 
+        chat_model: BaseChatModel = langchain_openai.ChatOpenAI(
+            model_name=model_name, temperature=0
+        )
+
         experiments.experiment(
             importer=importer,
             formatters=formatters,
             model_name=model_name,
+            chat_model=chat_model,
             storage=storage,
             dry_run=False,
             folds=folds,

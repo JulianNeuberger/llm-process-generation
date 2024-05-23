@@ -1,6 +1,8 @@
 import datetime
 
+import langchain_openai
 import nltk
+from langchain_core.language_models import BaseChatModel
 
 import data
 import experiments
@@ -16,12 +18,12 @@ if __name__ == "__main__":
         except LookupError:
             nltk.download("punkt")
 
-        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/van-der-aa-md/{date_formatted}.json"
-        # storage = f"res/answers/pet/2024-02-27_13-29-40.json"
-
         num_shots = 0
         model_name = "gpt-4-0125-preview"
+
+        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        storage = f"res/answers/{model_name}/van-der-aa-md/{date_formatted}.json"
+        # storage = f"res/answers/{model_name}/pet/2024-02-27_13-29-40.json"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         # formatter = format.PetTagFormattingStrategy()
@@ -41,10 +43,15 @@ if __name__ == "__main__":
             print(fold)
         print("------------")
 
+        chat_model: BaseChatModel = langchain_openai.ChatOpenAI(
+            model_name=model_name, temperature=0
+        )
+
         experiments.experiment(
             importer=importer,
             formatters=[formatter],
             model_name=model_name,
+            chat_model=chat_model,
             storage=storage,
             num_shots=num_shots,
             dry_run=False,

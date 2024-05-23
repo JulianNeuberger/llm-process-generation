@@ -6,6 +6,9 @@ import langchain_community.callbacks
 import langchain_openai
 import tqdm
 from langchain_core import prompts
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import BaseMessage
+from langchain_core.prompt_values import PromptValue
 
 import format
 from data import base
@@ -51,12 +54,28 @@ def get_prompt(
     return chat_prompt
 
 
+def prompt_openai(
+    chat_model: langchain_openai.ChatOpenAI, prompt_as_messages: PromptValue
+) -> typing.Tuple[BaseMessage, float, int, int]:
+    with langchain_community.callbacks.get_openai_callback() as cb:
+        res = chat_model.invoke(prompt_as_messages)
+        num_input_tokens = cb.prompt_tokens
+        num_output_tokens = cb.completion_tokens
+        total_costs = usage.get_cost_for_tokens(
+            model_name=chat_model.model_name,
+            num_input_tokens=num_input_tokens,
+            num_output_tokens=num_output_tokens,
+        )
+        return res, total_costs, num_input_tokens, num_output_tokens
+
+
 def run_single_document_prompt(
     input_document: TDocument,
     current_prediction: TDocument,
     formatter: format.BaseFormattingStrategy[TDocument],
     example_docs: typing.List[TDocument],
-    chat_model: langchain_openai.ChatOpenAI,
+    chat_model: BaseChatModel,
+    model_name: str,
     dry_run: bool,
 ) -> model.PromptResult:
     print(f"Running prompt for {input_document.id} ...")
@@ -74,6 +93,18 @@ def run_single_document_prompt(
         steps=", ".join(formatter.steps),
     )
     num_input_tokens = chat_model.get_num_tokens(prompt_as_text)
+    if isinstance(chat_model, langchain_openai.ChatOpenAI):
+        res, total_costs, num_input_tokens, num_output_tokens = prompt_openai(
+            chat_model, prompt_as_messages
+        )
+    else:
+        res = chat_model.invoke(prompt_as_messages)
+        num_output_tokens = chat_model.get_num_tokens(str(res.content))
+        total_costs = usage.get_cost_for_tokens(
+            model_name=model_name,
+            num_input_tokens=num_input_tokens,
+            num_output_tokens=num_output_tokens,
+        )
 
     if dry_run:
         print(f"Dry run for request with an estimated {num_input_tokens} tokens.")
@@ -83,16 +114,8 @@ def run_single_document_prompt(
         total_costs = 0.0
     else:
         print(f"Making request with an estimated {num_input_tokens} tokens.")
-        with langchain_community.callbacks.get_openai_callback() as cb:
-            res = chat_model.invoke(prompt_as_messages)
-            num_input_tokens = cb.prompt_tokens
-            num_output_tokens = cb.completion_tokens
-            total_costs = usage.get_cost_for_tokens(
-                model_name=chat_model.model_name,
-                num_input_tokens=num_input_tokens,
-                num_output_tokens=num_output_tokens,
-            )
-        answer = res.content.__str__()
+
+        answer = str(res.content)
 
     return model.PromptResult(
         prompts=[prompt_as_text],
@@ -112,12 +135,13 @@ def run_multiple_document_prompts(
     formatter: format.BaseFormattingStrategy[TDocument],
     example_docs: typing.List[TDocument],
     chat_model: langchain_openai.ChatOpenAI,
+    model_name: str,
     dry_run: bool,
 ) -> typing.Generator[model.PromptResult, None, None]:
     for d in input_documents:
         cur_pred = d.copy(clear=formatter.steps)
         yield run_single_document_prompt(
-            d, cur_pred, formatter, example_docs, chat_model, dry_run
+            d, cur_pred, formatter, example_docs, chat_model, model_name, dry_run
         )
 
 
@@ -126,15 +150,13 @@ def experiment(
     formatters: typing.List[format.BaseFormattingStrategy[TDocument]],
     *,
     model_name: str,
+    chat_model: BaseChatModel,
     storage: str,
     num_shots: int,
     dry_run: bool,
     folds: typing.List[typing.Dict[str, typing.List[str]]] = None,
 ):
     documents = importer.do_import()
-    chat_model: langchain_openai.ChatOpenAI = langchain_openai.ChatOpenAI(
-        model_name=model_name, temperature=0
-    )
 
     saved_experiment_results: typing.List[model.ExperimentResult]
     if not os.path.isfile(storage):
@@ -154,12 +176,13 @@ def experiment(
     documents_by_id = {d.id: d for d in documents}
     for fold_id, fold in tqdm.tqdm(enumerate(folds), total=len(folds)):
         if fold_id == len(saved_experiment_results):
+            temperature = getattr(chat_model, "temperature", -1.0)
             saved_experiment_results.append(
                 model.ExperimentResult(
                     meta=model.RunMeta(
                         num_shots=num_shots,
                         model=model_name,
-                        temperature=chat_model.temperature,
+                        temperature=temperature,
                     ),
                     results=[],
                 )
@@ -181,6 +204,7 @@ def experiment(
             formatters=formatters,
             chat_model=chat_model,
             example_docs=example_docs,
+            model_name=model_name,
             dry_run=dry_run,
         )
 
