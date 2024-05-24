@@ -1,7 +1,9 @@
 import datetime
 
+import langchain_anthropic
 import langchain_openai
 import nltk
+from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
 
 import data
@@ -12,18 +14,26 @@ from experiments import sampling
 if __name__ == "__main__":
 
     def main():
+        load_dotenv()
+
         # Load sentence tokenizer if necessary
         try:
             nltk.data.find("tokenizers/punkt")
         except LookupError:
             nltk.download("punkt")
 
-        num_shots = 0
-        model_name = "gpt-4-0125-preview"
+        num_shots = 1
+
+        # model_name = "gpt-4-0125-preview"
+        # model_name = "gpt-4o-2024-05-13"
+        # model_name = "claude-3-sonnet-20240229"
+        model_name = "claude-3-opus-20240229"
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/{model_name}/van-der-aa-md/{date_formatted}.json"
-        # storage = f"res/answers/{model_name}/pet/2024-02-27_13-29-40.json"
+        # storage = f"res/answers/{model_name}/van-der-aa-md/{date_formatted}.json"
+        storage = (
+            "res/answers/claude-3-opus-20240229/van-der-aa-md/2024-05-23_15-23-35.json"
+        )
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         # formatter = format.PetTagFormattingStrategy()
@@ -43,7 +53,11 @@ if __name__ == "__main__":
             print(fold)
         print("------------")
 
-        chat_model: BaseChatModel = langchain_openai.ChatOpenAI(
+        # chat_model: BaseChatModel = langchain_openai.ChatOpenAI(
+        #     model_name=model_name, temperature=0
+        # )
+
+        chat_model: BaseChatModel = langchain_anthropic.ChatAnthropic(
             model_name=model_name, temperature=0
         )
 

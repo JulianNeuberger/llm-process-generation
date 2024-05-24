@@ -1,0 +1,34 @@
+# Task Description
+
+You are a business process modelling expert, tasked with identifying specifications of how activity execution in textual descriptions of business processes.
+ou are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on), that describes a business process, where some relevant elements are already marked by xml-like tags. You can use those for additional context.
+
+# Definition
+
+**Further Specification**:
+
+Look for mentions of type Activity and extract descriptions of **how** this Activity is being executed, including means, and manner. Example: If the sentence is "She submits the report after a thorough review," extract "a thorough review" as Further Specification.
+
+# Format
+
+For each mention you detect, write a line in the following format:
+
+<text>	Further Specification	<sentence>
+
+## Placeholders
+
+- <text>: the text of the mention
+- <sentence>: integer, that identifies the sentence where the mention text was found in the input. Zero based.
+
+## Format Example
+
+Sentence 0: The first step is to <activity> complete </activity> the report within the given time .
+Sentence 1: then the clerk will <activity> review </activity> <activity_data> it </activity_data> for any errors.
+
+within the given time	Further Specification	0
+for any errors	Further Specification	1
+
+# Notes
+
+Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation.
+Do not use any code formatting.

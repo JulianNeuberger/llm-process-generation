@@ -643,6 +643,8 @@ class QuishpiMentionListingFormattingStrategy(
                 continue
 
             mentions.append(f"{m.type}\t{m.text}")
+        if len(mentions) == 0:
+            return "No mentions detected."
         return "\n".join(mentions)
 
     def input(self, document: data.QuishpiDocument) -> str:

@@ -2,6 +2,7 @@ import datetime
 
 import langchain_openai
 import nltk
+from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
 
 import data
@@ -12,6 +13,8 @@ from experiments import sampling
 if __name__ == "__main__":
 
     def main():
+        load_dotenv()
+
         # Load sentence tokenizer if necessary
         try:
             nltk.data.find("tokenizers/punkt")

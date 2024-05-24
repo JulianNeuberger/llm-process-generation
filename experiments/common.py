@@ -2,9 +2,11 @@ import json
 import os
 import typing
 
+import langchain_anthropic
 import langchain_community.callbacks
 import langchain_openai
 import tqdm
+from langchain_community.chat_models import ChatDeepInfra
 from langchain_core import prompts
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
@@ -213,3 +215,15 @@ def experiment(
             os.makedirs(os.path.dirname(storage), exist_ok=True)
             with open(storage, "w", encoding="utf8") as f:
                 json.dump([r.to_dict() for r in saved_experiment_results], f)
+
+
+def chat_model_for_name(model_name: str) -> BaseChatModel:
+    if model_name.startswith("gpt-"):
+        return langchain_openai.ChatOpenAI(model_name=model_name, temperature=0)
+    if model_name.startswith("claude-"):
+        return langchain_anthropic.ChatAnthropic(model_name=model_name, temperature=0)
+    if model_name.startswith("meta-llama/Meta-Llama-3"):
+        return ChatDeepInfra(model=model_name, temperature=0)
+    if model_name.startswith("deepinfra/"):
+        return ChatDeepInfra(model=model_name, temperature=0)
+    raise ValueError(f'Unknown model with name "{model_name}"')

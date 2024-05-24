@@ -3,6 +3,7 @@ import typing
 
 import langchain_openai
 import nltk
+from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
 
 import data
@@ -55,6 +56,8 @@ if __name__ == "__main__":
         return filter_result
 
     def main():
+        load_dotenv()
+
         # Load sentence tokenizer if necessary
         try:
             nltk.data.find("tokenizers/punkt")
