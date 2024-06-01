@@ -771,6 +771,8 @@ class PetRelationListingFormattingStrategy(
             if self._only_tags is not None and r.type.lower() not in self._only_tags:
                 continue
             res.append(f"{r.type}\t{r.head_mention_index}\t{r.tail_mention_index}")
+        if len(res) == 0:
+            return "No relations found."
         return "\n".join(res)
 
     def output(self, document: data.PetDocument) -> str:
@@ -814,6 +816,10 @@ class PetRelationListingFormattingStrategy(
                 tail_index = int(tail_index)
             except ValueError:
                 total_errors += 1
+                continue
+            if head_index >= len(document.mentions):
+                continue
+            if tail_index >= len(document.mentions):
                 continue
             document.relations.append(
                 data.PetRelation(
@@ -859,13 +865,28 @@ class PetEntityListingFormattingStrategy(base.BaseFormattingStrategy[data.PetDoc
         for line in string.splitlines(keepends=False):
             if " " not in line:
                 try:
-                    mention_ids = [int(line)]
+                    mention_id = int(line)
+                    if mention_id >= len(document.mentions):
+                        continue
+                    mention_ids = []
                 except ValueError:
                     print(f"Skipping non space-separated line '{line}'!")
                     continue
             else:
-                mention_ids = [int(i) for i in line.split(" ")]
-            mentions = [document.mentions[i] for i in mention_ids]
+                mention_ids = []
+                for i in line.split(" "):
+                    try:
+                        mention_id = int(i)
+                        if mention_id >= len(document.mentions):
+                            continue
+                        mention_ids.append(mention_id)
+                    except ValueError:
+                        pass
+            mentions = []
+            for i in mention_ids:
+                if i >= len(document.mentions):
+                    continue
+                mentions.append(document.mentions[i])
             mention_types = set(m.type for m in mentions)
             if len(mention_types) > 1:
                 print(f"Extracted multi-type entity, with mentions {mentions}.")

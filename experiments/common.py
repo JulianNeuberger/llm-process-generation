@@ -5,6 +5,7 @@ import typing
 import langchain_anthropic
 import langchain_community.callbacks
 import langchain_openai
+import langchain_mistralai
 import tqdm
 from langchain_community.chat_models import ChatDeepInfra
 from langchain_core import prompts
@@ -226,4 +227,13 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
         return ChatDeepInfra(model=model_name, temperature=0)
     if model_name.startswith("deepinfra/"):
         return ChatDeepInfra(model=model_name, temperature=0)
+    if model_name.startswith("mistral"):
+        return langchain_mistralai.ChatMistralAI(model=model_name, temperature=0)
+    if model_name.startswith("Qwen/"):
+        return langchain_openai.ChatOpenAI(
+            model_name=model_name,
+            temperature=0,
+            openai_api_base="https://api.aimlapi.com/",
+            openai_api_key=os.environ["AIML_API_KEY"],
+        )
     raise ValueError(f'Unknown model with name "{model_name}"')

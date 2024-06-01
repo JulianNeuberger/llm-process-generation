@@ -57,16 +57,17 @@ class PetDocument(
 
         new_entities = self.entities
         for entity in other.entities:
-            new_entity = PetEntity(
-                mention_indices=tuple(
-                    new_mention_ids[i] for i in entity.mention_indices
-                )
-            )
+            mention_indices = [new_mention_ids[i] for i in entity.mention_indices]
+            new_entity = PetEntity(mention_indices=tuple(mention_indices))
             if new_entity not in new_entities:
                 new_entities.append(new_entity)
 
         new_relations = self.relations
         for relation in other.relations:
+            if relation.head_mention_index not in new_mention_ids:
+                continue
+            if relation.tail_mention_index not in new_mention_ids:
+                continue
             new_relation = PetRelation(
                 type=relation.type,
                 head_mention_index=new_mention_ids[relation.head_mention_index],

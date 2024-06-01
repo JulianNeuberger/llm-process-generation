@@ -64,8 +64,12 @@ if __name__ == "__main__":
         except LookupError:
             nltk.download("punkt")
 
-        num_shots = 3
-        model_name = "gpt-4-0125-preview"
+        num_shots = 0
+
+        # model_name = "gpt-4-0125-preview"
+        model_name = "gpt-4o-2024-05-13"
+        # model_name = "claude-3-sonnet-20240229"
+        # model_name = "claude-3-opus-20240229"
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/{model_name}/van-der-aa-re/{date_formatted}.json"
@@ -85,7 +89,9 @@ if __name__ == "__main__":
         documents = importer.do_import()
         documents = select_one_by_constraint_types(documents, [])
         print(f"Dataset consists of {len(documents)} documents.")
-        folds = sampling.generate_sentence_constraint_folds(documents, num_shots)
+        folds = sampling.generate_sentence_constraint_folds(
+            documents, num_shots, strategy="similarity", seed=42
+        )
 
         print("Using folds:")
         print("------------")
@@ -93,9 +99,7 @@ if __name__ == "__main__":
             print(fold)
         print("------------")
 
-        chat_model: BaseChatModel = langchain_openai.ChatOpenAI(
-            model_name=model_name, temperature=0
-        )
+        chat_model: BaseChatModel = experiments.chat_model_for_name(model_name)
 
         experiments.experiment(
             importer=importer,
