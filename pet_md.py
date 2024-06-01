@@ -1,7 +1,5 @@
 import datetime
 
-import langchain_openai
-import langchain_anthropic
 import nltk
 from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
@@ -23,23 +21,33 @@ if __name__ == "__main__":
             nltk.download("punkt")
 
         num_shots = 3
-        # model_name = "gpt-4-0125-preview"
+
+        # model_name = "gpt-4-turbo-2024-04-09"
         # model_name = "gpt-4o-2024-05-13"
         # model_name = "claude-3-sonnet-20240229"
         # model_name = "claude-3-opus-20240229"
         # model_name = "meta-llama/Meta-Llama-3-70B-Instruct"
         # model_name = "deepinfra/airoboros-70b"
+        # model_name = "gpt-4-0125-preview"
+        # model_name = "Qwen/Qwen1.5-72B-Chat"
+        model_name = "gpt-3.5-turbo-0125"
+        # model_name = "mistral-large-latest"
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/{model_name}/pet-md/{date_formatted}.json"
-        # storage = "res/answers/claude-3-opus-20240229/pet-md/2024-05-23_13-26-46.json"
+        # storage = "res/answers/claude-3-opus-20240229/pet-md/2024-05-28_14-46-19.json"
         # storage = "res/answers/gpt-4-0125-preview/pet-md/2024-05-23_13-31-08.json"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         importer = data.PetImporter("res/data/pet/all.new.jsonl")
         # train_docs = [d.id for d in importer.do_import() if d.id != "doc-6.1"]
         # folds = [{"train": train_docs, "test": ["doc-6.1"]}]
-        folds = sampling.generate_folds(importer.do_import(), num_shots, seed=42)
+        folds = sampling.generate_folds(
+            documents=importer.do_import(),
+            num_examples=num_shots,
+            strategy="similarity",
+            seed=42,
+        )
 
         # formatters = [
         #     format.PetActivityListingFormattingStrategy(["mentions"]),
@@ -130,6 +138,7 @@ if __name__ == "__main__":
         print("------------")
 
         chat_model: BaseChatModel = experiments.chat_model_for_name(model_name)
+        print(f"Using model: {chat_model.name}")
 
         experiments.experiment(
             importer=importer,

@@ -215,6 +215,18 @@ def get_scores(
             print("---------------")
             for tag, stats in step_stats.items():
                 print(f"{tag} | {stats}")
+
+            print()
+            print("Hallucinations:")
+            hallucinations = {
+                t: s.num_pred for t, s in step_stats.items() if s.num_gold == 0
+            }
+            if len(hallucinations) == 0:
+                print("None.")
+            else:
+                for t, n in hallucinations.items():
+                    print(f"{t}: {n}")
+            print()
     scores_by_step = {}
     for step, stats in total_stats_by_step.items():
         f1_scores = eval.stats_to_scores(stats)
@@ -324,6 +336,8 @@ def print_experiment_results(
     print(
         f"Total parse errors in {len(experiment_results)} answers: {num_parse_errors}"
     )
+
+    print(f'Result file: "{result_file}"')
     print_scores_by_step(scores)
 
 
@@ -341,7 +355,7 @@ def main():
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = f"res/answers/claude-3-opus-20240229/pet-md/2024-05-23_13-26-46.json"
+    answer_file = "res/answers/Qwen/Qwen1.5-72B-Chat/pet-re/2024-05-28_15-49-50.json"
 
     importer = None
     for k, v in importers.items():

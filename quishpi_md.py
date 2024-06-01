@@ -1,7 +1,5 @@
 import datetime
 
-import langchain_anthropic
-import langchain_openai
 import nltk
 from langchain_core.language_models import BaseChatModel
 
@@ -23,22 +21,24 @@ if __name__ == "__main__":
         except LookupError:
             nltk.download("punkt")
 
-        num_shots = 1
+        num_shots = 0
 
         # model_name = "gpt-4-0125-preview"
-        # model_name = "gpt-4o-2024-05-13"
+        model_name = "gpt-4o-2024-05-13"
         # model_name = "claude-3-sonnet-20240229"
-        model_name = "claude-3-opus-20240229"
+        # model_name = "claude-3-opus-20240229"
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        # storage = f"res/answers/{model_name}/quishpi-md/{date_formatted}.json"
-        storage = (
-            f"res/answers/claude-3-opus-20240229/quishpi-md/2024-05-23_15-28-59.json"
-        )
+        storage = f"res/answers/{model_name}/quishpi-md/{date_formatted}.json"
+        # storage = (
+        #     f"res/answers/claude-3-opus-20240229/quishpi-md/2024-05-23_15-28-59.json"
+        # )
 
         importer = data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"])
         # folds = [{"train": [], "test": ["20818304_rev1"]}]
-        folds = sampling.generate_folds(importer.do_import(), num_shots)
+        folds = sampling.generate_folds(
+            importer.do_import(), num_shots, strategy="similarity", seed=42
+        )
 
         # formatters = [
         #     format.QuishpiMentionListingFormattingStrategy(
@@ -65,9 +65,7 @@ if __name__ == "__main__":
         #     model_name=model_name, temperature=0
         # )
 
-        chat_model: BaseChatModel = langchain_anthropic.ChatAnthropic(
-            model_name=model_name, temperature=0
-        )
+        chat_model: BaseChatModel = experiments.chat_model_for_name(model_name)
 
         experiments.experiment(
             importer=importer,
@@ -80,8 +78,6 @@ if __name__ == "__main__":
             folds=folds,
         )
 
-        experiments.print_experiment_results(
-            storage, importer, verbose=True, print_only_tags=["condition"]
-        )
+        experiments.print_experiment_results(storage, importer, verbose=True)
 
     main()
