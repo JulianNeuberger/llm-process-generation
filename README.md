@@ -4,6 +4,7 @@ This is the code for our ER conference 2024 submission "A Universal Prompting St
 
 Also check the companion repository for generating BPMN models from PET annotated documents: https://anonymous.4open.science/r/pet-to-bpmn-poc-B465/README.md
 
+The excel file `results.xlsx` contains all results and the raw answer files that contains those results.
 
 ![Ablation study results](figures/ablation/num_shots.png)
 
