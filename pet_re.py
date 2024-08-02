@@ -1,6 +1,5 @@
 import datetime
 
-import langchain_openai
 import nltk
 from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
@@ -21,8 +20,17 @@ if __name__ == "__main__":
         except LookupError:
             nltk.download("punkt")
 
-        num_shots = 0
-        model_name = "gpt-4-0125-preview"
+        num_shots = 1
+
+        # model_name = "gpt-4-turbo-2024-04-09"
+        model_name = "gpt-4o-2024-05-13"
+        # model_name = "claude-3-sonnet-20240229"
+        # model_name = "claude-3-opus-20240229"
+        # model_name = "meta-llama/Meta-Llama-3-70B-Instruct"
+        # model_name = "deepinfra/airoboros-70b"
+        # model_name = "gpt-4-0125-preview"
+        # model_name = "Qwen/Qwen1.5-72B-Chat"
+        # model_name = "gpt-3.5-turbo-0125"
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/{model_name}/pet-re/{date_formatted}.json"
@@ -36,7 +44,9 @@ if __name__ == "__main__":
         #         "test": ["doc-6.1"],
         #     }
         # ]
-        folds = sampling.generate_folds(importer.do_import(), num_shots)
+        folds = sampling.generate_folds(
+            importer.do_import(), num_shots, strategy="similarity"
+        )
 
         # formatters = [format.PetRelationListingFormattingStrategy(steps=["relations"])]
         formatters = [
@@ -68,7 +78,8 @@ if __name__ == "__main__":
             print(fold)
         print("------------")
 
-        chat_model = experiments.chat_model_for_name(model_name)
+        chat_model: BaseChatModel = experiments.chat_model_for_name(model_name)
+        print(f"Using model: {chat_model.name}")
 
         experiments.experiment(
             importer=importer,

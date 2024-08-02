@@ -17,6 +17,7 @@ prices: typing.Dict[str, Price] = {
     "gpt-4-turbo-2024-04-09": Price(prompt=0.01, completion=0.03),
     "meta-llama/Meta-Llama-3-70B-Instruct": Price(prompt=0.00059, completion=0.00079),
     "deepinfra/airoboros-70b": Price(prompt=0.0007, completion=0.0009),
+    "Qwen/Qwen1.5-72B-Chat": Price(prompt=0.00117, completion=0.00117),
 }
 
 
