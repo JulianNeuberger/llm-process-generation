@@ -65,8 +65,9 @@ class QuishpiImporter(base.BaseImporter[QuishpiDocument]):
         self._excluded_tags = [t.lower() for t in exclude_tags]
 
     def do_import(self) -> typing.List[QuishpiDocument]:
-        annotation_path = os.path.join(self._dir_path, "judgeannotations")
-        texts_path = os.path.join(self._dir_path, "texts")
+        annotation_path = self._dir_path + "/judgeannotations"
+        texts_path = self._dir_path +"/texts"
+        print(annotation_path)
 
         assert os.path.isdir(annotation_path)
         assert os.path.isdir(texts_path)

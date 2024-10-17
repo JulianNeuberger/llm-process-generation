@@ -33,6 +33,7 @@ def run_iterative_document_prompt(
             model_name,
             dry_run,
         )
+
         for answer in result.answers:
             parsed = formatter.parse(input_document, answer)
             if cur_doc is None:

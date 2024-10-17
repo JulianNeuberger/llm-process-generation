@@ -30,3 +30,7 @@ from data.quishpi import (
     QuishpiDocument,
     QuishpiImporter,
 )
+
+from data.annotate import (
+    AnnotateImporter
+)

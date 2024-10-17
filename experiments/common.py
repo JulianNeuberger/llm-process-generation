@@ -6,6 +6,7 @@ import langchain_anthropic
 import langchain_community.callbacks
 import langchain_openai
 import langchain_mistralai
+import langchain_groq
 import tqdm
 from langchain_community.chat_models import ChatDeepInfra
 from langchain_core import prompts
@@ -87,14 +88,21 @@ def run_single_document_prompt(
 
     formatted_input_document = formatter.input(current_prediction)
 
+    print("formated_input_document")
+    print(formatted_input_document)
+
     prompt_as_text = prompt.format(
         input=formatted_input_document,
         steps=", ".join(formatter.steps),
     )
     prompt_as_messages = prompt.format_prompt(
-        input=formatted_input_document,
+        input= formatted_input_document,
         steps=", ".join(formatter.steps),
     )
+
+    print("prompt_as_messages----------------------------------------------------------------------------------------")
+    print(prompt_as_text)
+
     num_input_tokens = chat_model.get_num_tokens(prompt_as_text)
     if isinstance(chat_model, langchain_openai.ChatOpenAI):
         res, total_costs, num_input_tokens, num_output_tokens = prompt_openai(
@@ -119,6 +127,9 @@ def run_single_document_prompt(
         print(f"Making request with an estimated {num_input_tokens} tokens.")
 
         answer = str(res.content)
+
+    print("Answer---------------------------------------------------------")
+    print(answer)
 
     return model.PromptResult(
         prompts=[prompt_as_text],
@@ -235,5 +246,12 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
             temperature=0,
             openai_api_base="https://api.aimlapi.com/",
             openai_api_key=os.environ["AIML_API_KEY"],
+        )
+    if model_name.startswith("llama") or model_name.startswith("gemma") or model_name.startswith("mixtral"):
+        return langchain_groq.ChatGroq(
+            model_name=model_name,
+            temperature=0,
+            max_tokens=4048,
+            groq_api_key=os.environ["GROQ_API_KEY"]
         )
     raise ValueError(f'Unknown model with name "{model_name}"')

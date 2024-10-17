@@ -34,7 +34,7 @@ if __name__ == "__main__":
         #     f"res/answers/claude-3-opus-20240229/quishpi-md/2024-05-23_15-28-59.json"
         # )
 
-        importer = data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"])
+        importer = data.QuishpiImporter("res/data/quishpi/input", exclude_tags=["entity"])
         # folds = [{"train": [], "test": ["20818304_rev1"]}]
         folds = sampling.generate_folds(
             importer.do_import(), num_shots, strategy="similarity", seed=42

@@ -1,18 +1,23 @@
 import datetime
 
 import nltk
-from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
 
+from dotenv import load_dotenv
+import os
 import data
 import experiments
 import format
+import json
+from data.pet import PetDictExporter
 from experiments import sampling
+
+
+
 
 if __name__ == "__main__":
 
     def main():
-        load_dotenv()
 
         # Load sentence tokenizer if necessary
         try:
@@ -20,48 +25,22 @@ if __name__ == "__main__":
         except LookupError:
             nltk.download("punkt")
 
-        num_shots = 3
-
-        # model_name = "gpt-4-turbo-2024-04-09"
-        # model_name = "gpt-4o-2024-05-13"
-        # model_name = "claude-3-sonnet-20240229"
-        # model_name = "claude-3-opus-20240229"
-        # model_name = "meta-llama/Meta-Llama-3-70B-Instruct"
-        # model_name = "deepinfra/airoboros-70b"
-        # model_name = "gpt-4-0125-preview"
-        # model_name = "Qwen/Qwen1.5-72B-Chat"
-        # model_name = "gpt-3.5-turbo-0125"
-        # model_name = "mistral-large-latest"
+        load_dotenv()
         model_name = "gpt-4o-mini"
-        # model_name = "llama-3.1-70b-versatile"
-        # model_name = "gemma2-9b-it"
-        # model_name = "mixtral-8x7b-32768"
-
+        num_shots = 0
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/{model_name}/pet-md/{date_formatted}.json"
-        # storage = "res/answers/claude-3-opus-20240229/pet-md/2024-05-28_14-46-19.json"
-        # storage = "res/answers/gpt-4-0125-preview/pet-md/2024-05-23_13-31-08.json"
-
-        # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
-        importer = data.PetImporter("res/data/pet/all.new.jsonl")
-        # train_docs = [d.id for d in importer.do_import() if d.id != "doc-6.1"]
-        # folds = [{"train": train_docs, "test": ["doc-6.1"]}]
-        folds = sampling.generate_folds(
-            documents=importer.do_import(),
-            num_examples=num_shots,
-            strategy="similarity",
-            seed=42,
-        )
-
-        # formatters = [
-        #     format.PetActivityListingFormattingStrategy(["mentions"]),
-        #     format.PetActorListingFormattingStrategy(["mentions"]),
-        #     format.PetDataListingFormattingStrategy(["mentions"]),
-        #     format.PetFurtherListingFormattingStrategy(["mentions"]),
-        #     format.PetXorListingFormattingStrategy(["mentions"]),
-        #     format.PetConditionListingFormattingStrategy(["mentions"]),
-        #     format.PetAndListingFormattingStrategy(["mentions"]),
-        # ]
+        storage = f"res/answers/{model_name}/annotate/{date_formatted}.json"
+        file_name = "Inquiry_Offer_Order"
+        file_path = file_name + ".txt"
+        print(file_path)
+        import_txt = data.AnnotateImporter(file_path)
+        petDict_exporter = PetDictExporter()
+        json_object = petDict_exporter.export_document(import_txt.get_pedDoc()[0])
+        print(json_object)
+        file_json = f"res/data/annotate/{file_name}.jsonl"
+        with open(file_json, "w") as outfile:
+            json.dump(json_object,outfile)
+        importer = data.PetImporter(file_json)
 
         formatters = [
             format.IterativePetMentionListingFormattingStrategy(
@@ -126,21 +105,6 @@ if __name__ == "__main__":
             ),
         ]
 
-        # formatters = [
-        #     format.PetMentionListingFormattingStrategy(
-        #         steps=["mentions"],
-        #         only_tags=None,
-        #         generate_descriptions=False,
-        #         prompt="pet/md/unified.txt",
-        #     )
-        # ]
-
-        print("Using folds:")
-        print("------------")
-        for fold in folds:
-            print(fold)
-        print("------------")
-
         chat_model: BaseChatModel = experiments.chat_model_for_name(model_name)
         print(f"Using model: {chat_model.name}")
 
@@ -152,9 +116,8 @@ if __name__ == "__main__":
             storage=storage,
             num_shots=num_shots,
             dry_run=False,
-            folds=folds,
         )
 
-        experiments.print_experiment_results(storage, importer, verbose=True)
+        #experiments.print_experiment_results(storage, importer, verbose=True)
 
     main()
