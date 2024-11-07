@@ -1,12 +1,17 @@
 import typing
-import format
 
+import eval
+import format
+import experiments
 import data
-from experiments.parse import parse_file, parse_experiment
+from experiments.parse import parse_file, print_scores, print_scores_by_step, get_scores
+import data
 
 
 def main():
-    result_file = "res/answers/gpt-4o-mini/annotate/2024-10-03_19-08-36.json"
+    #result_file1 = "res/answers/gpt-4o-mini/annotate/2024-10-18_08-58-23.json"
+    #result_file2 = "res/answers/gpt-4o-mini/annotate/2024-10-17_16-24-29.json"
+    result_file2 = "res/answers/gpt-4o-2024-05-13/annotate-re/2024-10-24_15-35-53.json"
     importers = {
         "pet": data.PetImporter("res/data/annotate/Inquiry_Offer_Order.jsonl"),
         "quishpi-re": data.VanDerAaSentenceImporter("res/data/quishpi/csv"),
@@ -19,7 +24,33 @@ def main():
         ),
         "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
     }
-    importer = data.PetImporter("res/data/annotate/Inquiry_Offer_Order.jsonl")
+    #importer = data.PetImporter("res/answers/gpt-4o-mini/annotate/results.jsonl")
+    #pred_doc, steps = get_predicted_doc(result_file1, importer)
+    #next_doc, steps = get_predicted_doc(result_file2, importer)
+    #data.PetJsonExporter("res/answers/gpt-4o-2024-05-13/annotate-re/test.jsonl").export([next_doc])
+
+    importing = data.PetImporter("res/answers/gpt-4o-2024-05-13/annotate-re/test.jsonl")
+    doc = importing.do_import()
+    ((get_double_assigned_TokenIndices(doc[0])))
+
+
+    #stats, missing = experiments.consensus_2([pred_doc], [next_doc], False, None, steps)
+    #scores = get_scores([stats],False)
+    #print_scores_by_step(scores)
+    #print(missing)
+
+    #stats, missing = experiments.consensus_2([next_doc], [pred_doc], False, None, steps)
+    #scores = get_scores([stats], False)
+    #print_scores_by_step(scores)
+    #print(missing)
+
+
+
+
+
+def get_predicted_doc(
+        result_file: str,
+        importer: data.PetImporter):
 
     documents = importer.do_import()
     documents_by_id = {d.id: d for d in documents}
@@ -47,7 +78,22 @@ def main():
                 else:
                     predicted_doc = predicted_doc + partial_prediction.document
             assert predicted_doc is not None
-            data.PetJsonExporter("res/answers/gpt-4o-mini/annotate/result.jsonl").export([predicted_doc])
-            print(predicted_doc)
+    return predicted_doc, steps
+
+
+def get_double_assigned_TokenIndices(petDocument: data.PetDocument):
+    petMention = petDocument.mentions
+    indicesList = [0] * len(petDocument.tokens)
+    for mentions in petMention:
+        for i in mentions.token_document_indices:
+            indicesList[i] += 1
+    double_List = []
+    for i in range(0, len(indicesList)):
+        if indicesList[i] >= 2:
+            double_List.append(i)
+    return double_List
+
+
+
 
 main()

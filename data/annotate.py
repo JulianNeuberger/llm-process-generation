@@ -3,6 +3,8 @@ import dataclasses
 import json
 import os
 import typing
+
+import data
 from format.common import create_PetToken_from_txt
 
 from data.base import TDocument
@@ -22,42 +24,50 @@ class AnnotateImporter(base.BaseImporter[PetDocument]):
 
     def do_import(self) -> typing.List[PetDocument]:
         if self._path[-4:] == ".txt":
-            documents = [self.read_documet_from_txt(self._path)]
+            documents = [self.read_document_from_txt(self._path,0)]
         else:
             dir_list = os.listdir(self._path)
             txt_list = []
-            for dataname in dir_list:
-                if dataname[-4:] == "txt":
-                    txt_list.append(dataname)
+            for dir_name in dir_list:
+                if dir_name[-4:] == ".txt":
+                    txt_list.append(dir_name)
             if not txt_list:
                 print("No Txt found in folder")
             else:
                 documents = self.read_documents_from_folder(txt_list)
         return documents
 
-    def read_documents_from_folder(self, txt_list: str):
-        return NotImplemented
+    def read_documents_from_folder(self, txt_list) -> typing.List[PetDocument]:
+        pet_list = []
+        for i in range(0, len(txt_list)):
+            pet_list.append(self.read_document_from_txt(txt_list[i],i))
+        return pet_list
 
-    def read_documet_from_txt(self, file_path: str):
-        with open(self._path,"r") as doc:
+    def read_document_from_txt(self, file_path: str, id: int):
+        print(file_path)
+        path = os.path.join(self._path,file_path)
+        print(path)
+        with open(path, "r") as doc:
             text = doc.read().replace("\n"," ")
             name = os.path.splitext(os.path.basename(doc.name))[0]
-            print(name)
-
         return PetDocument(
-            id=1,
+            id=id,
             name=name,
             text=text,
             category="",
-            tokens=create_PetToken_from_txt(self._path),
+            tokens=create_PetToken_from_txt(path),
             mentions="",
             relations="",
             entities="",
         )
 
-    def get_pedDoc(self) -> PetDocument:
+    def get_pedDoc(self) -> typing.List[PetDocument]:
         return self.pet_doc
 
-
+def main():
+    #txt = AnnotateImporter("")
+    #for x in txt.get_pedDoc():
+        #print(x)
+    return
 
 

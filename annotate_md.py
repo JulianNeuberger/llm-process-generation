@@ -9,7 +9,7 @@ import data
 import experiments
 import format
 import json
-from data.pet import PetDictExporter
+from data.pet import PetDictExporter, PetJsonExporter
 from experiments import sampling
 
 
@@ -26,22 +26,29 @@ if __name__ == "__main__":
             nltk.download("punkt")
 
         load_dotenv()
+        #model_name = "gpt-4o-2024-08-06"
         model_name = "gpt-4o-mini"
+        #model_name = "gpt-3.5-turbo"
+        #model_name = "local_llm/llama3.1:70b"
         num_shots = 0
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        storage = f"res/answers/{model_name}/annotate/{date_formatted}.json"
-        file_name = "Inquiry_Offer_Order"
-        file_path = file_name + ".txt"
-        print(file_path)
-        import_txt = data.AnnotateImporter(file_path)
-        petDict_exporter = PetDictExporter()
-        json_object = petDict_exporter.export_document(import_txt.get_pedDoc()[0])
-        print(json_object)
-        file_json = f"res/data/annotate/{file_name}.jsonl"
-        with open(file_json, "w") as outfile:
-            json.dump(json_object,outfile)
-        importer = data.PetImporter(file_json)
+        if model_name.startswith("local_llm"):
+            storage = f"res/answers/local_llm-llama3.1-70b/annotate/{date_formatted}.json"
+        else:
+            storage = f"res/answers/{model_name}/annotate-md/{date_formatted}.json"
 
+        #file_name = "Inquiry_Offer_Order"
+        file_name = "1_5_3 Documentation and Justification Requirements"
+        file_path = file_name + ".txt"
+        file_path = "onboarding Process for New Employees.txt"
+
+        file_json = "res/data/annotate/onboarding Process for New Employees.jsonl"
+        import_txt = data.AnnotateImporter(file_path)
+        pet_json_exporter = PetJsonExporter(file_json)
+        pet_json_exporter.export(import_txt.get_pedDoc())
+
+
+        importer = data.PetImporter(file_json)
         formatters = [
             format.IterativePetMentionListingFormattingStrategy(
                 ["mentions"],
@@ -117,7 +124,8 @@ if __name__ == "__main__":
             num_shots=num_shots,
             dry_run=False,
         )
-
         #experiments.print_experiment_results(storage, importer, verbose=True)
+    def annotate(chat_model: BaseChatModel, importer, formatter, storage):
 
+        return experiments
     main()

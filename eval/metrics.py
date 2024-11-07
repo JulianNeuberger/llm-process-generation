@@ -123,6 +123,7 @@ def relation_f1_stats(
     print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
+    print(predicted_documents,ground_truth_documents)
     return _f1_stats(
         predicted_documents=predicted_documents,
         ground_truth_documents=ground_truth_documents,
@@ -328,14 +329,15 @@ def _f1_stats(
     stats_by_tag: typing.Dict[str, typing.Tuple[float, float, float]] = {}
 
     for p, t in zip(predicted_documents, ground_truth_documents):
-        true_attribute = getattr(t, attribute)
         pred_attribute = getattr(p, attribute)
+        true_attribute = getattr(t, attribute)
 
         true = list(true_attribute)
         pred = list(pred_attribute)
         true_candidates = list(true_attribute)
         ok = []
         non_ok = []
+
         for cur in pred:
             match: typing.Optional[data.DocumentBase] = None
             if isinstance(cur, data.HasCustomMatch):

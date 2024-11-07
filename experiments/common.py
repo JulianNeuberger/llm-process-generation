@@ -88,9 +88,6 @@ def run_single_document_prompt(
 
     formatted_input_document = formatter.input(current_prediction)
 
-    print("formated_input_document")
-    print(formatted_input_document)
-
     prompt_as_text = prompt.format(
         input=formatted_input_document,
         steps=", ".join(formatter.steps),
@@ -99,9 +96,6 @@ def run_single_document_prompt(
         input= formatted_input_document,
         steps=", ".join(formatter.steps),
     )
-
-    print("prompt_as_messages----------------------------------------------------------------------------------------")
-    print(prompt_as_text)
 
     num_input_tokens = chat_model.get_num_tokens(prompt_as_text)
     if isinstance(chat_model, langchain_openai.ChatOpenAI):
@@ -127,9 +121,6 @@ def run_single_document_prompt(
         print(f"Making request with an estimated {num_input_tokens} tokens.")
 
         answer = str(res.content)
-
-    print("Answer---------------------------------------------------------")
-    print(answer)
 
     return model.PromptResult(
         prompts=[prompt_as_text],
@@ -229,9 +220,9 @@ def experiment(
                 json.dump([r.to_dict() for r in saved_experiment_results], f)
 
 
-def chat_model_for_name(model_name: str) -> BaseChatModel:
-    if model_name.startswith("gpt-"):
-        return langchain_openai.ChatOpenAI(model_name=model_name, temperature=0)
+def chat_model_for_name(model_name: str,temp = 0) -> BaseChatModel:
+    if model_name.startswith("gpt-") or model_name.startswith("o1"):
+        return langchain_openai.ChatOpenAI(model_name=model_name, temperature=temp)
     if model_name.startswith("claude-"):
         return langchain_anthropic.ChatAnthropic(model_name=model_name, temperature=0)
     if model_name.startswith("meta-llama/Meta-Llama-3"):
@@ -246,6 +237,14 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
             temperature=0,
             openai_api_base="https://api.aimlapi.com/",
             openai_api_key=os.environ["AIML_API_KEY"],
+        )
+    if model_name.startswith("local_llm/"):
+        model_name = model_name.replace("local_llm/","")
+        return langchain_openai.ChatOpenAI(
+            model_name=model_name,
+            temperature=0,
+            openai_api_base="http://132.180.195.1:8007/v1",
+            openai_api_key="oLlama",
         )
     if model_name.startswith("llama") or model_name.startswith("gemma") or model_name.startswith("mixtral"):
         return langchain_groq.ChatGroq(
