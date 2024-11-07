@@ -1,0 +1,16 @@
+The sales department and the customer centre act as the interface to the customer for customer inquiries.
+On principle, distinction is made between inquiries for CCH catalogue parts and inquiries for installations.
+In the case of catalogue parts, in accordance with the frame conditions, a standard offer is submitted and the offer process is concluded. In the case of installations, first of all the feasibility is clarified and then a fundamental decision made as to whether an offer is to be submitted.
+Depending upon the complexity of the offer, the offer is drawn up by an interdisciplinary project team comprising all the technical departments involved (e.g. customer centre, production, purchasing and quality …) or it is attended to by the customer centre.
+The actual drawing-up of an offer comprises an OFFER REVIEW.
+During this phase the following:
+Conditions of payment
+Special quality requirements
+Special documentation requirements
+Contractual rights
+Technical delivery conditions
+After sales services
+are clarified and incorporated in the offer. Once all the relevant basic points have been reviewed and clarified, preliminary engineering plans are drawn up for customer-specific modifications and complete installations.
+The first essential technical documents and dimensional drawings are prepared during this phase.
+Then, on the basis of these preliminary documents, CALCULATIONS are made using an EDP-controlled calculation model.
+All the results of the three phases, offer review, preliminary engineering and calculation, are laid down in a written offer and sent to the customer. After receipt of an order, this is compared with the offer and, if the result is positive, an order confirmation is sent to the customer.
