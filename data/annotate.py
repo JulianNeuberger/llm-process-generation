@@ -15,7 +15,7 @@ from datasets import load_dataset
 from data import base
 
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
-DATA_DIR = os.path.normpath(os.path.join(CUR_DIR, "..", "res", "data", "annotate"))
+DATA_DIR = os.path.normpath(os.path.join(CUR_DIR, "..", "res", "data", "annotate", "pipe", "0_txt"))
 
 class AnnotateImporter(base.BaseImporter[PetDocument]):
     def __init__(self, file_path: str):

@@ -1,5 +1,5 @@
 base_prompt = """
-You are a business process modelling expert and you are tasked with creating a business process. You are creating one business process with a headline, that summarizes the business process. Don't use any bulletpoints, formulate whole sentences please. The BP (business process) should be a detailed description of a singular process. The business process should be from a real scenario. The processs may be from human ressourcees, manufacturing, quality controll.
+You are a business process modelling expert and you are tasked with creating a business process. You are creating one business process with a headline, that summarizes the business process. Don't use any bulletpoints, formulate whole sentences please. The BP (business process) should be a detailed description of a singular process. The business process should be from a real scenario. The field of the process is {topic}.
 {and_prompt}
 {examples_prompt}
 {format_instructions}

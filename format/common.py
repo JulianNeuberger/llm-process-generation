@@ -4,6 +4,7 @@ from data.pet import PetToken
 
 import nltk.tag
 from nltk import tokenize
+from transformers import BertTokenizer, TFBertModel
 
 CUR_DIR = os.path.dirname(os.path.realpath(__file__))
 PROMPT_DIR = os.path.normpath(os.path.join(CUR_DIR, "..", "res", "prompts"))
@@ -14,6 +15,7 @@ def load_prompt_from_file(file_path: str) -> str:
     file_path = os.path.join(PROMPT_DIR, file_path)
     with open(file_path, "r") as f:
         return f.read()
+
 def create_PetToken_from_txt(file_path: str) -> PetToken:
     with open(file_path, 'r') as file:
         data = file.read().replace('\n', ' ')
@@ -29,5 +31,16 @@ def create_PetToken_from_txt(file_path: str) -> PetToken:
             word_counter += 1
         sentence_counter += 1
     return petList
+
+def tokensize_from_file(file_path:str):
+    with open(file_path, "r") as file:
+        text = file.read()
+    return tokensize_from_text(text)
+
+def tokensize_from_text(text: str):
+    tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
+    tokenized_input = tokenizer.tokenize(text)
+    size = len(tokenized_input)
+    return size
 
 

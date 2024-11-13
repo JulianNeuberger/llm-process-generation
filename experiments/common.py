@@ -6,7 +6,7 @@ import langchain_anthropic
 import langchain_community.callbacks
 import langchain_openai
 import langchain_mistralai
-import langchain_groq
+#import langchain_groq
 import tqdm
 from langchain_community.chat_models import ChatDeepInfra
 from langchain_core import prompts
@@ -246,11 +246,11 @@ def chat_model_for_name(model_name: str,temp = 0) -> BaseChatModel:
             openai_api_base="http://132.180.195.1:8007/v1",
             openai_api_key="oLlama",
         )
-    if model_name.startswith("llama") or model_name.startswith("gemma") or model_name.startswith("mixtral"):
-        return langchain_groq.ChatGroq(
-            model_name=model_name,
-            temperature=0,
-            max_tokens=4048,
-            groq_api_key=os.environ["GROQ_API_KEY"]
-        )
+    #if model_name.startswith("llama") or model_name.startswith("gemma") or model_name.startswith("mixtral"):
+        #return langchain_groq.ChatGroq(
+        #    model_name=model_name,
+        #    temperature=0,
+         #   max_tokens=4048,
+          #  groq_api_key=os.environ["GROQ_API_KEY"]
+        #)
     raise ValueError(f'Unknown model with name "{model_name}"')
