@@ -1,10 +1,11 @@
 import typing
 import langchain_openai
+import random
 
 import nltk
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
-
+from pathlib import Path
 from langchain_core.language_models import BaseChatModel
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain.output_parsers import PydanticOutputParser
@@ -14,16 +15,18 @@ from format.common import tokensize_from_text
 from format.prompts.bp_prompt import base_prompt, and_prompt, examples_prompt, topics_prompt
 
 
-
 class BP_Description(BaseModel):
     heading: str = Field(description="A heading for the business process description.")
     text: str = Field(description="The text of the business process description. The snippet shouldn't contain the headline.")
 
+
 class BP_Topics(BaseModel):
     topic: str = Field(description="The topic of a business")
 
+
 class BP_List(BaseModel):
     topics: typing.List[BP_Topics] = Field (description="List of topics")
+
 
 def main():
     load_dotenv()
@@ -48,8 +51,7 @@ def main():
     save_to_folder("res/data/annotate/pipe/0_txt/test", text_list)
 
 
-def create_bp_from_llm(and_prompt_b: bool, examples_prompt_b: bool, count: int, chat_model: BaseChatModel, storage: str, topiclist):
-
+def create_bp_from_llm(and_prompt_r, examples_prompt_b: bool, count: int, chat_model: BaseChatModel, storage: str, topiclist):
     text_list = []
     pydantic_parser = PydanticOutputParser(pydantic_object=BP_Description)
     format_instructions = pydantic_parser.get_format_instructions()
@@ -58,11 +60,20 @@ def create_bp_from_llm(and_prompt_b: bool, examples_prompt_b: bool, count: int, 
         template=base_prompt,
         partial_variables={"format_instructions": format_instructions}
     )
-    for topic in topiclist.topics:
+    for topic in topiclist:
+        if and_prompt_r == "rand":
+            if (random.random() < 0.5):
+                and_prompt_b = True
+            else:
+                and_prompt_b = False
+        elif and_prompt_r:
+            and_prompt_b = True
+        elif not and_prompt_r:
+            and_prompt_b = False
         prompt = prompt_template.format_prompt(
             and_prompt=and_prompt if and_prompt_b else "",
             examples_prompt=examples_prompt if examples_prompt_b else "",
-            topic= topic.topic
+            topic=topic
         )
         res = chat_model.invoke(prompt.to_string())
         parsed_output = pydantic_parser.parse(res.content)
@@ -71,12 +82,13 @@ def create_bp_from_llm(and_prompt_b: bool, examples_prompt_b: bool, count: int, 
     return text_list
 
 def save_to_folder(folder_path: str, text_List: typing.List[BP_Description]):
+    Path(folder_path).mkdir(parents=True, exist_ok=True)
     for text in text_List:
         print("heading: "+ text.heading)
         print("text: " + text.text)
         print("Token size:")
         print( tokensize_from_text(text.text))
-        with open(folder_path + "/" + text.heading,"w") as text_file:
+        with open(folder_path + "/" + text.heading + ".txt","w") as text_file:
             text_file.write(text.text)
 
 def create_topics(count: int, chat_model: BaseChatModel):
@@ -92,8 +104,8 @@ def create_topics(count: int, chat_model: BaseChatModel):
     res = chat_model.invoke(prompt.to_string())
 
     parsed_output = pydantic_parser.parse(res.content)
+    topic_list = []
     for topic in parsed_output.topics:
-        print(topic.topic)
-    return parsed_output
+        topic_list.append(topic.topic)
+    return topic_list
 
-main()

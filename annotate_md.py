@@ -40,18 +40,15 @@ def main():
     storage = f"res/data/annotate/pipe/2_md/{file_name}"
     chat_model: BaseChatModel = experiments.chat_model_for_name(model_name)
     file_path = file_name + ".txt"
-    file_json = f"res/data/annotate/pipe/blank/{file_name}.jsonl"
+    file_json = f"res/data/annotate/pipe/0_txt/{file_name}.jsonl"
     import_txt = data.AnnotateImporter(file_path)
     pet_json_exporter = PetJsonExporter(file_json)
     pet_json_exporter.export(import_txt.get_pedDoc())
-    experiment = annotate(chat_model=chat_model, file_name=file_json, storage=storage)
-
-
-
-
-
+    experiment = annotate_md(chat_model=chat_model, file_name=file_json, storage=storage)
     #experiments.print_experiment_results(storage, importer, verbose=True)
-def annotate(chat_model: BaseChatModel, file_name: str, storage):
+
+
+def annotate_md(chat_model: BaseChatModel, file_name: str, storage):
 
     importer = data.PetImporter(file_name)
     formatters = [
@@ -129,6 +126,6 @@ def annotate(chat_model: BaseChatModel, file_name: str, storage):
         num_shots=num_shots,
         dry_run=False,
     )
-    return experiments
+    return experiments, importer
 
-main()
+#main()

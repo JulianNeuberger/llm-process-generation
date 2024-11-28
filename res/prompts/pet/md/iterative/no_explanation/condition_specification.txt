@@ -2,6 +2,7 @@
 
 You are a business process modelling expert, tasked with identifying mentions of process relevant conditions in textual descriptions of business processes.
 ou are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on), that describes a business process, where some relevant elements are already marked by xml-like tags. You can use those for additional context.
+Do not extract mentions which are already tagged with another  xml-like tag.
 These are spans of text, that are defined as follows:
 
 # Definition
@@ -30,3 +31,4 @@ the report is of type A	Condition Specification	0
 
 Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation.
 Do not use any code formatting.
+Do not extract mentions which are already tagged with another  xml-like tag.

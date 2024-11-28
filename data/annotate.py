@@ -14,12 +14,12 @@ from datasets import load_dataset
 
 from data import base
 
-CUR_DIR = os.path.dirname(os.path.realpath(__file__))
-DATA_DIR = os.path.normpath(os.path.join(CUR_DIR, "..", "res", "data", "annotate", "pipe", "0_txt"))
+
+
 
 class AnnotateImporter(base.BaseImporter[PetDocument]):
     def __init__(self, file_path: str):
-        self._path = os.path.join(DATA_DIR, file_path)
+        self._path = os.path.join(file_path)
         self.pet_doc = self.do_import()
 
     def do_import(self) -> typing.List[PetDocument]:
@@ -44,9 +44,7 @@ class AnnotateImporter(base.BaseImporter[PetDocument]):
         return pet_list
 
     def read_document_from_txt(self, file_path: str, id: int):
-        print(file_path)
-        path = os.path.join(self._path,file_path)
-        print(path)
+        path = os.path.join(self._path)
         with open(path, "r") as doc:
             text = doc.read().replace("\n"," ")
             name = os.path.splitext(os.path.basename(doc.name))[0]

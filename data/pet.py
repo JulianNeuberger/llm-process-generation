@@ -125,7 +125,8 @@ class PetMention(base.HasType, base.SupportsPrettyDump[PetDocument]):
         if any([i in o.token_document_indices for i in self.token_document_indices]):
             return True
         return False
-
+    def set_Token_Doc_indices(self, new_token_document_indices: typing.Tuple[int, ...] ):
+        self.token_document_indices = new_token_document_indices
 
 @dataclasses.dataclass(frozen=True)
 class PetEntity(base.SupportsPrettyDump[PetDocument]):
