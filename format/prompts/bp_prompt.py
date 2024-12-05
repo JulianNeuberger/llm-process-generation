@@ -1,5 +1,5 @@
 base_prompt = """
-You are a business process modelling expert and you are tasked with creating a business process. You are creating one business process with a headline, that summarizes the business process. Don't use any bulletpoints, formulate whole sentences please. The BP (business process) should be a detailed description of a singular process. The business process should be from a real scenario. The field of the process is {topic}.
+You are a business process modelling expert and you are tasked with creating a business process. You are creating one business process with a headline, that summarizes the business process. Don't use any bullet points, formulate whole sentences please. The BP (business process) should be a detailed description of a singular process. The business process should be from a real scenario. The field of the process is {topic}.
 {and_prompt}
 {examples_prompt}
 {format_instructions}
@@ -7,7 +7,7 @@ You are a business process modelling expert and you are tasked with creating a b
 """
 
 and_prompt = """ 
-The BP can also have a parrallel workstream integrated or a decision that gives multiple options to continue the process (use phrases like "while", "meanwhile", "at the same time" or similiar and not only the word parrallel).
+The BP can also have a parallel workstream integrated or a decision that gives multiple options to continue the process (use phrases like "while", "meanwhile", "at the same time" or similar and not only the word parallel).
 """
 
 examples_prompt = """
@@ -26,7 +26,8 @@ Change requests must document the provision that is proposed to be changed, the 
 
 topics_prompt = """
 You are a business process modelling expert and you are tasked with giving back different business fields, where we can find different business processes. Give me back a List with {count} different fields. 
-{format_instructions}
+{format_instructions
+
 
 
 """
