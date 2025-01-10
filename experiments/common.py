@@ -19,6 +19,8 @@ from data import base
 from experiments import usage, iterative, model
 from format.common import load_prompt_from_file
 
+from annotate_sap_sam.hint_provider import HintsProvider
+
 TDocument = typing.TypeVar("TDocument", bound=base.DocumentBase)
 
 
@@ -37,7 +39,7 @@ def get_prompt(
 
     example_template = load_prompt_from_file("example-template.txt")
     user_prompt = load_prompt_from_file("user-prompt.txt")
-
+        
     example_prompt = prompts.ChatPromptTemplate.from_messages(
         [("human", user_prompt), ("ai", example_template)]
     )
@@ -51,9 +53,16 @@ def get_prompt(
         examples=examples,
     )
 
-    chat_prompt = prompts.ChatPromptTemplate.from_messages(
-        [system_message, few_shot_prompt, user_prompt]
-    )
+    # check which user prompt shoud be used
+    if HintsProvider.use_hint:
+        # read prompt with hint
+        user_prompt_with_hint = load_prompt_from_file("user-prompt-with-hint.txt")
+        final_prompts = [system_message, few_shot_prompt, user_prompt_with_hint]
+    else:
+        final_prompts = [system_message, few_shot_prompt, user_prompt]
+    
+    # create a chat prompt
+    chat_prompt = prompts.ChatPromptTemplate.from_messages(messages=final_prompts)
 
     return chat_prompt
 
@@ -91,10 +100,12 @@ def run_single_document_prompt(
     prompt_as_text = prompt.format(
         input=formatted_input_document,
         steps=", ".join(formatter.steps),
+        hint=input_document.get_hint(), # Ivan Khrop, provide hints for LLM for better annotation
     )
     prompt_as_messages = prompt.format_prompt(
         input= formatted_input_document,
         steps=", ".join(formatter.steps),
+        hint=input_document.get_hint(), # Ivan Khrop, provide hints for LLM for better annotation
     )
 
     num_input_tokens = chat_model.get_num_tokens(prompt_as_text)

@@ -204,3 +204,7 @@ crashlytics-build.properties
 fabric.properties
 
 eval.zip
+
+# Archives and diagrams
+*.zip
+*.drawio

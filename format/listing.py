@@ -838,14 +838,15 @@ class PetIterativeRelationListingFormattingStrategy(
 
 
 class PetEntityListingFormattingStrategy(base.BaseFormattingStrategy[data.PetDocument]):
-    def __init__(self, steps: typing.List[str]):
+    def __init__(self, steps: typing.List[str], prompt: str = None):
         super().__init__(steps)
         self._input_formatter = tags.PetTagFormattingStrategy(
             include_ids=True, only_tags=["Activity Data", "Actor"]
         )
+        self.prompt = prompt if prompt is not None else "pet/er/long.txt"
 
     def description(self) -> str:
-        return common.load_prompt_from_file("pet/er/long.txt")
+        return common.load_prompt_from_file(self.prompt)
 
     @property
     def args(self):
@@ -917,7 +918,7 @@ class PetMentionListingFormattingStrategy(
 
     def description(self) -> str:
         if self._prompt is None:
-            return common.load_prompt_from_file("pet/md/short_prompt.tx")
+            return common.load_prompt_from_file("pet/md/short_prompt.txt")
         else:
             return common.load_prompt_from_file(self._prompt)
 

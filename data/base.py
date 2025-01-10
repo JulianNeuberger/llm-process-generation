@@ -13,6 +13,17 @@ class DocumentBase:
 
     def copy(self, clear: typing.List[str]):
         raise NotImplementedError()
+    
+    def get_hint(self) -> str:
+        """
+        Get hint of this document for LLM.
+        
+        Returns
+        -------
+        str
+            Hint as string.
+        """
+        raise NotImplementedError()
 
 
 TDocument = typing.TypeVar("TDocument", bound=DocumentBase)

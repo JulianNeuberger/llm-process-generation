@@ -8,6 +8,62 @@ from experiments import model, common
 
 TDocument = typing.TypeVar("TDocument", bound=base.DocumentBase)
 
+def run_iterative_document_prompt_getting_doc(
+    input_document: TDocument,
+    formatters: typing.List[format.BaseFormattingStrategy[TDocument]],
+    example_docs: typing.List[TDocument],
+    chat_model: BaseChatModel,
+    model_name: str,
+    dry_run: bool,
+) -> TDocument:
+    """
+    Run prompt and get an updated copy of the target document.
+
+    Parameters
+    ----------
+    input_document: TDocument
+        Input document to annotate. 
+    formatters: typing.List[format.BaseFormattingStrategy[TDocument]]
+        Formatters that specify annotation type.
+    example_docs: typing.List[TDocument]
+        Documents provided as examples.
+    chat_model: BaseChatModel
+        AI Model that will be used for annotation.
+    model_name: str
+        Name of AI Model.
+    dry_run: bool
+        If run is dry.
+
+    Returns
+    -------
+    TDocument
+        An updated copy of input_document after annotation. 
+    """
+    # copy the original document
+    cur_doc: TDocument = input_document.copy(formatters[0].steps)
+    # apply each formatter
+    for i, formatter in enumerate(formatters):
+        # run a single document prompt
+        result = common.run_single_document_prompt(
+            input_document,
+            cur_doc,
+            formatter,
+            example_docs,
+            chat_model,
+            model_name,
+            dry_run,
+        )
+
+        # parse answers and add them to the document
+        for answer in result.answers:
+            parsed = formatter.parse(input_document, answer)
+            if cur_doc is None:
+                cur_doc = parsed.document
+            else:
+                cur_doc += parsed.document
+        
+    return cur_doc
+
 
 def run_iterative_document_prompt(
     input_document: TDocument,

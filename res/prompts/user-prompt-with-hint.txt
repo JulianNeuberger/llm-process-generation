@@ -1,0 +1,31 @@
+Please retrieve all {steps} from the following text.
+
+# Text
+
+{input}
+
+# Hint
+
+You can use a BPMN-Model that described by the text. The model is a directed graph:
+
+{hint}
+
+## Model Description
+
+- **Element ID**: Unique identifier of the element.
+
+- **BPMN Type**: Type of the element. Task, CollapsedSubprocess and Event define an activity excepting StartNoneEvent and EndNoneEvent. Exclusive_Databased_Gateway means XOR Gateway.
+
+- **Label**: Label of the element.
+
+- **Actor**: Actor which performs this activity.
+
+- **Owner**: Owner of the process. Do not use it.
+
+- **Following Elements**: List of following elements. Use them as tails of relations for the corresponding element.
+
+- **Target Element**: Following element. Use it as a tail of relations for the corresponding element.
+
+- **Edge Type**: Type of connection. Use it to identify type of relation. SequenceFlow is flow relation, Message flow can be flow or actor receiver relations. 
+
+- **Edge Label**: Label of relation usually used for condition specification and conditional cases.

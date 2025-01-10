@@ -7,6 +7,9 @@ from datasets import load_dataset
 
 from data import base
 
+# import path to hints
+from pathlib import Path
+PATH_TO_GRAPHS = Path(__file__).parent.parent.joinpath("res", "data", "annotate", "sap sam", "graphs.json")
 
 @dataclasses.dataclass
 class PetDocument(
@@ -87,6 +90,41 @@ class PetDocument(
             relations=new_relations,
         )
 
+    def to_dict(self) -> dict[str, typing.Any]:
+        """Get document attributes as a dictionary."""
+        data = dict()
+        # write all fields
+        data["text"] = self.text
+        data["id"] = self.id
+        data["name"] = self.name
+        data["category"] = self.category
+        data["tokens"] = [token.to_dict() for token in self.tokens] # recursive serialization
+        data["mentions"] = [mention.to_dict() for mention in self.mentions] # recursive serialization
+        data["entities"] = [entity.to_dict() for entity in self.entities] # recursive serialization
+        data["relations"] = [relation.to_dict() for relation in self.relations] # recursive serialization
+
+        return data
+    
+    def get_hint(self) -> str:
+        try:
+            # read file with graphs
+            with open(PATH_TO_GRAPHS, "r") as file:
+                graphs = json.load(file)
+            # get a hint for the current document
+            hint = graphs[self.id]
+            # add hint to the prompt text
+            #updated_text = prompt_text.format(hint=hint)
+            return hint
+        # in case of any errors, just return the original prompt
+        except FileNotFoundError as exception:
+            print(f"File not found: {exception}")
+            return "No hints"
+        except KeyError as exception:
+            print(f"No model for this document: {exception}")
+            return "No hints"
+        except Exception as exception:
+            print(f"Error: {exception}")
+            return "No hints"
 
 @dataclasses.dataclass(frozen=True)
 class PetMention(base.HasType, base.SupportsPrettyDump[PetDocument]):
@@ -125,8 +163,17 @@ class PetMention(base.HasType, base.SupportsPrettyDump[PetDocument]):
         if any([i in o.token_document_indices for i in self.token_document_indices]):
             return True
         return False
+    
     def set_Token_Doc_indices(self, new_token_document_indices: typing.Tuple[int, ...] ):
         self.token_document_indices = new_token_document_indices
+
+    def to_dict(self) -> dict[str, typing.Any]:
+        """Get document attributes as a dictionary."""
+        data = dict()
+        data["type"] = self.type
+        data["tokenDocumentIndices"] = self.token_document_indices
+
+        return data
 
 @dataclasses.dataclass(frozen=True)
 class PetEntity(base.SupportsPrettyDump[PetDocument]):
@@ -158,6 +205,10 @@ class PetEntity(base.SupportsPrettyDump[PetDocument]):
     def __hash__(self):
         element_counts = collections.Counter(self.mention_indices)
         return hash(frozenset(element_counts.items()))
+    
+    def to_dict(self) -> dict[str, typing.Any]:
+        """Get document attributes as a dictionary."""
+        return {"mentionIndices": self.mention_indices}
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
@@ -176,6 +227,16 @@ class PetRelation(base.HasType, base.SupportsPrettyDump[PetDocument]):
         head = document.mentions[self.head_mention_index].pretty_dump(document)
         tail = document.mentions[self.tail_mention_index].pretty_dump(document)
         return f"{head} -{self.type}-> {tail}"
+
+    def to_dict(self) -> dict[str, typing.Any]:
+        """Get document attributes as a dictionary."""
+        data = dict()
+        # put data in the dict
+        data["headMentionIndex"] = self.head_mention_index
+        data["tailMentionIndex"] = self.tail_mention_index
+        data["type"] = self.type
+
+        return data
 
 
 @dataclasses.dataclass
@@ -200,7 +261,17 @@ class PetToken:
             pos_tag=self.pos_tag,
             sentence_index=self.sentence_index,
         )
+    
+    def to_dict(self) -> dict[str, typing.Any]:
+        """Get token attributes as a dictionary."""
+        data: dict[str, typing.Any] = dict()
+        # dave data in the dict
+        data["text"] = self.text
+        data["indexInDocument"] = self.index_in_document
+        data["posTag"] = self.pos_tag
+        data["sentenceIndex"] = self.sentence_index
 
+        return data
 
 class PetJsonExporter:
     def __init__(self, path: str):
