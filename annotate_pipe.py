@@ -6,14 +6,14 @@ from annotate_md import annotate_md
 from annotate_re import annotate_re
 from annotate_er import annotate_er
 from pathlib import Path
-from create_descriptions import create_topics, create_bp_from_llm, save_to_folder
+from create_descriptions import create_topics, create_bp_from_llm, save_to_folder, create_bp_list_from_llm
 import experiments
 from dotenv import load_dotenv
 import nltk
 from langchain_core.language_models import BaseChatModel
 from data.pet import PetJsonExporter
 
-run_number = "02_jerex"
+run_number = "jerex_02"
 base_path = f"res/data/annotate/pipe/run_{run_number}/"
 text_path = base_path + "0_text"
 json_path = base_path + "1_base"
@@ -28,10 +28,10 @@ annotate_er_extract_path = base_path + "8_annotate_er_extract"
 
 def main():
     #test_double()
-    #fullPipe()
+    fullPipe()
     #print_doubles()
-    combine_1_file()
-
+    #combine_1_file("complete.json")
+    #remove_newline("res/data/annotate/pipe/run_10/2_annotated/Board_Meeting_Preparation_and_Execution.json")
 
 def fullPipe():
     load_dotenv()
@@ -46,20 +46,23 @@ def fullPipe():
     model_name = "gpt-4o"
     and_prompt_r = "rand"
     examples_prompt_b = True
-    count = 1
+    count = 10
 
     gpt_chat_model: BaseChatModel = experiments.chat_model_for_name(model_name, 0)
 
     # setting up folder structure
-    create_dirs()
+    #create_dirs()
 
     # Create descriptions and save topics
     if False:
         tlist = create_topics(count, gpt_chat_model)
-
         with open(base_path + "topics.json", "w") as file:
             json.dump(tlist, file)
-        text_list = create_bp_from_llm(and_prompt_r, examples_prompt_b, count, gpt_chat_model, "", tlist)
+        hlist = create_bp_list_from_llm(tlist,gpt_chat_model)
+        with open(base_path + "headings.json", "w") as file:
+            json.dump(hlist, file)
+        print("Anzahl themen", len(hlist))
+        text_list = create_bp_from_llm(and_prompt_r, examples_prompt_b, count, gpt_chat_model, "", hlist)
         save_to_folder(base_path + "0_text", text_list)
 
     # Convert descriptions to json
@@ -83,7 +86,7 @@ def fullPipe():
             data.PetJsonExporter(annotate_md_extract_path + "/" + json_data).export([pred_doc])
 
     # remove double tokens
-    if False:
+    if True:
         dir_list = os.listdir(annotate_md_extract_path)
         for md_data in dir_list:
             doc = data.PetImporter(annotate_md_extract_path + "/" + md_data).do_import()
@@ -110,8 +113,7 @@ def fullPipe():
             experiment_list, importer = annotate_er(gpt_chat_model, annotate_re_extract_path + "/" + md_data, storage)
             pred_doc, steps = experiments.get_predicted_doc(storage, importer)
             data.PetJsonExporter(annotate_er_extract_path + "/" + md_data).export([pred_doc])
-
-
+            combine_1_file("complete.jsonl")
 
 
 
@@ -194,13 +196,21 @@ def print_doubles():
             for k, v in double_dict.items():
                 print("index: ", k, " | type: ", v)
 
-def combine_1_file(dir_path = annotate_er_extract_path):
+
+def combine_1_file( file_name: str, dir_path = annotate_er_extract_path):
     dir_list = os.listdir(dir_path)
     docs = [None]* len(dir_list)
     for x in range(len(dir_list)):
         doc = data.PetImporter(dir_path + "/" + dir_list[x]).do_import()
-        docs[x] = doc[0]
-    data.PetJsonExporter(base_path + "complete.json").export(docs)
+        for docu in doc:
+            docs[x] = docu
+    data.PetJsonExporter(base_path + file_name).export(docs)
 
+def remove_newline(file_name: str):
+    with open(file_name, 'r') as file:
+        data = file.read()
+    print(data)
+    data = data.replace("\n", "")
+    print(data)
 
 main()

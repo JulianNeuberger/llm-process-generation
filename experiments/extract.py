@@ -145,12 +145,12 @@ def remove_mention(pet_document: data.PetDocument, mention_index: int, mention_t
 def double_assigned_remove(double_assigned: dict[int, typing.List["mentions"]], pet_document: data.PetDocument):
     mention_set = {
         "activity",
-        "actor",
         "activity data",
+        "actor",
         "xor gateway",
         "condition specification",
-        "and gateway",
-        "further specification"
+        "further specification",
+        "and gateway"
     }
     for index, mention_types in double_assigned.items():
         for mention in mention_set:

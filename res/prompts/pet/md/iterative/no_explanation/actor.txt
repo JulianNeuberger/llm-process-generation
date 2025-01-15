@@ -32,4 +32,4 @@ the clerk	Actor	1
 
 Do not change the text you extract, i.e., do not correct typos, or change spaces, or add punctuation.
 Do not use any code formatting.
-Do not extract mentions which are already tagged with another  xml-like tag.
+Do not extract mentions which are already tagged with another xml-like tag.
