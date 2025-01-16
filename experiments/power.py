@@ -1,3 +1,5 @@
+import os
+import pathlib
 import sched, time
 import subprocess
 from threading import Thread
@@ -31,6 +33,7 @@ class PowerMeasurementThread(Thread):
         process_output = completed_process.stdout
         line = process_output.splitlines()[1].decode("utf-8")
         power = line.split(' ')[0]
+        pathlib.Path(self.log_path).parent.mkdir(exist_ok=True, parents=True)
         with open(self.log_path, "a") as f:
             f.write(power)
             f.write("\n")
