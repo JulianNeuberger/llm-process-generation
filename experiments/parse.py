@@ -204,7 +204,7 @@ def get_num_tokens(results: typing.List[experiments.ExperimentResult]):
 
 
 def get_scores(
-    experiment_stats: typing.List[ExperimentStats], verbose: bool
+    experiment_stats: typing.List[ExperimentStats], verbose: bool, calculate_only_tags: typing.Optional[typing.List[str]]
 ) -> typing.Dict[str, PrintableScores]:
     total_stats_by_step = sum_stats(experiment_stats)
     if verbose:
@@ -229,6 +229,12 @@ def get_scores(
             print()
     scores_by_step = {}
     for step, stats in total_stats_by_step.items():
+        if calculate_only_tags is not None:
+            stats = {k: v for k, v in stats.items() if k in calculate_only_tags}
+        #filtered_stats = {}
+        #for k, v in stats.items():
+        #    if k in calculate_only_tags:
+        #        filtered_stats[k] = v
         f1_scores = eval.stats_to_scores(stats)
         micro_scores = eval.average_scores(stats, strategy="micro")
         macro_scores = eval.average_scores(stats, strategy="macro")
@@ -308,6 +314,7 @@ def print_experiment_results(
     importer: data.BaseImporter[TDocument],
     only_document_ids: typing.List[str] = None,
     print_only_tags: typing.List[str] = None,
+    calculate_only_tags: typing.Optional[typing.List[str]] = None,
     verbose: bool = False,
 ):
     if print_only_tags is not None:
@@ -332,7 +339,7 @@ def print_experiment_results(
     )
     print(list(unique_doc_ids))
 
-    scores = get_scores(experiment_stats, verbose)
+    scores = get_scores(experiment_stats, verbose, calculate_only_tags)
     print(
         f"Total parse errors in {len(experiment_results)} answers: {num_parse_errors}"
     )
@@ -343,19 +350,19 @@ def print_experiment_results(
 
 def main():
     importers = {
-        "pet": data.PetImporter("res/data/pet/all.new.jsonl"),
-        "quishpi-re": data.VanDerAaSentenceImporter("res/data/quishpi/csv"),
-        "quishpi-md": data.QuishpiImporter("res/data/quishpi", exclude_tags=["entity"]),
+        "pet": data.PetImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/pet/all.new.jsonl"),
+        "quishpi-re": data.VanDerAaSentenceImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/quishpi/csv"),
+        "quishpi-md": data.QuishpiImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/quishpi", exclude_tags=["entity"]),
         "van-der-aa-re": data.VanDerAaSentenceImporter(
-            "res/data/van-der-aa/datacollection.csv"
+            "C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/van-der-aa/datacollection.csv"
         ),
         "van-der-aa-md": data.VanDerAaImporter(
-            "res/data/van-der-aa/datacollection.csv"
+            "C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/van-der-aa/datacollection.csv"
         ),
-        "analysis": data.PetImporter("res/data/pet/all.new.jsonl"),
+        "analysis": data.PetImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = "res/answers/Qwen/Qwen1.5-72B-Chat/pet-re/2024-05-28_15-49-50.json"
+    answer_file = "../res/answers/ollama-llama3.1-70b/pet-md/2024-09-11_21-18-24.json"
 
     importer = None
     for k, v in importers.items():
@@ -369,7 +376,8 @@ def main():
         importer,
         # only_document_ids=["1-1_bicycle_manufacturing"],
         # print_only_tags=["action"],
-        verbose=True,
+        # calculate_only_tags= ["actor", "activity data", "activity", "xor gateway", "and gateway", "further specification", "condition specification"],
+        verbose=False,
     )
 
 

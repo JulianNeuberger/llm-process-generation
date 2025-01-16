@@ -7,7 +7,7 @@ from langchain_core.language_models import BaseChatModel
 import data
 import experiments
 import format
-from experiments import sampling
+from experiments import sampling, power
 
 if __name__ == "__main__":
 
@@ -26,17 +26,23 @@ if __name__ == "__main__":
         # model_name = "gpt-4o-2024-05-13"
         # model_name = "claude-3-sonnet-20240229"
         # model_name = "claude-3-opus-20240229"
-        # model_name = "meta-llama/Meta-Llama-3-70B-Instruct"
+        # model_name = "meta-ollama-llama3.1-70b/Meta-Llama-3-70B-Instruct"
         # model_name = "deepinfra/airoboros-70b"
         # model_name = "gpt-4-0125-preview"
         # model_name = "Qwen/Qwen1.5-72B-Chat"
-        model_name = "gpt-3.5-turbo-0125"
+        # model_name = "gpt-3.5-turbo-0125"
         # model_name = "mistral-large-latest"
+        # model_name = "vllm"
+        # model_name = "ollama-llama3.1-70b"
+        # model_name = "ollama-mistral7b-v0.2"
+        # model_name = "ollama-llama3.3-70b-instruct"
+        model_name = "ollama-calme2.1-qwen2.5-72b"
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/{model_name}/pet-md/{date_formatted}.json"
         # storage = "res/answers/claude-3-opus-20240229/pet-md/2024-05-28_14-46-19.json"
-        # storage = "res/answers/gpt-4-0125-preview/pet-md/2024-05-23_13-31-08.json"
+        # storage = "res/answers/gpt-4-0125-preview/pet-md/2024-05-29_09-15-38.json"
+        # storage = "res/answers/vllm/pet-md/2024-08-22_13-32-50_Mistral7B-Instruct-v0.2.json"
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         importer = data.PetImporter("res/data/pet/all.new.jsonl")
@@ -152,5 +158,5 @@ if __name__ == "__main__":
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
-
-    main()
+    power.measure_power_draw_for_function(main, "res/power/pet_md.dat")
+    # main()

@@ -1057,8 +1057,8 @@ class PetMentionListingFormattingStrategy(
                 parsed_mentions.extend(mentions_from_line)
             except Exception:
                 num_parse_errors += 1
-                # print("Error during parsing of line, skipping line. Error was:")
-                # print(traceback.format_exc())
+                print("Error during parsing of line, skipping line. Erroneous line:")
+                print(line)
 
         doc = data.PetDocument(
             id=document.id,

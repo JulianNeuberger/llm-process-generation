@@ -24,9 +24,10 @@ if __name__ == "__main__":
         num_shots = 3
 
         # model_name = "gpt-4-0125-preview"
-        model_name = "gpt-4o-2024-05-13"
+        # model_name = "gpt-4o-2024-05-13"
         # model_name = "claude-3-sonnet-20240229"
         # model_name = "claude-3-opus-20240229"
+        model_name = "vllm"
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/{model_name}/pet-er/{date_formatted}.json"

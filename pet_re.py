@@ -23,14 +23,15 @@ if __name__ == "__main__":
         num_shots = 1
 
         # model_name = "gpt-4-turbo-2024-04-09"
-        model_name = "gpt-4o-2024-05-13"
+        # model_name = "gpt-4o-2024-05-13"
         # model_name = "claude-3-sonnet-20240229"
         # model_name = "claude-3-opus-20240229"
-        # model_name = "meta-llama/Meta-Llama-3-70B-Instruct"
+        # model_name = "meta-ollama-llama3.1-70b/Meta-Llama-3-70B-Instruct"
         # model_name = "deepinfra/airoboros-70b"
         # model_name = "gpt-4-0125-preview"
         # model_name = "Qwen/Qwen1.5-72B-Chat"
         # model_name = "gpt-3.5-turbo-0125"
+        model_name = "vllm"
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/{model_name}/pet-re/{date_formatted}.json"
