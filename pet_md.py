@@ -11,6 +11,22 @@ from experiments import sampling, power
 
 if __name__ == "__main__":
 
+    # model_name = "gpt-4-turbo-2024-04-09"
+    # model_name = "gpt-4o-2024-05-13"
+    # model_name = "claude-3-sonnet-20240229"
+    # model_name = "claude-3-opus-20240229"
+    # model_name = "meta-ollama-llama3.1-70b/Meta-Llama-3-70B-Instruct"
+    # model_name = "deepinfra/airoboros-70b"
+    # model_name = "gpt-4-0125-preview"
+    # model_name = "Qwen/Qwen1.5-72B-Chat"
+    # model_name = "gpt-3.5-turbo-0125"
+    # model_name = "mistral-large-latest"
+    # model_name = "vllm"
+    # model_name = "ollama-llama3.1-70b"
+    # model_name = "ollama-mistral7b-v0.2"
+    # model_name = "ollama-llama3.3-70b-instruct"
+    model_name = "ollama-calme2.1-qwen2.5-72b"
+
     def main():
         load_dotenv()
 
@@ -22,21 +38,7 @@ if __name__ == "__main__":
 
         num_shots = 3
 
-        # model_name = "gpt-4-turbo-2024-04-09"
-        # model_name = "gpt-4o-2024-05-13"
-        # model_name = "claude-3-sonnet-20240229"
-        # model_name = "claude-3-opus-20240229"
-        # model_name = "meta-ollama-llama3.1-70b/Meta-Llama-3-70B-Instruct"
-        # model_name = "deepinfra/airoboros-70b"
-        # model_name = "gpt-4-0125-preview"
-        # model_name = "Qwen/Qwen1.5-72B-Chat"
-        # model_name = "gpt-3.5-turbo-0125"
-        # model_name = "mistral-large-latest"
-        # model_name = "vllm"
-        # model_name = "ollama-llama3.1-70b"
-        # model_name = "ollama-mistral7b-v0.2"
-        # model_name = "ollama-llama3.3-70b-instruct"
-        model_name = "ollama-calme2.1-qwen2.5-72b"
+
 
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/{model_name}/pet-md/{date_formatted}.json"
@@ -158,5 +160,7 @@ if __name__ == "__main__":
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
-    power.measure_power_draw_for_function(main, "res/power/pet_md.dat")
+    current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    log_path = "res/power/" + model_name + " " + current_date + " pet_md.dat"
+    power.measure_power_draw_for_function(main, log_path)
     # main()
