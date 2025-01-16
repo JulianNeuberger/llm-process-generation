@@ -3,7 +3,7 @@ import datetime
 import nltk
 from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
-
+from datetime import datetime
 import data
 import experiments
 import format
@@ -158,5 +158,7 @@ if __name__ == "__main__":
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
-    power.measure_power_draw_for_function(main, "res/power/pet_md.dat")
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        log_path = "res/power/" + model_name + "/" + current_date + "/pet_md.dat"
+        power.measure_power_draw_for_function(main, log_path)
     # main()
