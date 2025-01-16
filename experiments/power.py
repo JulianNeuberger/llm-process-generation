@@ -18,15 +18,16 @@ class PowerMeasurementThread(Thread):
         self.event = None
         self.log_path = log_path
         self.scheduler = sched.scheduler(time.time, time.sleep)
+        self.scheduler.run()
 
     def run(self):
-        self.event = self.scheduler.enter(1, 1, self.log_power_measurement, (self.scheduler,))
-        self.scheduler.run()
+        self.event = self.scheduler.enter(1, 1, self.log_power_measurement)
+
 
     def stop(self):
         self.scheduler.cancel(self.event)
 
-    def log_power_measurement(self, scheduler):
+    def log_power_measurement(self):
         completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.average', '--format=csv'],
                                            capture_output=True)
         print(completed_process.returncode)
@@ -37,8 +38,8 @@ class PowerMeasurementThread(Thread):
         with open(self.log_path, "a") as f:
             f.write(power)
             f.write("\n")
-        self.event = scheduler.enter(1, 1, self.log_power_measurement, (scheduler,))
-        scheduler.run()
+        self.event = self.scheduler.enter(1, 1, self.log_power_measurement)
+
 
 
 if __name__ == "__main__":
