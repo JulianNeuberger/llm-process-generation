@@ -157,6 +157,8 @@ def experiment(
     num_shots: int,
     dry_run: bool,
     folds: typing.List[typing.Dict[str, typing.List[str]]] = None,
+    on_new_document: typing.Callable[[TDocument], None] = None,
+    on_new_fold: typing.Callable[[int], None] = None
 ):
     documents = importer.do_import()
 
@@ -177,6 +179,8 @@ def experiment(
 
     documents_by_id = {d.id: d for d in documents}
     for fold_id, fold in tqdm.tqdm(enumerate(folds), total=len(folds)):
+        if on_new_fold is not None:
+            on_new_fold(fold_id)
         if fold_id == len(saved_experiment_results):
             temperature = getattr(chat_model, "temperature", -1.0)
             saved_experiment_results.append(
@@ -208,6 +212,7 @@ def experiment(
             example_docs=example_docs,
             model_name=model_name,
             dry_run=dry_run,
+            on_new_document=on_new_document
         )
 
         for result in result_iterator:

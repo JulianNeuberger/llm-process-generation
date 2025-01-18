@@ -2,6 +2,7 @@ import pathlib
 import sched
 import subprocess
 import time
+import typing
 from threading import Thread
 
 
@@ -11,6 +12,16 @@ def measure_power_draw_for_function(func, log_path):
     func()
     power_thread.stop()
 
+class PowerLogger:
+    def __init__(self):
+        self.current_document = None
+        self.current_fold_id = None
+
+    def measure_power_draw_for_function(self, func, log_path):
+        power_thread = PowerMeasurementThread(log_path)
+        power_thread.start()
+        func()
+        power_thread.stop()
 
 class PowerMeasurementThread(Thread):
     def __init__(self, log_path: str):
@@ -19,6 +30,8 @@ class PowerMeasurementThread(Thread):
         self.log_path = log_path
         self.scheduler = sched.scheduler(time.time, time.sleep)
         self.running = True
+        self.current_document = None
+        self.current_fold_id = None
 
     def run(self):
         self.event = self.scheduler.enter(1, 1, self.log_power_measurement)
@@ -39,6 +52,16 @@ class PowerMeasurementThread(Thread):
         power = line.split(' ')[0]
         pathlib.Path(self.log_path).parent.mkdir(exist_ok=True, parents=True)
         with open(self.log_path, "a") as f:
+            if self.current_document is not None:
+                f.write(self.current_document.id)
+            else:
+                f.write("None")
+            f.write("\t")
+            if self.current_fold_id is not None:
+                f.write(self.current_fold_id)
+            else:
+                f.write("None")
+            f.write("\t")
             f.write(power)
             f.write("\n")
         self.event = self.scheduler.enter(1, 1, self.log_power_measurement)

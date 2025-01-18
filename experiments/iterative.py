@@ -54,8 +54,11 @@ def run_multiple_iterative_document_prompts(
     chat_model: BaseChatModel,
     model_name: str,
     dry_run: bool,
+    on_new_document: typing.Callable[[TDocument], None] = None
 ) -> typing.Generator[model.PromptResult, None, None]:
     for d in input_documents:
+        if on_new_document is not None:
+            on_new_document(d)
         yield run_iterative_document_prompt(
             d, formatters, example_docs, chat_model, model_name, dry_run
         )

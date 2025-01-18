@@ -39,8 +39,6 @@ if __name__ == "__main__":
 
         num_shots = 3
 
-
-
         date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         storage = f"res/answers/{model_name}/pet-md/{date_formatted}.json"
         # storage = "res/answers/claude-3-opus-20240229/pet-md/2024-05-28_14-46-19.json"
