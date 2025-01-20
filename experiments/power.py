@@ -1,3 +1,4 @@
+import datetime
 import pathlib
 import sched
 import subprocess
@@ -55,20 +56,23 @@ class PowerMeasurementThread(Thread):
         completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.average', '--format=csv'],
                                            capture_output=True)
         process_output = completed_process.stdout
+        current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         line = process_output.splitlines()[1].decode("utf-8")
         power = line.split(' ')[0]
         pathlib.Path(self.log_path).parent.mkdir(exist_ok=True, parents=True)
         with open(self.log_path, "a") as f:
+            f.write(current_date)
+            f.write("\t\t")
             if self.current_document is not None:
                 f.write(str(self.current_document.id))
             else:
                 f.write("None")
-            f.write("\t")
+            f.write("\t\t")
             if self.current_fold_id is not None:
                 f.write(str(self.current_fold_id))
             else:
                 f.write("None")
-            f.write("\t")
+            f.write("\t\t")
             f.write(power)
             f.write("\n")
         self.event = self.scheduler.enter(1, 1, self.log_power_measurement)
