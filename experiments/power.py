@@ -45,6 +45,7 @@ class PowerMeasurementThread(Thread):
         self.running = False
         if self.event:
             self.scheduler.cancel(self.event)
+        self.join()
 
     def set_current_document(self, current_document):
         self.current_document = current_document
