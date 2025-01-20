@@ -60,12 +60,12 @@ class PowerMeasurementThread(Thread):
         pathlib.Path(self.log_path).parent.mkdir(exist_ok=True, parents=True)
         with open(self.log_path, "a") as f:
             if self.current_document is not None:
-                f.write(self.current_document.id)
+                f.write(str(self.current_document.id))
             else:
                 f.write("None")
             f.write("\t")
             if self.current_fold_id is not None:
-                f.write(self.current_fold_id)
+                f.write(str(self.current_fold_id))
             else:
                 f.write("None")
             f.write("\t")
