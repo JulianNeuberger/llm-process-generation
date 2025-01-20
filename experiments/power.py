@@ -6,22 +6,23 @@ import typing
 from threading import Thread
 
 
-def measure_power_draw_for_function(func, log_path):
-    power_thread = PowerMeasurementThread(log_path)
-    power_thread.start()
-    func()
-    power_thread.stop()
-
 class PowerLogger:
-    def __init__(self):
-        self.current_document = None
-        self.current_fold_id = None
+    def __init__(self, func, log_path):
+        self.func = func
+        self.log_path = log_path
+        self.power_thread = PowerMeasurementThread(self.log_path)
 
-    def measure_power_draw_for_function(self, func, log_path):
-        power_thread = PowerMeasurementThread(log_path)
-        power_thread.start()
-        func()
-        power_thread.stop()
+    def set_current_document(self, current_document):
+        self.power_thread.set_current_document(current_document)
+
+    def set_current_fold_id(self, current_fold_id):
+        self.power_thread.set_current_fold_id(current_fold_id)
+
+    def start_logging(self):
+        self.power_thread.start()
+        self.func()
+        self.power_thread.stop()
+
 
 class PowerMeasurementThread(Thread):
     def __init__(self, log_path: str):
@@ -43,6 +44,12 @@ class PowerMeasurementThread(Thread):
         self.running = False
         if self.event:
             self.scheduler.cancel(self.event)
+
+    def set_current_document(self, current_document):
+        self.current_document = current_document
+
+    def set_current_fold_id(self, current_fold_id):
+        self.current_fold_id = current_fold_id
 
     def log_power_measurement(self):
         completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.average', '--format=csv'],

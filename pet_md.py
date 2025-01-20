@@ -156,10 +156,13 @@ if __name__ == "__main__":
             num_shots=num_shots,
             dry_run=False,
             folds=folds,
+            on_new_document=power_logger.set_current_document,
+            on_new_fold=power_logger.set_current_fold_id
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
     current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     log_path = "res/power/" + model_name + " " + current_date + " pet_md.dat"
-    power.measure_power_draw_for_function(main, log_path)
+    power_logger = power.PowerLogger(main, log_path)
+    power_logger.start_logging()
     # main()
