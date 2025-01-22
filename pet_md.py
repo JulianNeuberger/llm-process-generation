@@ -28,7 +28,8 @@ if __name__ == "__main__":
     # model_name = "ollama-calme2.1-qwen2.5-72b"
     # model_name = "ollama-solar-pro-preview"
     # model_name = "ollama-shuttle-3"
-    model_name = "ollama-llama3.3-Q2"
+    # model_name = "ollama-llama3.3-Q2"
+    model_name = "ollama-llama3.3-Q3"
     def main():
         load_dotenv()
 
