@@ -47,14 +47,14 @@ if __name__ == "__main__":
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         importer = data.PetImporter("res/data/pet/all.new.jsonl")
-        # train_docs = [d.id for d in importer.do_import() if d.id != "doc-6.1"]
-        # folds = [{"train": train_docs, "test": ["doc-6.1"]}]
-        folds = sampling.generate_folds(
-            documents=importer.do_import(),
-            num_examples=num_shots,
-            strategy="similarity",
-            seed=42,
-        )
+        train_docs = [d.id for d in importer.do_import() if d.id != "doc-6.1"]
+        folds = [{"train": train_docs, "test": ["doc-6.1"]}]
+        # folds = sampling.generate_folds(
+        #    documents=importer.do_import(),
+        #    num_examples=num_shots,
+        #    strategy="similarity",
+        #    seed=42,
+        #)
 
         # formatters = [
         #     format.PetActivityListingFormattingStrategy(["mentions"]),

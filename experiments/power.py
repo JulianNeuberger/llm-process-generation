@@ -2,6 +2,7 @@ import datetime
 import pathlib
 import sched
 import subprocess
+import threading
 import time
 import typing
 from threading import Thread
@@ -43,9 +44,10 @@ class PowerMeasurementThread(Thread):
 
     def stop(self):
         self.running = False
-        if self.event:
+        if self.event is not None:
             self.scheduler.cancel(self.event)
-        self.join()
+        if threading.current_thread() != self:
+            self.join()
 
     def set_current_document(self, current_document):
         self.current_document = current_document
