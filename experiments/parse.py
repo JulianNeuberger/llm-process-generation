@@ -231,8 +231,8 @@ def get_scores(
     for step, stats in total_stats_by_step.items():
         if calculate_only_tags is not None:
             stats = {k: v for k, v in stats.items() if k in calculate_only_tags}
-        #filtered_stats = {}
-        #for k, v in stats.items():
+        # filtered_stats = {}
+        # for k, v in stats.items():
         #    if k in calculate_only_tags:
         #        filtered_stats[k] = v
         f1_scores = eval.stats_to_scores(stats)
@@ -351,7 +351,8 @@ def print_experiment_results(
 def main():
     importers = {
         "pet": data.PetImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/pet/all.new.jsonl"),
-        "quishpi-re": data.VanDerAaSentenceImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/quishpi/csv"),
+        "quishpi-re": data.VanDerAaSentenceImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data"
+                                                    "/quishpi/csv"),
         "quishpi-md": data.QuishpiImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/quishpi", exclude_tags=["entity"]),
         "van-der-aa-re": data.VanDerAaSentenceImporter(
             "C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/van-der-aa/datacollection.csv"
@@ -362,7 +363,8 @@ def main():
         "analysis": data.PetImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/pet/all.new.jsonl"),
     }
 
-    # answer_file = "C:/Users/Felix/Desktop/Studium/BA/Messungen/Antworten/ollama-shuttle-3/pet-md/2025-01-20_14-45-38.json"
+    # answer_file = "C:/Users/Felix/Desktop/Studium/BA/Messungen/Antworten/ollama-shuttle-3/pet-md/2025-01-20_14-45
+    # -38.json"
     answer_file = "../res/answers/gpt-4o-2024-05-13/pet-md/2024-05-28_14-47-32.json"
 
     importer = None
@@ -375,9 +377,9 @@ def main():
     print_experiment_results(
         answer_file,
         importer,
-        # only_document_ids=["1-1_bicycle_manufacturing"],
-        # print_only_tags=["action"],
-        # calculate_only_tags= ["actor", "activity data", "activity", "xor gateway", "and gateway", "further specification", "condition specification"],
+        # only_document_ids=["1-1_bicycle_manufacturing"], print_only_tags=["action"], calculate_only_tags= ["actor",
+        # "activity data", "activity", "xor gateway", "and gateway", "further specification", "condition
+        # specification"],
         verbose=False,
     )
 

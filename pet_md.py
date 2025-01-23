@@ -30,6 +30,8 @@ if __name__ == "__main__":
     # model_name = "ollama-shuttle-3"
     # model_name = "ollama-llama3.3-Q2"
     model_name = "ollama-llama3.3-Q3"
+
+
     def main():
         load_dotenv()
 
@@ -49,24 +51,24 @@ if __name__ == "__main__":
 
         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
         importer = data.PetImporter("res/data/pet/all.new.jsonl")
-        train_docs = [d.id for d in importer.do_import() if d.id != "doc-6.1"]
-        folds = [{"train": train_docs, "test": ["doc-6.1"]}]
-        # folds = sampling.generate_folds(
-        #    documents=importer.do_import(),
-        #    num_examples=num_shots,
-        #    strategy="similarity",
-        #    seed=42,
-        #)
+        # train_docs = [d.id for d in importer.do_import() if d.id != "doc-6.1"]
+        # folds = [{"train": train_docs, "test": ["doc-6.1"]}]
+        folds = sampling.generate_folds(
+            documents=importer.do_import(),
+            num_examples=num_shots,
+            strategy="similarity",
+            seed=42,
+        )
 
-        # formatters = [
-        #     format.PetActivityListingFormattingStrategy(["mentions"]),
-        #     format.PetActorListingFormattingStrategy(["mentions"]),
-        #     format.PetDataListingFormattingStrategy(["mentions"]),
-        #     format.PetFurtherListingFormattingStrategy(["mentions"]),
-        #     format.PetXorListingFormattingStrategy(["mentions"]),
-        #     format.PetConditionListingFormattingStrategy(["mentions"]),
-        #     format.PetAndListingFormattingStrategy(["mentions"]),
-        # ]
+        formatters = [
+            format.PetActivityListingFormattingStrategy(["mentions"]),
+            format.PetActorListingFormattingStrategy(["mentions"]),
+            format.PetDataListingFormattingStrategy(["mentions"]),
+            format.PetFurtherListingFormattingStrategy(["mentions"]),
+            format.PetXorListingFormattingStrategy(["mentions"]),
+            format.PetConditionListingFormattingStrategy(["mentions"]),
+            format.PetAndListingFormattingStrategy(["mentions"]),
+        ]
 
         formatters = [
             format.IterativePetMentionListingFormattingStrategy(
@@ -163,6 +165,8 @@ if __name__ == "__main__":
         )
 
         experiments.print_experiment_results(storage, importer, verbose=True)
+
+
     current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     log_path = "res/power/" + model_name + " " + current_date + " pet_md.dat"
     power_logger = power.PowerLogger(main, log_path)
