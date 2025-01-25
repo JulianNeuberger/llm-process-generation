@@ -60,7 +60,7 @@ class PowerMeasurementThread(Thread):
         completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.average', '--format=csv'],
                                            capture_output=True)
         process_output = completed_process.stdout
-        current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         line = process_output.splitlines()[1].decode("utf-8")
         power = line.split(' ')[0]
         pathlib.Path(self.log_path).parent.mkdir(exist_ok=True, parents=True)
