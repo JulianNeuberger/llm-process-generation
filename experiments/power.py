@@ -35,7 +35,7 @@ class PowerMeasurementThread(Thread):
         self.running = True
         self.current_document = None
         self.current_fold_id = None
-        self.interval = 0.1
+        self.interval = 1.0
 
     def run(self):
         self.event = self.scheduler.enter(self.interval, 1, self.log_power_measurement)
@@ -57,7 +57,7 @@ class PowerMeasurementThread(Thread):
         self.current_fold_id = current_fold_id
 
     def log_power_measurement(self):
-        completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.instant', '--format=csv'],
+        completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.average', '--format=csv'],
                                            capture_output=True)
         process_output = completed_process.stdout
         current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")

@@ -2,6 +2,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import statistics
 
+
 # get timestamps and power measurements from logfile
 def parse_logfile(file_path: str):
     with open(file_path, 'r') as file:
