@@ -271,7 +271,7 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/shuttle-3-GGUF:Q4_K_M", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-llama3.3-70b"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q4_K_M", temperature=0,
+        return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/Llama-3.3-70B-Instruct-GGUF:Q4_K_M", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-llama3.3-Q2"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q2_K", temperature=0,
