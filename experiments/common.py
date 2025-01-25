@@ -107,7 +107,7 @@ def run_single_document_prompt(
                 )
                 break
             except openai.InternalServerError:
-                res = BaseMessage("")
+                res = None
                 total_costs = 0
                 num_output_tokens = 0
 
