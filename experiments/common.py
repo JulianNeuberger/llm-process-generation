@@ -1,6 +1,8 @@
 import json
 import os
 import typing
+
+import openai
 import requests
 import langchain_anthropic
 import langchain_community.callbacks
@@ -96,9 +98,19 @@ def run_single_document_prompt(
     )
     num_input_tokens = chat_model.get_num_tokens(prompt_as_text)
     if isinstance(chat_model, langchain_openai.ChatOpenAI):
-        res, total_costs, num_input_tokens, num_output_tokens = prompt_openai(
-            chat_model, prompt_as_messages
-        )
+        remaining_tries = 3
+        while remaining_tries > 0:
+            remaining_tries -= 1
+            try:
+                res, total_costs, num_input_tokens, num_output_tokens = prompt_openai(
+                    chat_model, prompt_as_messages
+                )
+                break
+            except openai.InternalServerError:
+                res = BaseMessage("")
+                total_costs = 0
+                num_output_tokens = 0
+
     else:
         res = chat_model.invoke(prompt_as_messages)
         num_output_tokens = chat_model.get_num_tokens(str(res.content))
@@ -259,12 +271,12 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/shuttle-3-GGUF:Q4_K_M", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-llama3.3-70b"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/MaziyarPanahi/Llama-3.3-70B-Instruct-GGUF:Q4_K_M", temperature=0,
+        return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q4_K_M", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-llama3.3-Q2"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/MaziyarPanahi/Llama-3.3-70B-Instruct-GGUF:Q2_K", temperature=0,
+        return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q2_K", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-llama3.3-Q3"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/MaziyarPanahi/Llama-3.3-70B-Instruct-GGUF:Q3_K_M", temperature=0,
+        return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q3_K_M", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     raise ValueError(f'Unknown model with name "{model_name}"')

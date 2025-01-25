@@ -24,12 +24,12 @@ if __name__ == "__main__":
     # model_name = "vllm"
     # model_name = "ollama-llama3.1-70b"
     # model_name = "ollama-mistral7b-v0.2"
-    # model_name = "ollama-llama3.3-70b-instruct"
+    model_name = "ollama-llama3.3-70b-instruct"
     # model_name = "ollama-calme2.1-qwen2.5-72b"
     # model_name = "ollama-solar-pro-preview"
     # model_name = "ollama-shuttle-3"
     # model_name = "ollama-llama3.3-Q2"
-    model_name = "ollama-llama3.3-Q3"
+    # model_name = "ollama-llama3.3-Q3"
 
 
     def main():

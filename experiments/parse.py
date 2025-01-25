@@ -363,9 +363,8 @@ def main():
         "analysis": data.PetImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/pet/all.new.jsonl"),
     }
 
-    # answer_file = "C:/Users/Felix/Desktop/Studium/BA/Messungen/Antworten/ollama-shuttle-3/pet-md/2025-01-20_14-45
-    # -38.json"
-    answer_file = "../res/answers/gpt-4o-2024-05-13/pet-md/2024-05-28_14-47-32.json"
+    answer_file = "../res/answers/ollama-llama3.3-Q3/pet-md/2025-01-23_11-02-59-non-iterative.json"
+    # answer_file = "../res/answers/gpt-4o-2024-05-13/pet-md/2024-05-28_14-47-32.json"
 
     importer = None
     for k, v in importers.items():
