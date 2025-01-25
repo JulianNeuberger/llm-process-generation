@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 
 # get timestamps and power measurements from logfile
-def parse(file_path: str):
+def parse_logfile(file_path: str):
     with open(file_path, 'r') as file:
         lines = file.readlines()
         # timestamps are 26 characters long
@@ -19,13 +19,31 @@ def parse(file_path: str):
         power_measurements = []
         for i in range(len(lines)):
             power_string = ""
-            # power can be a max of 6 chars long (456.78)
-            for j in range(1, 6):
+            for j in range(1, 20):
                 # add last chars until a tab occurs
                 if lines[i][-j] != "\t":
                     power_string = lines[i][-j] + power_string
                 else:
                     break
-            power_measurements.append(power_string)
+            power_measurements.append(float(power_string))
     return timestamps, power_measurements
 
+
+def calc_integral_trapezoid(timestamps: list[float], power_measurements: list[float]):
+    microjoules = np.trapz(power_measurements, timestamps)
+    joules = microjoules / 1000000
+    kwh = joules / 3600000
+    return kwh
+
+
+def main():
+    timestamps, power_measurements = parse_logfile("../res/power/ollama-llama3.3-70b-instruct 2025-01-25_16-23-26 "
+                                                   "pet_md.dat")
+    print(timestamps)
+    print("\n")
+    print(power_measurements)
+    print(calc_integral_trapezoid(timestamps, power_measurements))
+
+
+if __name__ == "__main__":
+    main()
