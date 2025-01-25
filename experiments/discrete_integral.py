@@ -1,6 +1,6 @@
 import numpy as np
 from datetime import datetime, timedelta
-
+import statistics
 
 # get timestamps and power measurements from logfile
 def parse_logfile(file_path: str):
@@ -33,16 +33,18 @@ def calc_integral_trapezoid(timestamps: list[float], power_measurements: list[fl
     microjoules = np.trapz(power_measurements, timestamps)
     joules = microjoules / 1000000
     kwh = joules / 3600000
-    return kwh
+    return str(kwh)
 
 
 def main():
     timestamps, power_measurements = parse_logfile("../res/power/ollama-llama3.3-70b-instruct 2025-01-25_16-23-26 "
                                                    "pet_md.dat")
-    print(timestamps)
-    print("\n")
-    print(power_measurements)
-    print(calc_integral_trapezoid(timestamps, power_measurements))
+    # conversion to seconds
+    time_elapsed = str(round(timestamps[-1] / 1000000))
+    average_power = str(statistics.fmean(power_measurements))
+    print("Experiment ran for: " + time_elapsed + " seconds." + "\n" +
+          "Average power draw: " + average_power + " W" + "\n" +
+          "Total energy used: " + calc_integral_trapezoid(timestamps, power_measurements) + " kWh")
 
 
 if __name__ == "__main__":
