@@ -208,3 +208,6 @@ eval.zip
 # Archives and diagrams
 *.zip
 *.drawio
+
+# Exclude samples that must be used for Jerex
+res/data/jerex

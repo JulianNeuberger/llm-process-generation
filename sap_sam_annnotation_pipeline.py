@@ -54,14 +54,14 @@ load_dotenv()
     # model_name = "gemma2-9b-it"
     # model_name = "mixtral-8x7b-32768"
 }
-model_name = "gpt-4o" # "gpt-4o"
+model_name = "gpt-4o" #
 # create a model
 gpt_chat_model: BaseChatModel = experiments.chat_model_for_name(model_name, 0)
 
 # special requirements
 iterative_strategy = False # specify True to use iterative prompt
 use_graph_model = True # specify True to use prompt with graph ground truth model
-num_shots = 1 # amount of examples to take
+num_shots = 4 # amount of examples to take
 seed = 42 # just a randomizer seed
 
 # define files with respect to intention to use hints and iterative strategy
@@ -89,7 +89,7 @@ if iterative_strategy:
 else:
     # ====================================================================
     md_unified_prompt_file = prompts_path.joinpath("md", "unified_sap_sam.txt")
-    er_unified_prompt_file = prompts_path.joinpath("er", "long_sap_sam.txt")
+    er_unified_prompt_file = prompts_path.joinpath("er", "long.txt") # use long_sap_sam.txt will also identify the same activities
     re_unified_prompt_file = prompts_path.joinpath("re", "long_sap_sam.txt")
     # ====================================================================
 # set up flag for hints
@@ -138,7 +138,7 @@ if False:
 # ====================================================================
 # Step 2. Mention Detection step for models.
 # ====================================================================
-if False:
+if True:
     # create formatters depending on strategy
     if iterative_strategy:
         formatters = [
@@ -228,9 +228,17 @@ if False:
         seed=seed,
     )
 
+    # Check for correctness
+    md_extracted_new = list()
+    for doc in md_extracted:
+        if len(doc.mentions) == 0:
+            print(f"Mentions for document {doc.id} were not detected.")
+        else:
+            md_extracted_new.append(doc)
+
     # save all the processed PetDocuments in jsonl file
     assert save_PetDocuments(
-        documents=md_extracted, 
+        documents=md_extracted_new, 
         path=sap_sam_json_file
     ), "Models were not annotated with mentions."
     print(f"PetDocumemts with mentions are saved to {str(sap_sam_json_file)}")
@@ -267,7 +275,7 @@ if False:
 # ====================================================================
 # Step 4. Entity Resolution step for models.
 # ====================================================================
-if True:
+if False:
     # only one prompt, no iterations
     formatters = [
         format.PetEntityListingFormattingStrategy(
@@ -292,9 +300,17 @@ if True:
         seed=seed,
     )
 
+    # Check for correctness
+    er_extracted_new = list()
+    for doc in er_extracted:
+        if len(doc.entities) == 0:
+            print(f"Entities for document {doc.id} were not detected.")
+        else:
+            er_extracted_new.append(doc)
+
     # save all the processed PetDocuments in jsonl file
     assert save_PetDocuments(
-        documents=er_extracted, 
+        documents=er_extracted_new, 
         path=sap_sam_json_file
     ), "Entity Resolution was not finished."
     print(f"PetDocumemts with entities are saved to {str(sap_sam_json_file)}")
@@ -303,7 +319,7 @@ if True:
 # ====================================================================
 # Step 5. Relation Extraction step for models.
 # ====================================================================
-if True:
+if False:
     # create formatters depending on strategy
     if iterative_strategy:
         formatters = [
@@ -353,9 +369,39 @@ if True:
         seed=seed,
     )
 
+    # Check for correctness
+    re_extracted_new = list()
+    for doc in re_extracted:
+        if len(doc.relations) == 0:
+            print(f"Relations for document {doc.id} were not detected.")
+        else:
+            re_extracted_new.append(doc)
+
     # save all the processed PetDocuments in jsonl file
     assert save_PetDocuments(
-        documents=re_extracted, 
+        documents=re_extracted_new, 
         path=sap_sam_json_file
     ), "Relation Extraction was not finished."
     print(f"PetDocumemts with relations are saved to {str(sap_sam_json_file)}")
+
+
+# ====================================================================
+# Step 6. Post-Processing step for models.
+# ====================================================================
+if False:
+    # create importer
+    importer = MixedDataImporter(
+        pet_path=pet_models_json_file, 
+        sap_sam_path=sap_sam_json_file
+    )
+
+    # apply post-processing
+    for doc in tqdm(importer._sap_sam_documents, desc="Post-Processing"):
+        doc.entities = [entity for entity in doc.entities if len(entity.mention_indices) > 0]
+
+    # save all the processed PetDocuments in jsonl file
+    assert save_PetDocuments(
+        documents=importer._sap_sam_documents, 
+        path=sap_sam_json_file
+    ), "Post-Processing was not finished."
+    print(f"PetDocumemts after post-processing are saved to {str(sap_sam_json_file)}")

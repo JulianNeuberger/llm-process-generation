@@ -181,8 +181,8 @@ class MixedDataImporter(BaseImporter[PetDocument]):
         sap_sam_path: Union[str, Path]
             Path to SAP-SAM-Dataset.
         """
-        self._pet_importer = PetImporter(pet_path)
-        self._sap_sam_importer = PetImporter(sap_sam_path)
+        self._pet_importer = PetImporter(file_path=str(pet_path))
+        self._sap_sam_importer = PetImporter(file_path=str(sap_sam_path))
         # read PET-Dataset
         self._pet_documents = self._pet_importer.do_import()
         # read SAP-SAM Dataset
