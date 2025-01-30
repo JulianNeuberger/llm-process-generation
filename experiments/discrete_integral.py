@@ -46,8 +46,7 @@ def calc_integral_power_average(timestamps: list[float], power_measurements: lis
 
 
 def main():
-    timestamps, power_measurements = parse_logfile("../res/power/ollama-llama3.3-70b-instruct 2025-01-25_17-06-20 "
-                                                   "pet_md-iterative1.dat")
+    timestamps, power_measurements = parse_logfile("../res/power/ollama-llama3.3-70b-instruct 2025-01-25_17-06-20 pet_md-iterative1.dat")
     # conversion to seconds
     time_elapsed = round(timestamps[-1] / 1000000)
     average_power = round(statistics.fmean(power_measurements), 6)

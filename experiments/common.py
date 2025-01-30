@@ -270,13 +270,16 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
     if model_name.startswith("ollama-shuttle-3"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/shuttle-3-GGUF:Q4_K_M", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("ollama-llama3.3-70b"):
+    if model_name.startswith("ollama-llama3.3-70b-instruct-Q4"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/Llama-3.3-70B-Instruct-GGUF:Q4_K_M", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("ollama-llama3.3-Q2"):
+    if model_name.startswith("ollama-llama3.3-70b-instruct-Q2"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q2_K", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("ollama-llama3.3-Q3"):
+    if model_name.startswith("ollama-llama3.3-70b-instruct-Q3"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q3_K_M", temperature=0,
+                                           openai_api_base="http://132.180.195.1:8007/v1")
+    if model_name.startswith("ollama-deepseek-r1-32b"):
+        return langchain_openai.ChatOpenAI(model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen-32B", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     raise ValueError(f'Unknown model with name "{model_name}"')
