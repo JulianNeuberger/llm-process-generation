@@ -98,7 +98,7 @@ def run_single_document_prompt(
     )
     num_input_tokens = chat_model.get_num_tokens(prompt_as_text)
     if isinstance(chat_model, langchain_openai.ChatOpenAI):
-        remaining_tries = 3
+        remaining_tries = 6
         while remaining_tries > 0:
             remaining_tries -= 1
             try:
@@ -280,6 +280,6 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q3_K_M", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-deepseek-r1-32b"):
-        return langchain_openai.ChatOpenAI(model_name="deepseek-r1:32b", temperature=0,
+        return langchain_openai.ChatOpenAI(model_name="deepseek-r1:32b", temperature=0.6,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     raise ValueError(f'Unknown model with name "{model_name}"')
