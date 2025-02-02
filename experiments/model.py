@@ -13,6 +13,7 @@ class PromptResult:
     total_costs: float
     answers: typing.List[str]
     original_id: str
+    num_tries: typing.List[int]
 
     def to_dict(self):
         return self.__dict__
@@ -39,6 +40,8 @@ class PromptResult:
         if formatter_args is None:
             formatter_args = [{}] * len(answers)
 
+        num_tries = dic.get("num_tries", [1]*len(answers))
+
         return PromptResult(
             prompts=prompts,
             input_tokens=dic["input_tokens"],
@@ -49,6 +52,7 @@ class PromptResult:
             formatters=formatters,
             formatter_args=formatter_args,
             steps=steps,
+            num_tries=num_tries
         )
 
     def __add__(self, other):
@@ -66,6 +70,7 @@ class PromptResult:
             steps=self.steps + other.steps,
             formatters=self.formatters + other.formatters,
             formatter_args=self.formatter_args + other.formatter_args,
+            num_tries=self.num_tries + other.num_tries
         )
 
 

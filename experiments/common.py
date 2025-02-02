@@ -97,6 +97,7 @@ def run_single_document_prompt(
         steps=", ".join(formatter.steps),
     )
     num_input_tokens = chat_model.get_num_tokens(prompt_as_text)
+    num_tries = 1
     if isinstance(chat_model, langchain_openai.ChatOpenAI):
         remaining_tries = 6
         while remaining_tries > 0:
@@ -107,6 +108,7 @@ def run_single_document_prompt(
                 )
                 break
             except openai.InternalServerError:
+                num_tries += 1
                 res = BaseMessage([""], type="")
                 total_costs = 0
                 num_output_tokens = 0
@@ -141,6 +143,7 @@ def run_single_document_prompt(
         output_tokens=num_output_tokens,
         total_costs=total_costs,
         formatter_args=[formatter.args],
+        num_tries=[num_tries]
     )
 
 
