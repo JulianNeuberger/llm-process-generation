@@ -135,7 +135,7 @@ def run_experiments(experiment_type: str, model_name: str, num_iter: int):
             print(f"Using model: {chat_model.name}")
 
             log_path = directory_path + f"power/iteration{i}.dat"
-            power_logger = power.PowerLogger(run_experiments, log_path)
+            power_logger = power.PowerLogger(run_experiments, log_path, [experiment_type, model_name, num_iter])
             power_logger.start_logging()
 
             experiments.experiment(
@@ -214,7 +214,7 @@ def run_experiments(experiment_type: str, model_name: str, num_iter: int):
             print(f"Using model: {chat_model.name}")
 
             log_path = directory + f"power/iteration{i}.dat"
-            power_logger = power.PowerLogger(run_experiments, log_path)
+            power_logger = power.PowerLogger(run_experiments, log_path, [experiment_type, model_name, num_iter])
             power_logger.start_logging()
 
             experiments.experiment(
@@ -293,13 +293,11 @@ def parse_results(directory_path: str):
 #                 for line in lines:
                     
 
-# def main():
-#     directory_path = run_experiments("pet_md", "ollama-shuttle-3", 2)
-#     answer_df = (parse_results(directory_path))
-#     print(answer_df)
-
-
-if __name__ == "__main__":
+def main():
     directory_path = run_experiments("pet_md", "ollama-shuttle-3", 2)
     answer_df = (parse_results(directory_path))
     print(answer_df)
+
+
+if __name__ == "__main__":
+    main()

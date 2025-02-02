@@ -9,10 +9,11 @@ from threading import Thread
 
 
 class PowerLogger:
-    def __init__(self, func, log_path):
+    def __init__(self, func, log_path, args=None):
         self.func = func
         self.log_path = log_path
         self.power_thread = PowerMeasurementThread(self.log_path)
+        self.args = args if args is not None else []
 
     def set_current_document(self, current_document):
         self.power_thread.set_current_document(current_document)
@@ -22,7 +23,7 @@ class PowerLogger:
 
     def start_logging(self):
         self.power_thread.start()
-        self.func()
+        self.func(*self.args)
         self.power_thread.stop()
 
 
