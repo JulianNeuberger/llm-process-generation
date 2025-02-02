@@ -60,9 +60,13 @@ class PowerMeasurementThread(Thread):
     def log_power_measurement(self):
         completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.instant', '--format=csv'],
                                            capture_output=True)
-        process_output = completed_process.stdout
+        process_output = completed_process.stdout.decode("utf-8")
         current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-        line = process_output.splitlines()[1].decode("utf-8")
+        lines = process_output.splitlines()
+        if len(lines) > 1:
+            line = lines[1]
+        else:
+            line = "error"
         power = line.split(' ')[0]
         pathlib.Path(self.log_path).parent.mkdir(exist_ok=True, parents=True)
         with open(self.log_path, "a") as f:

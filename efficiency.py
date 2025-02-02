@@ -1,7 +1,6 @@
 import datetime
 import os
 import statistics
-import numpy as np
 import pandas as pd
 import nltk
 from dotenv import load_dotenv
@@ -15,7 +14,6 @@ from experiments.parse import parse_experiments, get_scores
 
 if __name__ == "__main__":
     def run_experiments(experiment_type: str, directory_path: str, model_name: str, num_iter: int):
-        date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         # copy of pet_md
         if experiment_type == "pet_md":
             for i in range(num_iter):
@@ -133,8 +131,6 @@ if __name__ == "__main__":
                 chat_model: BaseChatModel = experiments.chat_model_for_name(model_name)
                 print(f"Using model: {chat_model.name}")
 
-
-
                 experiments.experiment(
                     importer=importer,
                     formatters=formatters,
@@ -147,7 +143,6 @@ if __name__ == "__main__":
                     on_new_document=power_logger.set_current_document,
                     on_new_fold=power_logger.set_current_fold_id
                 )
-
 
         # copy of pet_re
         elif experiment_type == "pet_re":
@@ -230,59 +225,46 @@ if __name__ == "__main__":
     def parse_results(directory_path: str):
         answer_directory = os.fsencode(directory_path + "answer")
         power_directory = os.fsencode(directory_path + "power")
-        answer_df = pd.DataFrame(columns=["P", "R", "F1", "Iteration"])
+        ans_df = pd.DataFrame(columns=["P", "R", "F1"])
+        pow_df = pd.DataFrame(columns=["kWh", "runtime", "average power draw"])
         # parsing answers
         for answer_file in os.listdir(answer_directory):
             filename = os.fsdecode(answer_file)
-            start_idx = filename.find("iteration")
-            end_idx = filename.find(".json")
-            current_iter = filename[start_idx+len("iteration"):end_idx]
+            # start_idx = filename.find("iteration")
+            # end_idx = filename.find(".json")
+            # current_iter = filename[start_idx+len("iteration"):end_idx]
             experiment_results = experiments.parse.parse_file(filename)
             num_parse_errors, experiment_stats = parse_experiments(experiment_results, data.PetImporter("res/data/pet/all"
                                                                                                         ".new.jsonl"),
                                                                    None, False)
             printable_scores = list(get_scores(experiment_stats, False, None).values())
 
-            answer_df = pd.concat([answer_df, pd.DataFrame(printable_scores)], ignore_index=False)
+            ans_df = pd.concat([ans_df, pd.DataFrame(printable_scores)], ignore_index=False)
 
-        # # parsing power logs
-        #     for power_file in os.listdir(power_directory):
-        #         filename = os.fsdecode(power_file)
-        #         start_idx = filename.find("iteration")
-        #         end_idx = filename.find(".dat")
-        #         current_iter = filename[start_idx + len("iteration"):end_idx]
-        #         timestamps, power_measurements = experiments.discrete_integral.parse_logfile(filename)
-        #         kwh = experiments.discrete_integral.calc_integral_trapezoid(timestamps, power_measurements)
-        #         time_elapsed = round(timestamps[-1] / 1000000)
-        #         average_power = round(statistics.fmean(power_measurements), 6)
-        #
-        #         power_df = pd.DataFrame()
-        #         pf.write(f"{kwh}\t{time_elapsed}\t{average_power}\t{current_iter}\n")
+        # parsing power logs
+            for power_file in os.listdir(power_directory):
+                filename = os.fsdecode(power_file)
+                # start_idx = filename.find("iteration")
+                # end_idx = filename.find(".dat")
+                # current_iter = filename[start_idx + len("iteration"):end_idx]
+                timestamps, power_measurements = experiments.discrete_integral.parse_logfile(filename)
+                kwh = experiments.discrete_integral.calc_integral_trapezoid(timestamps, power_measurements)
+                time_elapsed = round(timestamps[-1] / 1000000)
+                average_power = round(statistics.fmean(power_measurements), 6)
+                stats_list = [kwh, time_elapsed, average_power]
+                pow_df = pd.concat([pow_df, pd.DataFrame(stats_list)], ignore_index=True)
 
-        return answer_df
+        return ans_df, pow_df
 
-    # calculate average, standard deviation from given aggregated file
-    # def calc_statistics_from_files(directory_path, aggregated_answer_filename=None, aggregated_power_filename=None):
-    #     if aggregated_answer_filename is not None:
-    #         answer_statistics_filename = directory_path + "answer-statistics.dat"
-    #         with open(aggregated_answer_filename, 'r') as af:
-    #             lines = af.readlines()
-    #             # read last line to determine the number iterations that were made
-    #             for j in range(1, 20):
-    #                 # add last chars until the letter "n" of "iteration" occurs
-    #                 if lines[-1][-j] != "n":
-    #                     iter_string = lines[-1][-j] + iter_string
-    #                 else:
-    #                     break
-    #                 num_iter = int(iter_string)
-    #             # find all tags which occur in the file
-    #             tag_set = set()
-    #             for i in range(len(lines)):
-    #                 end_idx = lines[i].find("\t")
-    #                 tag_set.add(lines[i][0:end_idx])
-    #             for tag in tag_set:
-    #
-    #                 for line in lines:
+    # calculate average, standard deviation from given dataframes
+    def calc_statistics_from_dataframe(directory_path: str, ans_df=None, pow_df=None):
+        complete_df = pd.DataFrame()
+        if ans_df is not None:
+            pd.concat([complete_df, ans_df])
+        if pow_df is not None:
+            pd.concat([complete_df, pow_df])
+
+        # add new columns
 
     exp_type = "pet_md"
     mod_name = "ollama-shuttle-3"
@@ -297,7 +279,7 @@ if __name__ == "__main__":
     log_path = dir_path + "power.dat"
     power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, n_iter])
     power_logger.start_logging()
-    answer_df = (parse_results(dir_path))
+    answer_df, power_df = parse_results(dir_path)
     print(answer_df)
 
 
