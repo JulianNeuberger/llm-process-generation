@@ -297,3 +297,7 @@ def main():
     directory_path = run_experiments("pet_md", "ollama-shuttle-3", 2)
     answer_df = (parse_results(directory_path))
     print(answer_df)
+
+
+if __name__ == "__main__":
+    main()
