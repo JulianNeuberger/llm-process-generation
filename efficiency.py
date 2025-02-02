@@ -234,14 +234,15 @@ if __name__ == "__main__":
             # end_idx = filename.find(".json")
             # current_iter = filename[start_idx+len("iteration"):end_idx]
             experiment_results = experiments.parse.parse_file(filename)
-            num_parse_errors, experiment_stats = parse_experiments(experiment_results, data.PetImporter("res/data/pet/all"
-                                                                                                        ".new.jsonl"),
+            num_parse_errors, experiment_stats = parse_experiments(experiment_results,
+                                                                   data.PetImporter("res/data/pet/all"
+                                                                                    ".new.jsonl"),
                                                                    None, False)
             printable_scores = list(get_scores(experiment_stats, False, None).values())
 
             ans_df = pd.concat([ans_df, pd.DataFrame(printable_scores)], ignore_index=False)
 
-        # parsing power logs
+            # parsing power logs
             for power_file in os.listdir(power_directory):
                 filename = os.fsdecode(power_file)
                 # start_idx = filename.find("iteration")
@@ -256,6 +257,7 @@ if __name__ == "__main__":
 
         return ans_df, pow_df
 
+
     # calculate average, standard deviation from given dataframes
     def calc_statistics_from_dataframe(directory_path: str, ans_df=None, pow_df=None):
         complete_df = pd.DataFrame()
@@ -266,8 +268,9 @@ if __name__ == "__main__":
 
         # add new columns
 
+
     exp_type = "pet_md"
-    mod_name = "ollama-shuttle-3"
+    mod_name = "ollama-lamarck-14B"
     n_iter = 2
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     if exp_type == "pet_md":
@@ -281,6 +284,3 @@ if __name__ == "__main__":
     power_logger.start_logging()
     answer_df, power_df = parse_results(dir_path)
     print(answer_df)
-
-
-
