@@ -298,9 +298,9 @@ if __name__ == "__main__":
     def calc_statistics_from_dataframe(directory_path: str, ans_df, pow_df):
         # Combine results of all iterations for power df
         combined_pow = pow_df.agg({
-            'kWh': mean_std(pow_df['kWh']),
-            'runtime': mean_std(pow_df['runtime']),
-            'avg. power draw': mean_std(pow_df['avg. power draw'])
+            'kWh': mean_std,
+            'runtime': mean_std,
+            'avg. power draw': mean_std
         })
         combined_pow.columns = ['kWh (mean, std)', 'runtime in seconds (mean, std)', 'average power draw (mean, std)']
 
