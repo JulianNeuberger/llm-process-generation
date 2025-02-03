@@ -229,7 +229,7 @@ if __name__ == "__main__":
             filepath = directory_path + "answers/" + os.fsdecode(answer_file)
             start_idx = filepath.find("iteration")
             end_idx = filepath.find(".json")
-            current_iter = filepath[start_idx + len("iteration"):end_idx]
+            current_iter = int(filepath[start_idx + len("iteration"):end_idx])
             experiment_results = experiments.parse.parse_file(filepath)
             num_parse_errors, experiment_stats = parse_experiments(experiment_results,
                                                                    data.PetImporter("res/data/pet/all"
@@ -270,7 +270,7 @@ if __name__ == "__main__":
             filepath = directory_path + "power/" + os.fsdecode(power_file)
             start_idx = filepath.find("iteration")
             end_idx = filepath.find(".dat")
-            current_iter = filepath[start_idx + len("iteration"):end_idx]
+            current_iter = int(filepath[start_idx + len("iteration"):end_idx])
             timestamps, power_measurements = experiments.discrete_integral.parse_logfile(filepath)
             kwh = experiments.discrete_integral.calc_integral_trapezoid(timestamps, power_measurements)
             time_elapsed = round(timestamps[-1] / 1000000)
@@ -320,7 +320,7 @@ if __name__ == "__main__":
 
         with pd.ExcelWriter(directory_path + "efficiency.xlsx", engine='xlsxwriter') as writer:
             # Save the DataFrames to separate sheets
-            combined_pow.T.to_excel(writer, sheet_name='Power_Stats', index=False)
+            combined_pow.to_excel(writer, sheet_name='Power_Stats', index=False)
             combined_ans.to_excel(writer, sheet_name='Answer_Stats', index=False)
 
 
