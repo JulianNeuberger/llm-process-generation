@@ -302,7 +302,7 @@ if __name__ == "__main__":
             'avg. power draw': mean_std
         })
         combined_pow.columns = ['kWh (mean, std)', 'runtime in seconds (mean, std)', 'average power draw (mean, std)']
-
+        combined_pow = combined_pow.T
         ans_df_reset = ans_df.reset_index()
 
         # Combine results of all iterations for answer df
