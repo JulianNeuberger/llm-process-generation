@@ -296,7 +296,7 @@ if __name__ == "__main__":
     # apply mean_std to dataframes and change values to tuples and save as Excel file
     def calc_statistics_from_dataframe(directory_path: str, ans_df, pow_df):
         # Combine results of all iterations for power df
-        combined_pow = pow_df.agg([mean_std])
+        combined_pow = pow_df.agg([mean_std], numeric_only=True)
         # combined_pow.columns = ['kWh (mean, std)', 'runtime in seconds (mean, std)', 'average power draw (mean, std)']
         # combined_pow = combined_pow.T
         ans_df_reset = ans_df.reset_index()
@@ -307,7 +307,7 @@ if __name__ == "__main__":
             'R': mean_std,
             'F1': mean_std,
             'iteration': 'first'
-        })
+        }, numeric_only=True)
         combined_ans.columns = ['P (mean, std)', 'R (mean, std)', 'F1 (mean, std)', 'iterations']
 
         combined_ans.reset_index(inplace=True)
