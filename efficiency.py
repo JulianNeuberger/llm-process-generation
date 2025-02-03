@@ -14,9 +14,10 @@ from experiments.parse import parse_experiments, get_scores
 
 if __name__ == "__main__":
     def run_experiments(experiment_type: str, directory_path: str, model_name: str, num_iter: int):
-        # copy of pet_md
+
         if experiment_type == "pet_md":
-            for i in range(num_iter):
+            for i in range(1, num_iter):
+                # copy of pet_md
                 load_dotenv()
 
                 # Load sentence tokenizer if necessary
@@ -144,9 +145,9 @@ if __name__ == "__main__":
                     on_new_fold=power_logger.set_current_fold_id
                 )
 
-        # copy of pet_re
         elif experiment_type == "pet_re":
-            for i in range(num_iter):
+            for i in range(1, num_iter):
+                # copy of pet_re
                 load_dotenv()
 
                 # Load sentence tokenizer if necessary
@@ -220,13 +221,12 @@ if __name__ == "__main__":
         else:
             print("Error: incorrect experiment type (use pet_md or pet_re)")
 
-
     # parse answers and power logs of all iterations from one experiment and write them into a pandas dataframe
     def parse_results(directory_path: str):
-        answer_directory = os.fsencode(directory_path + "answer")
+        answer_directory = os.fsencode(directory_path + "answers")
         power_directory = os.fsencode(directory_path + "power")
-        ans_df = pd.DataFrame(columns=["P", "R", "F1"])
-        pow_df = pd.DataFrame(columns=["kWh", "runtime", "average power draw"])
+        ans_df = pd.DataFrame(columns=["P", "R", "F1", "parse errors"])
+        pow_df = pd.DataFrame(columns=["kWh", "runtime", "avg. power draw"])
         # parsing answers
         for answer_file in os.listdir(answer_directory):
             filename = os.fsdecode(answer_file)
@@ -257,7 +257,6 @@ if __name__ == "__main__":
 
         return ans_df, pow_df
 
-
     # calculate average, standard deviation from given dataframes
     def calc_statistics_from_dataframe(directory_path: str, ans_df=None, pow_df=None):
         complete_df = pd.DataFrame()
@@ -279,7 +278,7 @@ if __name__ == "__main__":
         dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
     else:
         dir_path = None
-    log_path = dir_path + "power.dat"
+    log_path = dir_path + "power/power.dat"
     power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, n_iter])
     power_logger.start_logging()
     answer_df, power_df = parse_results(dir_path)
