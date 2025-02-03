@@ -300,22 +300,21 @@ if __name__ == "__main__":
         plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
         plt.close()
 
+        pow_df_melted = pow_df.reset_index().melt(id_vars=['iteration'], value_vars=['kWh', 'runtime', 'avg. power draw'],
+                                                  var_name='Metric', value_name='Value')
         fig, axes = plt.subplots(1, 3, figsize=(18, 6))  # 1 row, 3 columns
 
         # Plot kWh
-        sns.boxplot(x='iteration', y='kWh', data=pow_df, width=0.5, showmeans=True, ax=axes[0])
-        axes[0].set_xlabel('Iteration')
+        sns.boxplot( data=pow_df_melted, width=0.5, showmeans=True, ax=axes[0])
         axes[0].set_ylabel('kWh')
 
         # Plot runtime
-        sns.boxplot(x='iteration', y='runtime', data=pow_df, width=0.5, showmeans=True, ax=axes[1])
-        axes[1].set_xlabel('Iteration')
-        axes[1].set_ylabel('Runtime')
+        sns.boxplot(data=pow_df_melted, width=0.5, showmeans=True, ax=axes[1])
+        axes[1].set_ylabel('Runtime in seconds')
 
         # Plot avg. power draw
-        sns.boxplot(x='iteration', y='avg. power draw', data=pow_df, width=0.5, showmeans=True, ax=axes[2])
-        axes[2].set_xlabel('Iteration')
-        axes[2].set_ylabel('Avg. Power Draw')
+        sns.boxplot(data=pow_df_melted, width=0.5, showmeans=True, ax=axes[2])
+        axes[2].set_ylabel('Avg. Power Draw in W')
 
         plt.tight_layout()
 
