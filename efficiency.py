@@ -292,11 +292,13 @@ if __name__ == "__main__":
         return ans_df, pow_df
 
     def boxplot_from_df(directory_path: str, ans_df, pow_df):
+        ans_df_melted = ans_df.reset_index().melt(id_vars=['Tag', 'iteration'], value_vars=['P', 'R', 'F1'],
+                                                  var_name='Metric', value_name='Value')
         plt.figure(figsize=(8, 6))
-        sns.boxplot(x='iteration', y=['P', 'R', 'F1'], data=ans_df.reset_index(), width=0.5, showmeans=True)
+        sns.boxplot(x='iteration', y='Value', hue='Metric', data=ans_df_melted, width=0.5, showmeans=True)
         save_path_ans = directory_path + "ans-boxplot.png"
         plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
-        plt.close()
+        plt.close()  # Close figure to free memory
         plt.figure(figsize=(8, 6))
         sns.boxplot(data=pow_df, width=0.5, showmeans=True)
         save_path_pow = directory_path + "pow-boxplot.png"
