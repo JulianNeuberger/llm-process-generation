@@ -286,5 +286,5 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
         return langchain_openai.ChatOpenAI(model_name="deepseek-r1:32b", temperature=0,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-lamarck-14B"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Lamarck-14B-v0.7-GGUF:Q2_K", temperature=0, openai_api_base="http://132.180.195.1:8007/v1")
+        return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Lamarck-14B-v0.7-GGUF:Q2_K", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
     raise ValueError(f'Unknown model with name "{model_name}"')

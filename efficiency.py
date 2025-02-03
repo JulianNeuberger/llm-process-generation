@@ -218,7 +218,6 @@ if __name__ == "__main__":
         else:
             print("Error: incorrect experiment type (use pet_md or pet_re)")
 
-
     # parse answers and power logs of all iterations from one experiment and write them into a pandas dataframe
     def parse_results(directory_path: str):
         answer_directory = os.fsencode(directory_path + "answers")
@@ -258,7 +257,7 @@ if __name__ == "__main__":
                 kwh = experiments.discrete_integral.calc_integral_trapezoid(timestamps, power_measurements)
                 time_elapsed = round(timestamps[-1] / 1000000)
                 average_power = round(statistics.fmean(power_measurements), 6)
-                pow_data = pow_data.append(
+                pow_data.append(
                     {
                         "kWh": kwh,
                         "runtime": time_elapsed,
