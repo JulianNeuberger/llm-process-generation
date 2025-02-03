@@ -16,7 +16,7 @@ if __name__ == "__main__":
     def run_experiments(experiment_type: str, directory_path: str, model_name: str, num_iter: int):
 
         if experiment_type == "pet_md":
-            for i in range(1, num_iter):
+            for i in range(1, num_iter+1):
                 # copy of pet_md
                 load_dotenv()
 
@@ -146,7 +146,7 @@ if __name__ == "__main__":
                 )
 
         elif experiment_type == "pet_re":
-            for i in range(1, num_iter):
+            for i in range(1, num_iter+1):
                 # copy of pet_re
                 load_dotenv()
 
@@ -240,7 +240,7 @@ if __name__ == "__main__":
                                                                    None, False)
             printable_scores = list(get_scores(experiment_stats, False, None).values())
 
-            ans_df = pd.concat([ans_df, pd.DataFrame(printable_scores)], ignore_index=True)
+            ans_df = pd.concat([ans_df, pd.DataFrame(printable_scores)], axis="index" ignore_index=True)
 
             # parsing power logs
             for power_file in os.listdir(power_directory):
@@ -253,7 +253,7 @@ if __name__ == "__main__":
                 time_elapsed = round(timestamps[-1] / 1000000)
                 average_power = round(statistics.fmean(power_measurements), 6)
                 stats_list = [kwh, time_elapsed, average_power]
-                pow_df = pd.concat([pow_df, pd.DataFrame(stats_list)], axis="columns", ignore_index=True)
+                pow_df = pd.concat([pow_df, pd.DataFrame(stats_list)], axis="index", ignore_index=True)
 
         return ans_df, pow_df
 
@@ -272,16 +272,16 @@ if __name__ == "__main__":
     mod_name = "ollama-lamarck-14B"
     n_iter = 2
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    # if exp_type == "pet_md":
-    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    # elif exp_type == "pet_re":
-    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    # else:
-    #     dir_path = None
-    dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_08-43-16/"
+    if exp_type == "pet_md":
+        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    elif exp_type == "pet_re":
+        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    else:
+        dir_path = None
+    # dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_08-43-16/"
     log_path = dir_path + "power/power.dat"
-    # power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, n_iter])
-    # power_logger.start_logging()
+    power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, n_iter])
+    power_logger.start_logging()
     answer_df, power_df = parse_results(dir_path)
     pd.set_option('display.max_rows', None)  # Show all rows
     pd.set_option('display.max_columns', None)  # Show all columns
