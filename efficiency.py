@@ -294,19 +294,17 @@ if __name__ == "__main__":
     def mean_std(series):
         return series.mean(), series.std()
 
-    # apply mean_std to dataframes and change values to tuples
+    # apply mean_std to dataframes and change values to tuples and save as excel file
     def calc_statistics_from_dataframe(directory_path: str, ans_df, pow_df):
         # Combine results of all iterations for power df
-        combined_pow = pd.DataFrame({
+        combined_pow = pow_df.agg({
             'kWh': mean_std(pow_df['kWh']),
             'runtime': mean_std(pow_df['runtime']),
             'avg. power draw': mean_std(pow_df['avg. power draw'])
         })
         combined_pow.columns = ['kWh (mean, std)', 'runtime in seconds (mean, std)', 'average power draw (mean, std)']
 
-        # Reset index for cleaner output
-        combined_pow = combined_pow.reset_index(drop=True)
-        print(combined_pow)
+
 
         # Combine results of all iterations for answer df
         combined_ans = ans_df.groupby('Tag').agg({
@@ -316,22 +314,24 @@ if __name__ == "__main__":
             'iteration': 'first'
         })
         combined_ans.columns = ['P (mean, std)', 'R (mean, std)', 'F1 (mean, std)', 'iterations']
-        # Reset index for cleaner output
-        combined_ans = combined_ans.reset_index(drop=True)
-        print(combined_ans)
+
+        with pd.ExcelWriter(directory_path + "efficiency.xlsx", engine='xlsxwriter') as writer:
+            # Save the DataFrames to separate sheets
+            combined_pow.to_excel(writer, sheet_name='Power_Stats', index=False)
+            combined_ans.to_excel(writer, sheet_name='Answer_Stats', index=False)
 
 
     exp_type = "pet_md"
     mod_name = "ollama-lamarck-14B"
     total_iter = 2
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    if exp_type == "pet_md":
-        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    elif exp_type == "pet_re":
-        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    else:
-        dir_path = None
-    # dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_09-04-14/"
+    # if exp_type == "pet_md":
+    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    # elif exp_type == "pet_re":
+    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    # else:
+    #     dir_path = None
+    dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_11-38-29/"
 
     for i in range(1, total_iter + 1):
         log_path = dir_path + f"power/iteration{i}.dat"
@@ -340,6 +340,4 @@ if __name__ == "__main__":
     answer_df, power_df = parse_results(dir_path, False)
     pd.set_option('display.max_rows', None)  # Show all rows
     pd.set_option('display.max_columns', None)  # Show all columns
-    print(answer_df)
-    print(power_df)
     calc_statistics_from_dataframe(dir_path, answer_df, power_df)
