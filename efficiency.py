@@ -299,11 +299,23 @@ if __name__ == "__main__":
         save_path_ans = directory_path + "ans-boxplot.png"
         plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
         plt.close()
-        plt.figure(figsize=(8, 6))
-        sns.boxplot(data=pow_df, width=0.5, showmeans=True)
+        fig, ax1 = plt.subplots(figsize=(8, 6))
+        sns.boxplot(data=pow_df['kWh'], ax=ax1, color='blue', width=0.5, showmeans=True)
+        ax1.set_ylabel('kWh', color='blue')
+
+        ax2 = ax1.twinx()
+        sns.boxplot(data=pow_df['runtime'], ax=ax2, color='green', width=0.5, showmeans=True)
+        ax2.set_ylabel('runtime', color='green')
+
+        ax3 = ax1.twinx()
+        ax3.spines['right'].set_position(('outward', 60))
+        sns.boxplot(data=pow_df['avg. power draw'], ax=ax3, color='red', width=0.5, showmeans=True)
+        ax3.set_ylabel('average power draw', color='red')
+
         save_path_pow = directory_path + "pow-boxplot.png"
         plt.savefig(save_path_pow, dpi=300, bbox_inches='tight')
         plt.close()
+
     # helper function for calculating average and standard deviation and returning them as a tuple
     def mean_std(series):
         return round(series.mean(), 4), round(series.std(), 4)
