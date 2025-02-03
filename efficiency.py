@@ -304,18 +304,15 @@ if __name__ == "__main__":
 
         # Plot kWh
         sns.boxplot(data=pow_df['kWh'], color='blue', width=0.5, showmeans=True, ax=axes[0])
-        axes[0].set_title('kWh Power Boxplot')
-        axes[0].set_ylabel('kWh')
+        axes[0].set_ylabel('Energy usage in kWh')
 
         # Plot runtime
         sns.boxplot(data=pow_df['runtime'], color='green', width=0.5, showmeans=True, ax=axes[1])
-        axes[1].set_title('Runtime Power Boxplot')
-        axes[1].set_ylabel('Runtime')
+        axes[1].set_ylabel('Runtime in s')
 
         # Plot avg. power draw
         sns.boxplot(data=pow_df['avg. power draw'], color='red', width=0.5, showmeans=True, ax=axes[2])
-        axes[2].set_title('Avg. Power Draw Power Boxplot')
-        axes[2].set_ylabel('Avg. Power Draw')
+        axes[2].set_ylabel('Avg. Power Draw in W')
 
         # Adjust layout to avoid overlap
         plt.tight_layout()
