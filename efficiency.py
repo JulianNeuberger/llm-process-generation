@@ -300,22 +300,24 @@ if __name__ == "__main__":
         plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
         plt.close()
 
-        pow_df_melted = pow_df.reset_index().melt(id_vars=['iteration'], value_vars=['kWh', 'runtime', 'avg. power draw'],
-                                                  var_name='Metric', value_name='Value')
         fig, axes = plt.subplots(1, 3, figsize=(18, 6))  # 1 row, 3 columns
 
         # Plot kWh
-        sns.boxplot( data=pow_df_melted, width=0.5, showmeans=True, ax=axes[0])
+        sns.boxplot(data=pow_df['kWh'], color='blue', width=0.5, showmeans=True, ax=axes[0])
+        axes[0].set_title('kWh Power Boxplot')
         axes[0].set_ylabel('kWh')
 
         # Plot runtime
-        sns.boxplot(data=pow_df_melted, width=0.5, showmeans=True, ax=axes[1])
-        axes[1].set_ylabel('Runtime in seconds')
+        sns.boxplot(data=pow_df['runtime'], color='green', width=0.5, showmeans=True, ax=axes[1])
+        axes[1].set_title('Runtime Power Boxplot')
+        axes[1].set_ylabel('Runtime')
 
         # Plot avg. power draw
-        sns.boxplot(data=pow_df_melted, width=0.5, showmeans=True, ax=axes[2])
-        axes[2].set_ylabel('Avg. Power Draw in W')
+        sns.boxplot(data=pow_df['avg. power draw'], color='red', width=0.5, showmeans=True, ax=axes[2])
+        axes[2].set_title('Avg. Power Draw Power Boxplot')
+        axes[2].set_ylabel('Avg. Power Draw')
 
+        # Adjust layout to avoid overlap
         plt.tight_layout()
 
         save_path_pow = directory_path + "pow-boxplot.png"
