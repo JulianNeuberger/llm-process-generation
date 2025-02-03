@@ -244,11 +244,11 @@ if __name__ == "__main__":
 
             # parsing power logs
             for power_file in os.listdir(power_directory):
-                filename = os.fsdecode(power_file)
+                filepath = directory_path + "power/" + os.fsdecode(power_file)
                 # start_idx = filename.find("iteration")
                 # end_idx = filename.find(".dat")
                 # current_iter = filename[start_idx + len("iteration"):end_idx]
-                timestamps, power_measurements = experiments.discrete_integral.parse_logfile(filename)
+                timestamps, power_measurements = experiments.discrete_integral.parse_logfile(filepath)
                 kwh = experiments.discrete_integral.calc_integral_trapezoid(timestamps, power_measurements)
                 time_elapsed = round(timestamps[-1] / 1000000)
                 average_power = round(statistics.fmean(power_measurements), 6)
