@@ -218,7 +218,6 @@ if __name__ == "__main__":
         else:
             print("Error: incorrect experiment type (use pet_md or pet_re)")
 
-
     # parse answers and power logs of all iterations from one experiment and write them into a pandas dataframe
     def parse_results(directory_path: str, parse_tags: bool):
         answer_directory = os.fsencode(directory_path + "answers")
@@ -294,10 +293,10 @@ if __name__ == "__main__":
     def mean_std(series):
         return round(series.mean(), 4), round(series.std(), 4)
 
-    # apply mean_std to dataframes and change values to tuples and save as excel file
+    # apply mean_std to dataframes and change values to tuples and save as Excel file
     def calc_statistics_from_dataframe(directory_path: str, ans_df, pow_df):
         # Combine results of all iterations for power df
-        combined_pow = pow_df.groupby('iteration').agg({
+        combined_pow = pow_df.agg({
             'kWh': mean_std,
             'runtime': mean_std,
             'avg. power draw': mean_std
@@ -342,4 +341,6 @@ if __name__ == "__main__":
     answer_df, power_df = parse_results(dir_path, False)
     pd.set_option('display.max_rows', None)  # Show all rows
     pd.set_option('display.max_columns', None)  # Show all columns
+    print(answer_df)
+    print(power_df)
     calc_statistics_from_dataframe(dir_path, answer_df, power_df)
