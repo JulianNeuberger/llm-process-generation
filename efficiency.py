@@ -305,7 +305,6 @@ if __name__ == "__main__":
         )
         values = combined_pow.values.flatten()
         new_pow_df = pd.DataFrame([values], columns=["kWh (mean, std)", "runtime (mean, std)", "average power draw (mean, std)"])
-        # combined_pow = combined_pow.T
         ans_df_reset = ans_df.reset_index()
 
         # Combine results of all iterations for answer df
@@ -327,17 +326,17 @@ if __name__ == "__main__":
 
     exp_type = "pet_md"
     mod_name = "ollama-lamarck-14B"
-    total_iter = 2
+    total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_11-38-29/"
+    # dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_11-38-29/"
 
-    # if exp_type == "pet_md":
-    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    # elif exp_type == "pet_re":
-    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    # else:
-    #     dir_path = None
+    if exp_type == "pet_md":
+        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    elif exp_type == "pet_re":
+        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    else:
+        dir_path = None
 
     for i in range(1, total_iter + 1):
         log_path = dir_path + f"power/iteration{i}.dat"
