@@ -58,6 +58,8 @@ class PowerMeasurementThread(Thread):
         self.current_fold_id = current_fold_id
 
     def log_power_measurement(self):
+        if not self.running:
+            return
         completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.instant', '--format=csv'],
                                            capture_output=True)
         process_output = completed_process.stdout.decode("utf-8")
