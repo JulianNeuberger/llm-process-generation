@@ -5,7 +5,7 @@ import pandas as pd
 import nltk
 from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
-
+from pathlib import Path
 import data
 import experiments
 import format
@@ -303,7 +303,8 @@ if __name__ == "__main__":
                 'avg. power draw': mean_std
             }
         )
-        combined_pow.columns = ['kWh (mean, std)', 'runtime in seconds (mean, std)', 'average power draw (mean, std)']
+        values = combined_pow.values.flatten()
+        new_pow_df = pd.DataFrame([values], columns=["kWh (mean, std)", "runtime (mean, std)", "average power draw (mean, std)"])
         # combined_pow = combined_pow.T
         ans_df_reset = ans_df.reset_index()
 
@@ -320,7 +321,7 @@ if __name__ == "__main__":
 
         with pd.ExcelWriter(directory_path + "efficiency.xlsx", engine='xlsxwriter') as writer:
             # Save the DataFrames to separate sheets
-            combined_pow.to_excel(writer, sheet_name='Power_Stats', index=False)
+            new_pow_df.to_excel(writer, sheet_name='Power_Stats', index=False)
             combined_ans.to_excel(writer, sheet_name='Answer_Stats', index=False)
 
 
@@ -328,16 +329,21 @@ if __name__ == "__main__":
     mod_name = "ollama-lamarck-14B"
     total_iter = 2
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_11-38-29/"
+
     # if exp_type == "pet_md":
     #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
     # elif exp_type == "pet_re":
     #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
     # else:
     #     dir_path = None
-    dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_11-38-29/"
 
     for i in range(1, total_iter + 1):
         log_path = dir_path + f"power/iteration{i}.dat"
+        log_file = Path(log_path)
+        if log_file.is_file():
+            break
         power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
         power_logger.start_logging()
     answer_df, power_df = parse_results(dir_path, False)
