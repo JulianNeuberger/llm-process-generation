@@ -225,7 +225,7 @@ if __name__ == "__main__":
     def parse_results(directory_path: str):
         answer_directory = os.fsencode(directory_path + "answers")
         power_directory = os.fsencode(directory_path + "power")
-        ans_df = pd.DataFrame(columns=["P", "R", "F1", "parse errors"])
+        ans_df = pd.DataFrame(columns=["P", "R", "F1", "#parse errors"])
         pow_df = pd.DataFrame(columns=["kWh", "runtime", "avg. power draw"])
         # parsing answers
         for answer_file in os.listdir(answer_directory):
@@ -240,7 +240,7 @@ if __name__ == "__main__":
                                                                    None, False)
             printable_scores = list(get_scores(experiment_stats, False, None).values())
 
-            ans_df = pd.concat([ans_df, pd.DataFrame(printable_scores)], ignore_index=False)
+            ans_df = pd.concat([ans_df, pd.DataFrame(printable_scores)], ignore_index=True)
 
             # parsing power logs
             for power_file in os.listdir(power_directory):
@@ -272,14 +272,15 @@ if __name__ == "__main__":
     mod_name = "ollama-lamarck-14B"
     n_iter = 2
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    if exp_type == "pet_md":
-        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    elif exp_type == "pet_re":
-        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    else:
-        dir_path = None
+    # if exp_type == "pet_md":
+    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    # elif exp_type == "pet_re":
+    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    # else:
+    #     dir_path = None
+    dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_08-43-16/"
     log_path = dir_path + "power/power.dat"
-    power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, n_iter])
-    power_logger.start_logging()
+    # power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, n_iter])
+    # power_logger.start_logging()
     answer_df, power_df = parse_results(dir_path)
     print(answer_df)
