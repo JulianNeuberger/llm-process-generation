@@ -225,22 +225,33 @@ if __name__ == "__main__":
     def parse_results(directory_path: str):
         answer_directory = os.fsencode(directory_path + "answers")
         power_directory = os.fsencode(directory_path + "power")
-        ans_df = pd.DataFrame(columns=["P", "R", "F1", "#parse errors"])
+        answer_data = []
         pow_df = pd.DataFrame(columns=["kWh", "runtime", "avg. power draw"])
         # parsing answers
         for answer_file in os.listdir(answer_directory):
             filepath = directory_path + "answers/" + os.fsdecode(answer_file)
-            # start_idx = filename.find("iteration")
-            # end_idx = filename.find(".json")
-            # current_iter = filename[start_idx+len("iteration"):end_idx]
+            start_idx = filepath.find("iteration")
+            end_idx = filepath.find(".json")
+            current_iter = filepath[start_idx+len("iteration"):end_idx]
             experiment_results = experiments.parse.parse_file(filepath)
             num_parse_errors, experiment_stats = parse_experiments(experiment_results,
                                                                    data.PetImporter("res/data/pet/all"
                                                                                     ".new.jsonl"),
                                                                    None, False)
-            printable_scores = list(get_scores(experiment_stats, False, None).values())
+            scores_by_step = get_scores(experiment_stats, False, None)
 
-            ans_df = pd.concat([ans_df, pd.DataFrame(printable_scores)], axis="index", ignore_index=True)
+            for step, printable_scores in scores_by_step.items():
+                for tag, score in printable_scores.scores_by_tag.items():
+                    answer_data.append({
+                        "Step": step,
+                        "Tag": tag,
+                        "P": score.p,
+                        "R": score.r,
+                        "F1": score.f1,
+                        "Iteration": current_iter
+                    })
+            ans_df = pd.DataFrame(answer_data)
+            ans_df.set_index("Tag", inplace=True)
 
             # parsing power logs
             for power_file in os.listdir(power_directory):
@@ -272,13 +283,13 @@ if __name__ == "__main__":
     mod_name = "ollama-lamarck-14B"
     n_iter = 2
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    if exp_type == "pet_md":
-        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    elif exp_type == "pet_re":
-        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    else:
-        dir_path = None
-    # dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_08-43-16/"
+    # if exp_type == "pet_md":
+    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    # elif exp_type == "pet_re":
+    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    # else:
+    #     dir_path = None
+    dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_09-04-14/"
     log_path = dir_path + "power/power.dat"
     power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, n_iter])
     power_logger.start_logging()
