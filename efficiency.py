@@ -229,11 +229,11 @@ if __name__ == "__main__":
         pow_df = pd.DataFrame(columns=["kWh", "runtime", "avg. power draw"])
         # parsing answers
         for answer_file in os.listdir(answer_directory):
-            filename = os.fsdecode(answer_file)
+            filepath = directory_path + os.fsdecode(answer_file)
             # start_idx = filename.find("iteration")
             # end_idx = filename.find(".json")
             # current_iter = filename[start_idx+len("iteration"):end_idx]
-            experiment_results = experiments.parse.parse_file(filename)
+            experiment_results = experiments.parse.parse_file(filepath)
             num_parse_errors, experiment_stats = parse_experiments(experiment_results,
                                                                    data.PetImporter("res/data/pet/all"
                                                                                     ".new.jsonl"),
