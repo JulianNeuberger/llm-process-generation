@@ -218,8 +218,9 @@ if __name__ == "__main__":
         else:
             print("Error: incorrect experiment type (use pet_md or pet_re)")
 
+
     # parse answers and power logs of all iterations from one experiment and write them into a pandas dataframe
-    def parse_results(directory_path: str):
+    def parse_results(directory_path: str, parse_tags: bool):
         answer_directory = os.fsencode(directory_path + "answers")
         power_directory = os.fsencode(directory_path + "power")
         answer_data = []
@@ -238,20 +239,22 @@ if __name__ == "__main__":
             scores_by_step = get_scores(experiment_stats, False, None)
 
             for step, printable_scores in scores_by_step.items():
-                for tag, score in printable_scores.scores_by_tag.items():
-                    answer_data.append({
-                        "Tag": tag,
-                        "P": score.p,
-                        "R": score.r,
-                        "F1": score.f1,
-                        "iteration": current_iter
-                    })
+                if parse_tags:
+                    for tag, score in printable_scores.scores_by_tag.items():
+                        answer_data.append({
+                            "Tag": tag,
+                            "P": score.p,
+                            "R": score.r,
+                            "F1": score.f1,
+                            "iteration": current_iter
+                        })
                 micro_scores = printable_scores.micro_averaged_scores
                 answer_data.append({
                     "Tag": "Micro_Avg",
                     "P": micro_scores.p if micro_scores.p is not None else 0.0,
                     "R": micro_scores.r if micro_scores.r is not None else 0.0,
                     "F1": micro_scores.f1 if micro_scores.f1 is not None else 0.0,
+                    "iteration": current_iter
                 })
 
                 macro_scores = printable_scores.macro_averaged_scores
@@ -260,42 +263,62 @@ if __name__ == "__main__":
                     "P": macro_scores.p if macro_scores.p is not None else 0.0,
                     "R": macro_scores.r if macro_scores.r is not None else 0.0,
                     "F1": macro_scores.f1 if macro_scores.f1 is not None else 0.0,
+                    "iteration": current_iter
                 })
 
-
             # parsing power logs
-            for power_file in os.listdir(power_directory):
-                filepath = directory_path + "power/" + os.fsdecode(power_file)
-                start_idx = filepath.find("iteration")
-                end_idx = filepath.find(".dat")
-                current_iter = filepath[start_idx + len("iteration"):end_idx]
-                timestamps, power_measurements = experiments.discrete_integral.parse_logfile(filepath)
-                kwh = experiments.discrete_integral.calc_integral_trapezoid(timestamps, power_measurements)
-                time_elapsed = round(timestamps[-1] / 1000000)
-                average_power = round(statistics.fmean(power_measurements), 6)
-                pow_data.append(
-                    {
-                        "kWh": kwh,
-                        "runtime": time_elapsed,
-                        "avg. power draw": average_power,
-                        "iteration": current_iter
-                    }
-                )
+        for power_file in os.listdir(power_directory):
+            filepath = directory_path + "power/" + os.fsdecode(power_file)
+            start_idx = filepath.find("iteration")
+            end_idx = filepath.find(".dat")
+            current_iter = filepath[start_idx + len("iteration"):end_idx]
+            timestamps, power_measurements = experiments.discrete_integral.parse_logfile(filepath)
+            kwh = experiments.discrete_integral.calc_integral_trapezoid(timestamps, power_measurements)
+            time_elapsed = round(timestamps[-1] / 1000000)
+            average_power = round(statistics.fmean(power_measurements), 6)
+            pow_data.append(
+                {
+                    "kWh": kwh,
+                    "runtime": time_elapsed,
+                    "avg. power draw": average_power,
+                    "iteration": current_iter
+                }
+            )
 
         ans_df = pd.DataFrame(answer_data)
         ans_df.set_index("Tag", inplace=True)
         pow_df = pd.DataFrame(pow_data)
         return ans_df, pow_df
 
-    # calculate average, standard deviation from given dataframes
-    def calc_statistics_from_dataframe(directory_path: str, ans_df=None, pow_df=None):
-        complete_df = pd.DataFrame()
-        if ans_df is not None:
-            pd.concat([complete_df, ans_df])
-        if pow_df is not None:
-            pd.concat([complete_df, pow_df])
+    # calculate average and standard deviation
+    def mean_std(series):
+        return series.mean(), series.std()
 
-        # add new columns
+    # apply mean_std to dataframes and change values to tuples
+    def calc_statistics_from_dataframe(directory_path: str, ans_df, pow_df):
+        # Combine results of all iterations for power df
+        combined_pow = pd.DataFrame({
+            'kWh': mean_std(pow_df['kWh']),
+            'runtime': mean_std(pow_df['runtime']),
+            'avg. power draw': mean_std(pow_df['avg. power draw'])
+        })
+        combined_pow.columns = ['kWh (mean, std)', 'runtime in seconds (mean, std)', 'average power draw (mean, std)']
+
+        # Reset index for cleaner output
+        combined_pow = combined_pow.reset_index(drop=True)
+        print(combined_pow)
+
+        # Combine results of all iterations for answer df
+        combined_ans = ans_df.groupby('Tag').agg({
+            'P': mean_std,
+            'R': mean_std,
+            'F1': mean_std,
+            'iteration': 'first'
+        })
+        combined_ans.columns = ['P (mean, std)', 'R (mean, std)', 'F1 (mean, std)', 'iterations']
+        # Reset index for cleaner output
+        combined_ans = combined_ans.reset_index(drop=True)
+        print(combined_ans)
 
 
     exp_type = "pet_md"
@@ -314,8 +337,9 @@ if __name__ == "__main__":
         log_path = dir_path + f"power/iteration{i}.dat"
         power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
         power_logger.start_logging()
-    answer_df, power_df = parse_results(dir_path)
+    answer_df, power_df = parse_results(dir_path, False)
     pd.set_option('display.max_rows', None)  # Show all rows
     pd.set_option('display.max_columns', None)  # Show all columns
     print(answer_df)
     print(power_df)
+    calc_statistics_from_dataframe(dir_path, answer_df, power_df)
