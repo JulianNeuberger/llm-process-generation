@@ -240,7 +240,7 @@ if __name__ == "__main__":
                                                                    None, False)
             printable_scores = list(get_scores(experiment_stats, False, None).values())
 
-            ans_df = pd.concat([ans_df, pd.DataFrame(printable_scores)], axis="index" ignore_index=True)
+            ans_df = pd.concat([ans_df, pd.DataFrame(printable_scores)], axis="index", ignore_index=True)
 
             # parsing power logs
             for power_file in os.listdir(power_directory):
