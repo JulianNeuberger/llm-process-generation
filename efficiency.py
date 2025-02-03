@@ -253,7 +253,7 @@ if __name__ == "__main__":
                 time_elapsed = round(timestamps[-1] / 1000000)
                 average_power = round(statistics.fmean(power_measurements), 6)
                 stats_list = [kwh, time_elapsed, average_power]
-                pow_df = pd.concat([pow_df, pd.DataFrame(stats_list)], ignore_index=True)
+                pow_df = pd.concat([pow_df, pd.DataFrame(stats_list)], axis="index", ignore_index=True)
 
         return ans_df, pow_df
 
