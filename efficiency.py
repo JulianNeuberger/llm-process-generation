@@ -300,21 +300,24 @@ if __name__ == "__main__":
         plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
         plt.close()
 
-        fig, ax1 = plt.subplots(figsize=(10, 6))
-        sns.boxplot(data=pow_df['kWh'], ax=ax1, color='blue', width=0.5, showmeans=True)
-        ax1.set_ylabel('kWh', color='blue')
-        ax1.set_xlabel('Metrics')
+        fig, axes = plt.subplots(1, 3, figsize=(18, 6))  # 1 row, 3 columns
 
-        ax2 = ax1.twinx()
-        sns.boxplot(data=pow_df['runtime'], ax=ax2, color='green', width=0.5, showmeans=True)
-        ax2.set_ylabel('runtime', color='green')
-        ax2.spines['right'].set_position(('outward', 60))
+        # Plot kWh
+        sns.boxplot(x='iteration', y='kWh', data=ans_df, width=0.5, showmeans=True, ax=axes[0])
+        axes[0].set_xlabel('Iteration')
+        axes[0].set_ylabel('kWh')
 
-        ax3 = ax1.twinx()
-        ax3.spines['right'].set_position(('outward', 120))
-        sns.boxplot(data=pow_df['avg. power draw'], ax=ax3, color='red', width=0.5, showmeans=True)
-        ax3.set_ylabel('avg. power draw', color='red')
+        # Plot runtime
+        sns.boxplot(x='iteration', y='runtime', data=ans_df, width=0.5, showmeans=True, ax=axes[1])
+        axes[1].set_xlabel('Iteration')
+        axes[1].set_ylabel('Runtime')
 
+        # Plot avg. power draw
+        sns.boxplot(x='iteration', y='avg. power draw', data=ans_df, width=0.5, showmeans=True, ax=axes[2])
+        axes[2].set_xlabel('Iteration')
+        axes[2].set_ylabel('Avg. Power Draw')
+
+        plt.tight_layout()
 
         save_path_pow = directory_path + "pow-boxplot.png"
         plt.savefig(save_path_pow, dpi=300, bbox_inches='tight')
