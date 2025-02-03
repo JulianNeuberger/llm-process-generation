@@ -292,17 +292,16 @@ if __name__ == "__main__":
 
     # calculate average and standard deviation
     def mean_std(series):
-        return series.mean(), series.std()
+        return round(series.mean(), 4), round(series.std(), 4)
 
     # apply mean_std to dataframes and change values to tuples and save as excel file
     def calc_statistics_from_dataframe(directory_path: str, ans_df, pow_df):
         # Combine results of all iterations for power df
-        combined_pow = pow_df.agg({
+        combined_pow = pow_df.groupby('iteration').agg({
             'kWh': mean_std,
             'runtime': mean_std,
             'avg. power draw': mean_std
         })
-        combined_pow = combined_pow.T
         combined_pow.columns = ['kWh (mean, std)', 'runtime in seconds (mean, std)', 'average power draw (mean, std)']
 
         ans_df_reset = ans_df.reset_index()
