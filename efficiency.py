@@ -292,10 +292,8 @@ if __name__ == "__main__":
         return ans_df, pow_df
 
     def boxplot_from_df(directory_path: str, ans_df, pow_df):
-        print(ans_df.columns)
         plt.figure(figsize=(8, 6))
-        ans_df_grouped = ans_df.pivot(index='iteration', columns='Tag', values=['P', 'R', 'F1'])
-        sns.boxplot(data=ans_df_grouped, width=0.5, showmeans=True)
+        sns.boxplot(x='iteration', y=['P', 'R', 'F1'], data=ans_df.reset_index(), width=0.5, showmeans=True)
         save_path_ans = directory_path + "ans-boxplot.png"
         plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
         plt.close()
