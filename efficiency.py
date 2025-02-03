@@ -246,6 +246,22 @@ if __name__ == "__main__":
                         "F1": score.f1,
                         "iteration": current_iter
                     })
+                micro_scores = printable_scores.micro_averaged_scores
+                answer_data.append({
+                    "Tag": "Micro_Avg",
+                    "P": micro_scores.p if micro_scores.p is not None else 0.0,
+                    "R": micro_scores.r if micro_scores.r is not None else 0.0,
+                    "F1": micro_scores.f1 if micro_scores.f1 is not None else 0.0,
+                })
+
+                macro_scores = printable_scores.macro_averaged_scores
+                answer_data.append({
+                    "Tag": "Macro_Avg",
+                    "P": macro_scores.p if macro_scores.p is not None else 0.0,
+                    "R": macro_scores.r if macro_scores.r is not None else 0.0,
+                    "F1": macro_scores.f1 if macro_scores.f1 is not None else 0.0,
+                })
+
 
             # parsing power logs
             for power_file in os.listdir(power_directory):
@@ -293,8 +309,9 @@ if __name__ == "__main__":
     else:
         dir_path = None
     # dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_09-04-14/"
-    log_path = dir_path + "power/power.dat"
+
     for i in range(1, total_iter + 1):
+        log_path = dir_path + f"power/iteration{i}.dat"
         power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
         power_logger.start_logging()
     answer_df, power_df = parse_results(dir_path)
