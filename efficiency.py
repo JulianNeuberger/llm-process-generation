@@ -229,7 +229,7 @@ if __name__ == "__main__":
         pow_df = pd.DataFrame(columns=["kWh", "runtime", "avg. power draw"])
         # parsing answers
         for answer_file in os.listdir(answer_directory):
-            filepath = directory_path + os.fsdecode(answer_file)
+            filepath = directory_path + "answers/" + os.fsdecode(answer_file)
             # start_idx = filename.find("iteration")
             # end_idx = filename.find(".json")
             # current_iter = filename[start_idx+len("iteration"):end_idx]
