@@ -4,9 +4,7 @@ import sched
 import subprocess
 import threading
 import time
-import typing
-from threading import Thread
-
+from threading import Thread, Lock
 
 class PowerLogger:
     def __init__(self, func, log_path, args=None):
@@ -37,17 +35,25 @@ class PowerMeasurementThread(Thread):
         self.current_document = None
         self.current_fold_id = None
         self.interval = 0.1
+        self.lock = Lock()  # Protects self.event
 
     def run(self):
-        self.event = self.scheduler.enter(self.interval, 1, self.log_power_measurement)
+        with self.lock:
+            self.event = self.scheduler.enter(self.interval, 1, self.log_power_measurement)
         while self.running:
             self.scheduler.run(blocking=False)
             time.sleep(0)
 
     def stop(self):
         self.running = False
-        if self.event is not None:
-            self.scheduler.cancel(self.event)
+        with self.lock:
+            if self.event:
+                try:
+                    self.scheduler.cancel(self.event)
+                except ValueError:
+                    pass
+                self.event = None
+
         if threading.current_thread() != self:
             self.join()
 
@@ -60,33 +66,22 @@ class PowerMeasurementThread(Thread):
     def log_power_measurement(self):
         if not self.running:
             return
+
         completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.instant', '--format=csv'],
                                            capture_output=True)
         process_output = completed_process.stdout.decode("utf-8")
         current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         lines = process_output.splitlines()
-        if len(lines) > 1:
-            line = lines[1]
-        else:
-            line = "error"
-        power = line.split(' ')[0]
+        power = lines[1].split(' ')[0] if len(lines) > 1 else "error"
+
         pathlib.Path(self.log_path).parent.mkdir(exist_ok=True, parents=True)
         with open(self.log_path, "a") as f:
-            f.write(current_date)
-            f.write("\t\t")
-            if self.current_document is not None:
-                f.write(str(self.current_document.id))
-            else:
-                f.write("None")
-            f.write("\t\t")
-            if self.current_fold_id is not None:
-                f.write(str(self.current_fold_id))
-            else:
-                f.write("None")
-            f.write("\t\t")
-            f.write(power)
-            f.write("\n")
-        self.event = self.scheduler.enter(self.interval, 1, self.log_power_measurement)
+            f.write(f"{current_date}\t\t{self.current_document.id if self.current_document else 'None'}\t\t"
+                    f"{self.current_fold_id if self.current_fold_id else 'None'}\t\t{power}\n")
+
+        with self.lock:
+            if self.running:
+                self.event = self.scheduler.enter(self.interval, 1, self.log_power_measurement)
 
 
 if __name__ == "__main__":
