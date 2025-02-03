@@ -283,4 +283,7 @@ if __name__ == "__main__":
     # power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, n_iter])
     # power_logger.start_logging()
     answer_df, power_df = parse_results(dir_path)
+    pd.set_option('display.max_rows', None)  # Show all rows
+    pd.set_option('display.max_columns', None)  # Show all columns
     print(answer_df)
+    print(power_df)
