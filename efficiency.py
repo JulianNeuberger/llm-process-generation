@@ -302,18 +302,21 @@ if __name__ == "__main__":
             'runtime': mean_std,
             'avg. power draw': mean_std
         })
+        combined_pow = combined_pow.T
         combined_pow.columns = ['kWh (mean, std)', 'runtime in seconds (mean, std)', 'average power draw (mean, std)']
 
-
+        ans_df_reset = ans_df.reset_index()
 
         # Combine results of all iterations for answer df
-        combined_ans = ans_df.groupby('Tag').agg({
+        combined_ans = ans_df_reset.groupby('Tag').agg({
             'P': mean_std,
             'R': mean_std,
             'F1': mean_std,
             'iteration': 'first'
         })
         combined_ans.columns = ['P (mean, std)', 'R (mean, std)', 'F1 (mean, std)', 'iterations']
+
+        combined_ans.reset_index(inplace=True)
 
         with pd.ExcelWriter(directory_path + "efficiency.xlsx", engine='xlsxwriter') as writer:
             # Save the DataFrames to separate sheets
