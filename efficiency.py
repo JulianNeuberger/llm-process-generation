@@ -299,18 +299,22 @@ if __name__ == "__main__":
         save_path_ans = directory_path + "ans-boxplot.png"
         plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
         plt.close()
-        fig, ax1 = plt.subplots(figsize=(8, 6))
+
+        fig, ax1 = plt.subplots(figsize=(10, 6))
         sns.boxplot(data=pow_df['kWh'], ax=ax1, color='blue', width=0.5, showmeans=True)
         ax1.set_ylabel('kWh', color='blue')
+        ax1.set_xlabel('Metrics')
 
         ax2 = ax1.twinx()
         sns.boxplot(data=pow_df['runtime'], ax=ax2, color='green', width=0.5, showmeans=True)
         ax2.set_ylabel('runtime', color='green')
+        ax2.spines['right'].set_position(('outward', 60))
 
         ax3 = ax1.twinx()
-        ax3.spines['right'].set_position(('outward', 60))
+        ax3.spines['right'].set_position(('outward', 120))
         sns.boxplot(data=pow_df['avg. power draw'], ax=ax3, color='red', width=0.5, showmeans=True)
-        ax3.set_ylabel('average power draw', color='red')
+        ax3.set_ylabel('avg. power draw', color='red')
+
 
         save_path_pow = directory_path + "pow-boxplot.png"
         plt.savefig(save_path_pow, dpi=300, bbox_inches='tight')
