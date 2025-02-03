@@ -320,7 +320,7 @@ if __name__ == "__main__":
 
         with pd.ExcelWriter(directory_path + "efficiency.xlsx", engine='xlsxwriter') as writer:
             # Save the DataFrames to separate sheets
-            combined_pow.to_excel(writer, sheet_name='Power_Stats', index=False)
+            combined_pow.T.to_excel(writer, sheet_name='Power_Stats', index=False)
             combined_ans.to_excel(writer, sheet_name='Answer_Stats', index=False)
 
 
