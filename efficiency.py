@@ -293,14 +293,16 @@ if __name__ == "__main__":
 
     def boxplot_from_df(directory_path: str, ans_df, pow_df):
         plt.figure(figsize=(8, 6))
-        sns.boxplot(x="Category", y="Value", data=ans_df, width=0.5, showmeans=True)
+        ans_df_grouped = ans_df.pivot(index='iteration', columns='tag', values=['P', 'R', 'F1'])
+        sns.boxplot(data=ans_df_grouped, width=0.5, showmeans=True)
         save_path_ans = directory_path + "ans-boxplot.png"
         plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
+        plt.close()
         plt.figure(figsize=(8, 6))
-        sns.boxplot(x="Category", y="Value", data=pow_df, width=0.5, showmeans=True)
+        sns.boxplot(data=pow_df, width=0.5, showmeans=True)
         save_path_pow = directory_path + "pow-boxplot.png"
         plt.savefig(save_path_pow, dpi=300, bbox_inches='tight')
-        plt.show()
+        plt.close()
     # helper function for calculating average and standard deviation and returning them as a tuple
     def mean_std(series):
         return round(series.mean(), 4), round(series.std(), 4)
