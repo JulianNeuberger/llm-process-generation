@@ -11,6 +11,8 @@ import experiments
 import format
 from experiments import sampling, power
 from experiments.parse import parse_experiments, get_scores
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
     def run_experiments(experiment_type: str, directory_path: str, model_name: str, iter: int):
@@ -289,6 +291,16 @@ if __name__ == "__main__":
         pow_df = pd.DataFrame(pow_data)
         return ans_df, pow_df
 
+    def boxplot_from_df(directory_path: str, ans_df, pow_df):
+        plt.figure(figsize=(8, 6))
+        sns.boxplot(x="Category", y="Value", data=ans_df, width=0.5, showmeans=True)
+        save_path_ans = directory_path + "ans-boxplot.png"
+        plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
+        plt.figure(figsize=(8, 6))
+        sns.boxplot(x="Category", y="Value", data=pow_df, width=0.5, showmeans=True)
+        save_path_pow = directory_path + "pow-boxplot.png"
+        plt.savefig(save_path_pow, dpi=300, bbox_inches='tight')
+        plt.show()
     # helper function for calculating average and standard deviation and returning them as a tuple
     def mean_std(series):
         return round(series.mean(), 4), round(series.std(), 4)
@@ -312,7 +324,7 @@ if __name__ == "__main__":
             'P': mean_std,
             'R': mean_std,
             'F1': mean_std,
-            'iteration': 'first'
+            'iteration': 'max'
         })
         combined_ans.columns = ['P (mean, std)', 'R (mean, std)', 'F1 (mean, std)', 'iterations']
 
@@ -329,14 +341,14 @@ if __name__ == "__main__":
     total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_11-38-29/"
+    dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_13-12-57/"
 
-    if exp_type == "pet_md":
-        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    elif exp_type == "pet_re":
-        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    else:
-        dir_path = None
+    # if exp_type == "pet_md":
+    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    # elif exp_type == "pet_re":
+    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    # else:
+    #     dir_path = None
 
     for i in range(1, total_iter + 1):
         log_path = dir_path + f"power/iteration{i}.dat"
@@ -346,6 +358,7 @@ if __name__ == "__main__":
         power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
         power_logger.start_logging()
     answer_df, power_df = parse_results(dir_path, False)
+    boxplot_from_df(dir_path, answer_df, power_df)
     pd.set_option('display.max_rows', None)  # Show all rows
     pd.set_option('display.max_columns', None)  # Show all columns
     print(answer_df)
