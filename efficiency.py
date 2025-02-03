@@ -300,7 +300,7 @@ if __name__ == "__main__":
             {
                 'kWh': mean_std,
                 'runtime': mean_std,
-                'average power draw': mean_std
+                'avg. power draw': mean_std
             }
         )
         combined_pow.columns = ['kWh (mean, std)', 'runtime in seconds (mean, std)', 'average power draw (mean, std)']
