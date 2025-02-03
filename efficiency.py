@@ -303,7 +303,7 @@ if __name__ == "__main__":
         fig, axes = plt.subplots(1, 3, figsize=(18, 6))  # 1 row, 3 columns
 
         # Plot kWh
-        sns.boxplot(x='iteration', y='kWh', data=ans_df, width=0.5, showmeans=True, ax=axes[0])
+        sns.boxplot(x='iteration', y='kwh', data=ans_df, width=0.5, showmeans=True, ax=axes[0])
         axes[0].set_xlabel('Iteration')
         axes[0].set_ylabel('kWh')
 
