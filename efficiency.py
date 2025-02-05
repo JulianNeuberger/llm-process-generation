@@ -303,15 +303,15 @@ if __name__ == "__main__":
         fig, axes = plt.subplots(1, 3, figsize=(18, 6))  # 1 row, 3 columns
 
         # Plot kWh
-        sns.boxplot(data=pow_df['kWh'], color='blue', width=0.5, showmeans=True, ax=axes[0])
+        sns.boxplot(data=pow_df['kWh'], width=0.5, showmeans=True, ax=axes[0])
         axes[0].set_ylabel('Energy usage in kWh')
 
         # Plot runtime
-        sns.boxplot(data=pow_df['runtime'], color='green', width=0.5, showmeans=True, ax=axes[1])
+        sns.boxplot(data=pow_df['runtime'], width=0.5, showmeans=True, ax=axes[1])
         axes[1].set_ylabel('Runtime in s')
 
         # Plot avg. power draw
-        sns.boxplot(data=pow_df['avg. power draw'], color='red', width=0.5, showmeans=True, ax=axes[2])
+        sns.boxplot(data=pow_df['avg. power draw'], width=0.5, showmeans=True, ax=axes[2])
         axes[2].set_ylabel('Avg. Power Draw in W')
 
         # Adjust layout to avoid overlap
@@ -357,18 +357,18 @@ if __name__ == "__main__":
 
 
     exp_type = "pet_md"
-    mod_name = "ollama-lamarck-14B"
+    mod_name = "ollama-llama3.3-70b-instruct-Q4"
     total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_13-12-57/"
+    # dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_13-12-57/"
 
-    # if exp_type == "pet_md":
-    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    # elif exp_type == "pet_re":
-    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    # else:
-    #     dir_path = None
+    if exp_type == "pet_md":
+        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    elif exp_type == "pet_re":
+        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    else:
+        dir_path = None
 
     for i in range(1, total_iter + 1):
         log_path = dir_path + f"power/iteration{i}.dat"
