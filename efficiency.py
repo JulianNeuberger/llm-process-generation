@@ -115,14 +115,14 @@ if __name__ == "__main__":
                 ),
             ]
 
-            formatters = [
-                format.PetMentionListingFormattingStrategy(
-                    steps=["mentions"],
-                    only_tags=None,
-                    generate_descriptions=False,
-                    prompt="pet/md/unified.txt",
-                )
-            ]
+            # formatters = [
+            #     format.PetMentionListingFormattingStrategy(
+            #         steps=["mentions"],
+            #         only_tags=None,
+            #         generate_descriptions=False,
+            #         prompt="pet/md/unified.txt",
+            #     )
+            # ]
 
             print("Using folds:")
             print("------------")
