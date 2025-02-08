@@ -357,7 +357,7 @@ if __name__ == "__main__":
 
 
     exp_type = "pet_md"
-    mod_name = "ollama-llama3.3-70b-instruct-Q4"
+    mod_name = "ollama-calme3.2-instruct-78b-Q4_K_S"
     total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 

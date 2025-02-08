@@ -99,7 +99,7 @@ def run_single_document_prompt(
     num_input_tokens = chat_model.get_num_tokens(prompt_as_text)
     num_tries = 1
     if isinstance(chat_model, langchain_openai.ChatOpenAI):
-        remaining_tries = 6
+        remaining_tries = 3
         while remaining_tries > 0:
             remaining_tries -= 1
             try:
@@ -261,30 +261,32 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
         local_name_response = requests.get(url=model_name_url)
         data = local_name_response.json()
         local_model_name = data['data'][0]['id']
-        return langchain_openai.ChatOpenAI(model_name=local_model_name, temperature=0.1,
+        return langchain_openai.ChatOpenAI(model_name=local_model_name, temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8020/v1")
 
     if model_name.startswith("ollama-calme2.1-qwen2.5-72b"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/calme-2.1-qwen2.5-72b-GGUF:Q4_K_M", temperature=0.1,
+        return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/calme-2.1-qwen2.5-72b-GGUF:Q4_K_M", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-solar-pro-preview"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/MaziyarPanahi/solar-pro-preview-instruct-GGUF:Q4_K_M", temperature=0.1,
+        return langchain_openai.ChatOpenAI(model_name="hf.co/MaziyarPanahi/solar-pro-preview-instruct-GGUF:Q4_K_M", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-shuttle-3"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/shuttle-3-GGUF:Q4_K_M", temperature=0.1,
+        return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/shuttle-3-GGUF:Q4_K_M", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-llama3.3-70b-instruct-Q4"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/Llama-3.3-70B-Instruct-GGUF:Q4_K_M", temperature=0.1,
+        return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/Llama-3.3-70B-Instruct-GGUF:Q4_K_M", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-llama3.3-70b-instruct-Q2"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q2_K", temperature=0.1,
+        return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q2_K", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-llama3.3-70b-instruct-Q3"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q3_K_M", temperature=0.1,
+        return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q3_K_M", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-deepseek-r1-32b"):
-        return langchain_openai.ChatOpenAI(model_name="deepseek-r1:32b", temperature=0.1,
+        return langchain_openai.ChatOpenAI(model_name="deepseek-r1:32b", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-lamarck-14B"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Lamarck-14B-v0.7-GGUF:Q2_K", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
+    if model_name.startswith("ollama-calme3.2-instruct-78b-Q4_K_S"):
+        return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/calme-3.2-instruct-78b-GGUF:Q4_K_S", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
     raise ValueError(f'Unknown model with name "{model_name}"')
