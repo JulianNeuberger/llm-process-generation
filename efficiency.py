@@ -1,5 +1,7 @@
 import datetime
+import json
 import os
+import re
 import statistics
 import pandas as pd
 import nltk
@@ -15,210 +17,210 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-    def run_experiments(experiment_type: str, directory_path: str, model_name: str, iter: int):
-
-        if experiment_type == "pet_md":
-            # copy of pet_md
-            load_dotenv()
-
-            # Load sentence tokenizer if necessary
-            try:
-                nltk.data.find("tokenizers/punkt")
-            except LookupError:
-                nltk.download("punkt")
-
-            num_shots = 3
-
-            storage = directory_path + f"answers/iteration{iter}.json"
-
-            # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
-            importer = data.PetImporter("res/data/pet/all.new.jsonl")
-            # train_docs = [d.id for d in importer.do_import() if d.id != "doc-6.1"]
-            # folds = [{"train": train_docs, "test": ["doc-6.1"]}]
-            folds = sampling.generate_folds(
-                documents=importer.do_import(),
-                num_examples=num_shots,
-                strategy="similarity",
-                seed=42,
-            )
-
-            # formatters = [
-            #     format.PetActivityListingFormattingStrategy(["mentions"]),
-            #     format.PetActorListingFormattingStrategy(["mentions"]),
-            #     format.PetDataListingFormattingStrategy(["mentions"]),
-            #     format.PetFurtherListingFormattingStrategy(["mentions"]),
-            #     format.PetXorListingFormattingStrategy(["mentions"]),
-            #     format.PetConditionListingFormattingStrategy(["mentions"]),
-            #     format.PetAndListingFormattingStrategy(["mentions"]),
-            # ]
-
-            formatters = [
-                format.IterativePetMentionListingFormattingStrategy(
-                    ["mentions"],
-                    "activity",
-                    context_tags=[],
-                    # prompt="pet/md/iterative/with_explanation/activity.txt",
-                ),
-                format.IterativePetMentionListingFormattingStrategy(
-                    ["mentions"],
-                    "actor",
-                    context_tags=["activity"],
-                    # prompt="pet/md/iterative/with_explanation/actor.txt",
-                ),
-                format.IterativePetMentionListingFormattingStrategy(
-                    ["mentions"],
-                    "activity data",
-                    context_tags=["activity", "actor"],
-                    # prompt="pet/md/iterative/with_explanation/activity_data.txt",
-                ),
-                format.IterativePetMentionListingFormattingStrategy(
-                    ["mentions"],
-                    "further specification",
-                    context_tags=["activity", "actor", "activity data"],
-                    # prompt="pet/md/iterative/with_explanation/further_specification.txt",
-                ),
-                format.IterativePetMentionListingFormattingStrategy(
-                    ["mentions"],
-                    "xor gateway",
-                    context_tags=[
-                        "activity",
-                        "actor",
-                        "activity data",
-                        "further specification",
-                    ],
-                    # prompt="pet/md/iterative/with_explanation/xor_gateway.txt",
-                ),
-                format.IterativePetMentionListingFormattingStrategy(
-                    ["mentions"],
-                    "condition specification",
-                    context_tags=[
-                        "activity",
-                        "actor",
-                        "activity data",
-                        "further specification",
-                        "xor gateway",
-                    ],
-                    # prompt="pet/md/iterative/with_explanation/condition_specification.txt",
-                ),
-                format.IterativePetMentionListingFormattingStrategy(
-                    ["mentions"],
-                    "and gateway",
-                    context_tags=[
-                        "activity",
-                        "actor",
-                        "activity data",
-                        "further specification",
-                        "xor gateway",
-                        "condition specification",
-                    ],
-                    # prompt="pet/md/iterative/with_explanation/and_gateway.txt",
-                ),
-            ]
-
-            # formatters = [
-            #     format.PetMentionListingFormattingStrategy(
-            #         steps=["mentions"],
-            #         only_tags=None,
-            #         generate_descriptions=False,
-            #         prompt="pet/md/unified.txt",
-            #     )
-            # ]
-
-            print("Using folds:")
-            print("------------")
-            for fold in folds:
-                print(fold)
-            print("------------")
-
-            chat_model: BaseChatModel = experiments.chat_model_for_name(model_name)
-            print(f"Using model: {chat_model.name}")
-
-            experiments.experiment(
-                importer=importer,
-                formatters=formatters,
-                model_name=model_name,
-                chat_model=chat_model,
-                storage=storage,
-                num_shots=num_shots,
-                dry_run=False,
-                folds=folds,
-                on_new_document=power_logger.set_current_document,
-                on_new_fold=power_logger.set_current_fold_id
-            )
-
-        elif experiment_type == "pet_re":
-            # copy of pet_re
-            load_dotenv()
-
-            # Load sentence tokenizer if necessary
-            try:
-                nltk.data.find("tokenizers/punkt")
-            except LookupError:
-                nltk.download("punkt")
-
-            num_shots = 1
-
-            storage = directory_path + f"answers/iteration{iter}.json"
-
-            # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
-            importer = data.PetImporter("res/data/pet/all.new.jsonl")
-            # folds = [
-            #     {
-            #         "train": [d.id for d in importer.do_import() if d.id != "doc-6.1"],
-            #         "test": ["doc-6.1"],
-            #     }
-            # ]
-            folds = sampling.generate_folds(
-                importer.do_import(), num_shots, strategy="similarity"
-            )
-
-            # formatters = [format.PetRelationListingFormattingStrategy(steps=["relations"])]
-            formatters = [
-                format.PetIterativeRelationListingFormattingStrategy(
-                    ["relations"],
-                    "pet/re/iterative/same_gateway.txt",
-                    only_tags=["same gateway"],
-                ),
-                format.PetIterativeRelationListingFormattingStrategy(
-                    ["relations"],
-                    "pet/re/iterative/flow.txt",
-                    only_tags=["flow"],
-                ),
-                format.PetIterativeRelationListingFormattingStrategy(
-                    ["relations"],
-                    "pet/re/iterative/remaining.txt",
-                    only_tags=[
-                        "uses",
-                        "actor performer",
-                        "actor recipient",
-                        "further specification",
-                    ],
-                ),
-            ]
-
-            print("Using folds:")
-            print("------------")
-            for fold in folds:
-                print(fold)
-            print("------------")
-
-            chat_model: BaseChatModel = experiments.chat_model_for_name(model_name)
-            print(f"Using model: {chat_model.name}")
-
-            experiments.experiment(
-                importer=importer,
-                formatters=formatters,
-                model_name=model_name,
-                chat_model=chat_model,
-                storage=storage,
-                num_shots=num_shots,
-                dry_run=False,
-                folds=folds,
-                on_new_document=power_logger.set_current_document,
-                on_new_fold=power_logger.set_current_fold_id
-            )
-        else:
-            print("Error: incorrect experiment type (use pet_md or pet_re)")
+    # def run_experiments(experiment_type: str, directory_path: str, model_name: str, iter: int):
+    #
+    #     if experiment_type == "pet_md":
+    #         # copy of pet_md
+    #         load_dotenv()
+    #
+    #         # Load sentence tokenizer if necessary
+    #         try:
+    #             nltk.data.find("tokenizers/punkt")
+    #         except LookupError:
+    #             nltk.download("punkt")
+    #
+    #         num_shots = 3
+    #
+    #         storage = directory_path + f"answers/iteration{iter}.json"
+    #
+    #         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
+    #         importer = data.PetImporter("res/data/pet/all.new.jsonl")
+    #         # train_docs = [d.id for d in importer.do_import() if d.id != "doc-6.1"]
+    #         # folds = [{"train": train_docs, "test": ["doc-6.1"]}]
+    #         folds = sampling.generate_folds(
+    #             documents=importer.do_import(),
+    #             num_examples=num_shots,
+    #             strategy="similarity",
+    #             seed=42,
+    #         )
+    #
+    #         # formatters = [
+    #         #     format.PetActivityListingFormattingStrategy(["mentions"]),
+    #         #     format.PetActorListingFormattingStrategy(["mentions"]),
+    #         #     format.PetDataListingFormattingStrategy(["mentions"]),
+    #         #     format.PetFurtherListingFormattingStrategy(["mentions"]),
+    #         #     format.PetXorListingFormattingStrategy(["mentions"]),
+    #         #     format.PetConditionListingFormattingStrategy(["mentions"]),
+    #         #     format.PetAndListingFormattingStrategy(["mentions"]),
+    #         # ]
+    #
+    #         formatters = [
+    #             format.IterativePetMentionListingFormattingStrategy(
+    #                 ["mentions"],
+    #                 "activity",
+    #                 context_tags=[],
+    #                 # prompt="pet/md/iterative/with_explanation/activity.txt",
+    #             ),
+    #             format.IterativePetMentionListingFormattingStrategy(
+    #                 ["mentions"],
+    #                 "actor",
+    #                 context_tags=["activity"],
+    #                 # prompt="pet/md/iterative/with_explanation/actor.txt",
+    #             ),
+    #             format.IterativePetMentionListingFormattingStrategy(
+    #                 ["mentions"],
+    #                 "activity data",
+    #                 context_tags=["activity", "actor"],
+    #                 # prompt="pet/md/iterative/with_explanation/activity_data.txt",
+    #             ),
+    #             format.IterativePetMentionListingFormattingStrategy(
+    #                 ["mentions"],
+    #                 "further specification",
+    #                 context_tags=["activity", "actor", "activity data"],
+    #                 # prompt="pet/md/iterative/with_explanation/further_specification.txt",
+    #             ),
+    #             format.IterativePetMentionListingFormattingStrategy(
+    #                 ["mentions"],
+    #                 "xor gateway",
+    #                 context_tags=[
+    #                     "activity",
+    #                     "actor",
+    #                     "activity data",
+    #                     "further specification",
+    #                 ],
+    #                 # prompt="pet/md/iterative/with_explanation/xor_gateway.txt",
+    #             ),
+    #             format.IterativePetMentionListingFormattingStrategy(
+    #                 ["mentions"],
+    #                 "condition specification",
+    #                 context_tags=[
+    #                     "activity",
+    #                     "actor",
+    #                     "activity data",
+    #                     "further specification",
+    #                     "xor gateway",
+    #                 ],
+    #                 # prompt="pet/md/iterative/with_explanation/condition_specification.txt",
+    #             ),
+    #             format.IterativePetMentionListingFormattingStrategy(
+    #                 ["mentions"],
+    #                 "and gateway",
+    #                 context_tags=[
+    #                     "activity",
+    #                     "actor",
+    #                     "activity data",
+    #                     "further specification",
+    #                     "xor gateway",
+    #                     "condition specification",
+    #                 ],
+    #                 # prompt="pet/md/iterative/with_explanation/and_gateway.txt",
+    #             ),
+    #         ]
+    #
+    #         # formatters = [
+    #         #     format.PetMentionListingFormattingStrategy(
+    #         #         steps=["mentions"],
+    #         #         only_tags=None,
+    #         #         generate_descriptions=False,
+    #         #         prompt="pet/md/unified.txt",
+    #         #     )
+    #         # ]
+    #
+    #         print("Using folds:")
+    #         print("------------")
+    #         for fold in folds:
+    #             print(fold)
+    #         print("------------")
+    #
+    #         chat_model: BaseChatModel = experiments.chat_model_for_name(model_name)
+    #         print(f"Using model: {chat_model.name}")
+    #
+    #         experiments.experiment(
+    #             importer=importer,
+    #             formatters=formatters,
+    #             model_name=model_name,
+    #             chat_model=chat_model,
+    #             storage=storage,
+    #             num_shots=num_shots,
+    #             dry_run=False,
+    #             folds=folds,
+    #             on_new_document=power_logger.set_current_document,
+    #             on_new_fold=power_logger.set_current_fold_id
+    #         )
+    #
+    #     elif experiment_type == "pet_re":
+    #         # copy of pet_re
+    #         load_dotenv()
+    #
+    #         # Load sentence tokenizer if necessary
+    #         try:
+    #             nltk.data.find("tokenizers/punkt")
+    #         except LookupError:
+    #             nltk.download("punkt")
+    #
+    #         num_shots = 1
+    #
+    #         storage = directory_path + f"answers/iteration{iter}.json"
+    #
+    #         # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
+    #         importer = data.PetImporter("res/data/pet/all.new.jsonl")
+    #         # folds = [
+    #         #     {
+    #         #         "train": [d.id for d in importer.do_import() if d.id != "doc-6.1"],
+    #         #         "test": ["doc-6.1"],
+    #         #     }
+    #         # ]
+    #         folds = sampling.generate_folds(
+    #             importer.do_import(), num_shots, strategy="similarity"
+    #         )
+    #
+    #         # formatters = [format.PetRelationListingFormattingStrategy(steps=["relations"])]
+    #         formatters = [
+    #             format.PetIterativeRelationListingFormattingStrategy(
+    #                 ["relations"],
+    #                 "pet/re/iterative/same_gateway.txt",
+    #                 only_tags=["same gateway"],
+    #             ),
+    #             format.PetIterativeRelationListingFormattingStrategy(
+    #                 ["relations"],
+    #                 "pet/re/iterative/flow.txt",
+    #                 only_tags=["flow"],
+    #             ),
+    #             format.PetIterativeRelationListingFormattingStrategy(
+    #                 ["relations"],
+    #                 "pet/re/iterative/remaining.txt",
+    #                 only_tags=[
+    #                     "uses",
+    #                     "actor performer",
+    #                     "actor recipient",
+    #                     "further specification",
+    #                 ],
+    #             ),
+    #         ]
+    #
+    #         print("Using folds:")
+    #         print("------------")
+    #         for fold in folds:
+    #             print(fold)
+    #         print("------------")
+    #
+    #         chat_model: BaseChatModel = experiments.chat_model_for_name(model_name)
+    #         print(f"Using model: {chat_model.name}")
+    #
+    #         experiments.experiment(
+    #             importer=importer,
+    #             formatters=formatters,
+    #             model_name=model_name,
+    #             chat_model=chat_model,
+    #             storage=storage,
+    #             num_shots=num_shots,
+    #             dry_run=False,
+    #             folds=folds,
+    #             on_new_document=power_logger.set_current_document,
+    #             on_new_fold=power_logger.set_current_fold_id
+    #         )
+    #     else:
+    #         print("Error: incorrect experiment type (use pet_md or pet_re)")
 
     # parse answers and power logs of all iterations from one experiment and write them into a pandas dataframe
     def parse_results(directory_path: str, parse_tags: bool):
@@ -226,6 +228,7 @@ if __name__ == "__main__":
         power_directory = os.fsencode(directory_path + "power")
         answer_data = []
         pow_data = []
+        total_parse_errors = []
         # parsing answers
         for answer_file in os.listdir(answer_directory):
             filepath = directory_path + "answers/" + os.fsdecode(answer_file)
@@ -233,10 +236,11 @@ if __name__ == "__main__":
             end_idx = filepath.find(".json")
             current_iter = int(filepath[start_idx + len("iteration"):end_idx])
             experiment_results = experiments.parse.parse_file(filepath)
-            num_parse_errors, experiment_stats = parse_experiments(experiment_results,
-                                                                   data.PetImporter("res/data/pet/all"
-                                                                                    ".new.jsonl"),
-                                                                   None, False)
+            parse_errors, experiment_stats = parse_experiments(experiment_results,
+                                                               data.PetImporter("res/data/pet/all"
+                                                                                ".new.jsonl"),
+                                                               None, False)
+            total_parse_errors.append(parse_errors)
             scores_by_step = get_scores(experiment_stats, False, None)
 
             for step, printable_scores in scores_by_step.items():
@@ -289,15 +293,29 @@ if __name__ == "__main__":
         ans_df = pd.DataFrame(answer_data)
         ans_df.set_index("Tag", inplace=True)
         pow_df = pd.DataFrame(pow_data)
-        return ans_df, pow_df
+        return ans_df, pow_df, total_parse_errors
 
-    def boxplot_from_df(directory_path: str, ans_df, pow_df):
+
+    def boxplot_from_data(directory_path: str, ans_df, pow_df, parse_err, retries):
         ans_df_melted = ans_df.reset_index().melt(id_vars=['Tag', 'iteration'], value_vars=['P', 'R', 'F1'],
                                                   var_name='Metric', value_name='Value')
         plt.figure(figsize=(8, 6))
         sns.boxplot(x='Metric', y='Value', data=ans_df_melted, width=0.5, showmeans=True)
         save_path_ans = directory_path + "ans-boxplot.png"
         plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
+        plt.close()
+
+        fig, axes = plt.subplots(1, 2, figsize=(12, 6))  # 1 row, 2 columns
+
+        sns.boxplot(data=parse_err, width=0.5, showmeans=True, ax=axes[0])
+        axes[0].set_ylabel('Total parse errors')
+
+        sns.boxplot(data=retries, width=0.5, showmeans=True, ax=axes[1])
+        axes[1].set_ylabel('Total number of retries')
+
+        plt.tight_layout()
+        save_path_err = directory_path + "err-boxplot.png"
+        plt.savefig(save_path_err, dpi=300, bbox_inches='tight')
         plt.close()
 
         fig, axes = plt.subplots(1, 3, figsize=(18, 6))  # 1 row, 3 columns
@@ -314,19 +332,44 @@ if __name__ == "__main__":
         sns.boxplot(data=pow_df['avg. power draw'], width=0.5, showmeans=True, ax=axes[2])
         axes[2].set_ylabel('Avg. Power Draw in W')
 
-        # Adjust layout to avoid overlap
         plt.tight_layout()
 
         save_path_pow = directory_path + "pow-boxplot.png"
         plt.savefig(save_path_pow, dpi=300, bbox_inches='tight')
         plt.close()
 
+    # parse answer files for total number of retries and return them as a list
+    def parse_retries(directory_path: str):
+        answer_directory = os.path.join(directory_path, "answers")  # FIXED: No os.fsencode()
+
+        retries = []
+        # parsing answers
+        for answer_file in os.listdir(answer_directory):
+            answer_file = answer_file.decode("utf-8") if isinstance(answer_file, bytes) else answer_file
+            filepath = os.path.join(answer_directory, answer_file)
+
+            with open(filepath, 'r', encoding='utf-8') as file:
+                file_content = file.read()  # Read the content of the file
+
+                # Use regular expressions to find all occurrences of 'num_tries' in the file
+                num_tries_matches = re.findall(r'"num_tries":\s*\[([^]]+)]', file_content)
+                total_sum = 0
+                for match in num_tries_matches:
+                    # Convert the matched string into a list of integers
+                    num_tries = [int(x) for x in match.split(",")]
+                    filtered_values = [num - 1 for num in num_tries if isinstance(num, int) and num > 1]
+                    total_sum += sum(filtered_values)
+            retries.append(total_sum)
+        return retries
+
     # helper function for calculating average and standard deviation and returning them as a tuple
     def mean_std(series):
-        return round(series.mean(), 4), round(series.std(), 4)
+        mean = round(series.mean(), 4)
+        std = round(series.std(), 4)
+        return mean, std
 
     # apply mean_std to dataframes and save as Excel file
-    def calc_statistics_from_dataframe(directory_path: str, ans_df, pow_df):
+    def calc_statistics_from_dataframe(directory_path: str, ans_df, pow_df, parse_errs: list, retries: list):
         # Combine results of all iterations for power df
         combined_pow = pow_df.agg(
             {
@@ -336,7 +379,8 @@ if __name__ == "__main__":
             }
         )
         values = combined_pow.values.flatten()
-        new_pow_df = pd.DataFrame([values], columns=["kWh (mean, std)", "runtime (mean, std)", "average power draw (mean, std)"])
+        new_pow_df = pd.DataFrame([values],
+                                  columns=["kWh (mean, std)", "runtime (mean, std)", "average power draw (mean, std)"])
         ans_df_reset = ans_df.reset_index()
 
         # Combine results of all iterations for answer df
@@ -350,10 +394,23 @@ if __name__ == "__main__":
 
         combined_ans.reset_index(inplace=True)
 
+        # Combine parse errors and retries
+        parse_series = pd.Series(parse_errs)
+        retry_series = pd.Series(retries)
+
+        parse_stats = mean_std(parse_series)
+        retry_stats = mean_std(retry_series)
+        err_data = {
+            'Parse errors': [parse_stats],
+            'Number of retries': [retry_stats]
+        }
+        err_df = pd.DataFrame(err_data)
+
         with pd.ExcelWriter(directory_path + "efficiency.xlsx", engine='xlsxwriter') as writer:
             # Save the DataFrames to separate sheets
             new_pow_df.to_excel(writer, sheet_name='Power_Stats', index=False)
             combined_ans.to_excel(writer, sheet_name='Answer_Stats', index=False)
+            err_df.to_excel(writer, sheet_name='Error_Stats', index=False)
 
 
     exp_type = "pet_md"
@@ -361,26 +418,27 @@ if __name__ == "__main__":
     total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # dir_path = "/home/fpoeschl/llm-process-generation/res/efficiency/pet-md/ollama-lamarck-14B/2025-02-03_13-12-57/"
+    dir_path = "res\\efficiency\\pet-md\\ollama-llama3.3-70b-instruct-Q4\\2025-02-05_13-22-40\\"
 
-    if exp_type == "pet_md":
-        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    elif exp_type == "pet_re":
-        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    else:
-        dir_path = None
+    # if exp_type == "pet_md":
+    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    # elif exp_type == "pet_re":
+    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    # else:
+    #     dir_path = None
 
-    for i in range(1, total_iter + 1):
-        log_path = dir_path + f"power/iteration{i}.dat"
-        log_file = Path(log_path)
-        if log_file.is_file():
-            break
-        power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
-        power_logger.start_logging()
-    answer_df, power_df = parse_results(dir_path, False)
-    boxplot_from_df(dir_path, answer_df, power_df)
+    # for i in range(1, total_iter + 1):
+    #     log_path = dir_path + f"power/iteration{i}.dat"
+    #     log_file = Path(log_path)
+    #     if log_file.is_file():
+    #         break
+    #     power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
+    #     power_logger.start_logging()
+    answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
+    list_retries = parse_retries(dir_path)
+    boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
     pd.set_option('display.max_rows', None)  # Show all rows
     pd.set_option('display.max_columns', None)  # Show all columns
     print(answer_df)
     print(power_df)
-    calc_statistics_from_dataframe(dir_path, answer_df, power_df)
+    calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
