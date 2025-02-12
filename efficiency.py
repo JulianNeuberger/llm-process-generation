@@ -414,11 +414,11 @@ if __name__ == "__main__":
 
 
     exp_type = "pet_md"
-    mod_name = "solar-pro-preview-instruct-GGUF:Q4_K_S"
+    mod_name = "ultiima-32b-Q4_K_S"
     total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # dir_path = "res\\efficiency\\pet-md\\ollama-llama3.3-70b-instruct-Q4\\2025-02-05_13-22-40\\"
+    # dir_path = "res\\efficiency\\pet-md\\ollama-llama3.3-70b-instruct-Q4_K_M\\2025-02-05_13-22-40\\"
 
     if exp_type == "pet_md":
         dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
@@ -438,8 +438,8 @@ if __name__ == "__main__":
     answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
     list_retries = parse_retries(dir_path)
     boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    pd.set_option('display.max_rows', None)  # Show all rows
-    pd.set_option('display.max_columns', None)  # Show all columns
-    print(answer_df)
-    print(power_df)
+    # pd.set_option('display.max_rows', None)
+    # pd.set_option('display.max_columns', None)
+    # print(answer_df)
+    # print(power_df)
     calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
