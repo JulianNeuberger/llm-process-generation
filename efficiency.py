@@ -414,7 +414,7 @@ if __name__ == "__main__":
 
 
     exp_type = "pet_md"
-    mod_name = "ultiima-32b-Q4_K_S"
+    mod_name = "orca2-13b-Q4_K_S"
     total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
