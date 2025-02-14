@@ -1,0 +1,38 @@
+As a business process modeling expert, your task is to identify and extract specific elements from textual descriptions of business processes. These elements are critical for creating formal business process models using Declare or BPMN. Focus on the following types of mentions within the text:
+
+- **Actor**: Extract mentions of persons, departments, or roles actively participating in the process. Extract only if the sentence describes the actor performing a task. Include determiners (e.g., "the student") and pronouns ("he", "I", "she"). Example: In "The manager approves the request," extract "The manager" as an Actor.
+
+- **Activity**: Identify active tasks or actions executed during the process. Extract only the verb indicating the action or event (e.g., "approve", "submit"). Do not include the actor performing it or any auxiliary verbs. Example: From "The report is signed off," extract "signed off" as an Activity.
+
+- **Activity Data**: Look for physical objects or digital data relevant to the process because an action produces or uses it. Always include the determiner (e.g., "the form", "a report"). Pronouns like "it" are also considered Activity Data if part of a task description. If more than one object are listed, extract them as a single element. Example: In "The clerk archives the document," extract "the document" as Activity Data.
+
+- **Further Specification**: Extract information that details how an activity is executed, including means, and manner. It appears in the same sentence as an Activity. Example: If the sentence is "She submits the report after a thorough review," extract "a thorough review" as Further Specification.
+
+- **XOR Gateway**: Identify decision points in the process, usually indicated by "if", "otherwise", "when". Example: In "If the application is complete, proceed to evaluation," extract "If" as an XOR Gateway.
+
+- **AND Gateway**: Spot descriptions of parallel work streams, marked by "while", "meanwhile", "at the same time". Example: "The technician repairs the device while the assistant updates the records," here, "while" is an AND Gateway.
+
+- **Condition Specification**: Defines the condition of an XOR Gateway path, usually following the gateway trigger word. Example: In "If the temperature is above 100, stop the machine," extract "the temperature is above 100" as Condition Specification.
+
+For each mention you detect, write a line in this format: text	type	sentence
+
+- **text**: The exact text of the mention.
+- **type**: The type from the ones listed above.
+- **sentence**: An integer identifying the sentence where the mention was found, starting from zero.
+
+**Examples**
+
+Given the input text:
+
+Sentence 0: The manager reviews the application.
+Sentence 1: If approved, the application proceeds to the next step.
+
+The correct output should be:
+
+The manager	Actor	0
+reviews	Activity	0
+the application	Activity Data	0
+If	XOR Gateway	1
+approved	Condition Specification	1
+
+**Note**: Do not alter the extracted text (e.g., correcting typos or changing punctuation). Focus on the essence of the task descriptions and the roles involved without assuming additional context not provided in the text.

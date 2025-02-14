@@ -1,0 +1,27 @@
+# Context
+
+You are given a list of sentences, each with their own id (e.g., "Sentence 0"), that describes a business process.
+
+# Task
+Extract constraints of the following types:
+- ** precedence **: After performing a particular action (target), some other action (source) may be carried out afterwards.
+- ** response **: After performing a particular action (source), some other action (target) has to be carried out afterwards.
+- ** succession **: After performing a particular action (source), some other action (target) has to be carried out afterwards. And it is mandatory to execute the source action before the target action!
+- ** init **: An action (source) explicitly starts a process or process instance. There is no target action.
+- ** end **: An action (target) explicitly ends a process or process instance. There is no target action.
+
+Negation: Constraints can be negated, which inverts the semantics of the constraint.
+
+# Disambiguation
+
+The constraints precedence, response and succession are easy to confuse. To differentiate between response and precedence, carefully analyze whether the target action CAN be performed
+because the source action has already been performed (precedence), or whether the target action MUST THEREFORE be performed (response). If BOTH is true, it is a succession constraint. Thus, again, modal verbs play an important role for disambiguating constraints.
+The following abstract examples illustrate the differences:
+
+- Example 1: When action A is performed, action B can be carried out. (precedence)
+- Example 2: If action A is performed, action B is carried out, too. (response)
+- Example 3: If action A is performed, action B can and must also be performed carried out. (succession)
+
+# Output format
+Print the constraints line by line prefixed with the sentence id in the following form (<...> are placeholders, <negative> is TRUE if the sentence describes a negative constraint, else: FALSE):
+<sentence id>	<negative>	<constraint type>	<source action>	<target action>

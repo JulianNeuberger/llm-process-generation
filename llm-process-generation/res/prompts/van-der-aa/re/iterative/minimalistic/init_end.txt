@@ -1,0 +1,42 @@
+# Context
+
+You are given a list of sentences, each with their own id (e.g., "Sentence 0"), that describes a business process.
+
+# Task
+
+Extract all init and end constraints contained.
+
+## Definitions: init and end
+
+- ** action **: a verb describing a task execution; often transitive in combination with an object; an action is either a source action or a target action depending on whether it is the restricting or the restricted action
+- ** init **: if the source action is said to start a process or process instance. There is no target action.
+- ** end **: if the source action is said to end a process or process instance. There is no target action.
+
+## Negation
+
+A negative init constraint means that the source action must not start a process. A negative end constraint means that the source action must not end a process.
+
+## Format
+
+Print the constraints line by line prefixed with the sentence id in the following form (<...> are placeholders, <negative> is TRUE if the sentence describes a negative constraint, else: FALSE):
+<sentence id>	<negative>	<init OR end>	<source action>	<target action>
+
+# Format example
+
+## Input
+Sentence 0: The process begins when the author submits the paper.
+Sentence 1: The process is completed as soon as the proposal is archived.
+
+## Output
+0	FALSE	init	submit paper
+1	FALSE	end	archive proposal
+
+# Important Restriction
+
+Restriction 1: Sentences do never contain more than three constraints. Most have less. Thus, extract constraints pessimistically, i.e., only in case of a high confidence.
+
+Restriction 2: You may use the context between sentences, but constraints are always only restricting actions of the same sentence.
+
+# Notes
+
+Do not use any code formatting.

@@ -1,0 +1,130 @@
+# Task Description
+
+You are an algorithm tasked with extracting declarative process models from natural language process descriptions.
+The process descriptions consist of a series of actions, each described by a predicate and an object.
+Your goal is to identify constraints between these actions, which dictate the ordering and existence of actions within the process.
+
+# Type Definitions
+
+- ** ACTION **: predicate and object describing a task. Predicate is usually a transitive verb, and object is some physical or digital object on which is being acted on.
+
+- ** CONSTRAINT **: defines if and how actions can be executed. Always has a source / head action and sometimes a target / tail action, depending on the type. If a constraint has a head action, the tail action is restricted in a way defined by the type.
+
+## Constraint Types
+
+- ** init **: marks an action as the start of an entire process. This action is the source / head action of the init constraint. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is started for an init constraint to apply. Signal words alone are not sufficient here.
+
+- ** end **: marks an action as the end of the whole process. The action is the source / head action. There is no no target / tail action. Note that it must be explicitly stated that the PROCESS is ended for an end constraint to apply. Signal words alone are not sufficient here.
+
+- ** precedence **: if the head action is executed the tail action CAN be executed as well. Thus, the head action is a precondition for executing the tail action.
+
+- ** response **: if the head action was executed, the tail action has to be executed, too. Thus, executing the tail action is mandatory in this case.
+
+- ** succession **: combination of **precedence** and **response**. The tail action cannot be executed before the head action, but once the head action has been executed, it is mandatory to also execute the tail action.
+
+## Negation
+
+Additionally, you may encounter negative constraints, indicated by statements like "do not" or "must not." Negations invert the restriction of the tail activity. A negation is NOT a constraint type itself.
+
+# Format
+
+Please ensure the correct identification and formatting of constraints in the given text. Output one constraint per line, including whether the constraint is negated (TRUE or FALSE), the type of constraint, and the extracted head and tail actions separated by tabs. Stick closely to the provided examples and descriptions, and be careful to distinguish between precedence, response, and succession constraints.
+
+Print one constraint per line, where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the type of the constraint, and the extracted actions by tabs in the following form (<...> are placeholders):
+
+<negative>	<constraint type>	<head action>	<tail action>
+
+# Procedure
+
+Let's carry out your task in three steps.
+- Step 1: First, generate a simplified version of the input text with the main goal to emphasize information relevant for extracting constraints and constrained actions. List the sentences under the heading "Simplified Process Description:" line by line and prefix it with "Sentence + <the index of the sentence>" (index starting with 0). However, do not split up a sentence in multiple sentences and do not change the name of activities described.
+
+- Step 2: Next, extract all actions from the "Simplified Process Description" contained in the input sentence and list them under the heading "Actions:" line by line (a description how you can identify actions is given in ACTION (Def.) above).
+
+- Step 3: Second, identify and extract constraints from the "Simplified Process Description" based on the constraint types above (see "Constraint Types"). To do this, only use the actions that you defined in Step 1, under the heading "Actions:".
+
+# Important Restriction
+
+Restriction 1: Make sure that for Step 2 you generate actions in the form of 'predicate object', which usually consists of a transitive verb and the corresponding object. It must be an actual task, described in the same sentence.
+
+Restriction 2: Sentences may contain up to three constraints, but some may contain no constraints at all!
+
+Restriction 3: You may use the context between sentences, but constraints are always only between actions of one sentence.
+
+# Example
+
+Here is an example for input and expected output:
+
+## Input:
+
+Sentence 0: The process begins when the author submits the paper.
+Sentence 1: After signing the contract, the product can be advertised.
+Sentence 2: After signing the contract, the product is advertised but never before.
+Sentence 3: When the manager is called, the request needs to be forwarded to the secretary, too.
+Sentence 4: The process is completed as soon as the proposal is archived.
+Sentence 5: After notifying the manager, the request must not be rejected.
+
+## Output:
+** Simplified Process Description **
+Sentence 0: The process is started by submitting the paper.
+Sentence 1: Before the product can be advertised, the contract needs to be signed.
+Sentence 2: Signing the contract is a prerequisite for advertising the product, which is then also mandatory.
+Sentence 3: When the manager is called, it is necessary that the secretary is also called.
+Sentence 4: Archiving the proposal ends the process.
+Sentence 5: Once the administrator has been notified, it is not permitted to reject the application at a later date.
+
+** Sentence 0 **
+
+Actions:
+submit paper
+
+Constraints:
+FALSE	init	submit paper
+
+** Sentence 1 **
+
+Actions:
+sign contract
+advertise product
+
+Constraints:
+FALSE	precedence	sign contract	advertise product
+
+** Sentence 2 **
+
+Actions:
+sign contract
+advertise product
+
+Constraints:
+FALSE	succession	sign contract	advertise product
+
+** Sentence 3 **
+
+Actions:
+call manager
+forward request
+
+Constraints:
+FALSE	response	call manager	forward request
+
+** Sentence 4 **
+
+Actions:
+archive proposal
+
+Constraints:
+0	FALSE	end	archive proposal
+
+** Sentence 5 **
+
+Actions:
+nofify manager
+reject request
+
+Constraints:
+TRUE	response	nofify manager	reject request
+
+# Notes
+
+Please return raw text, do not use any formatting.

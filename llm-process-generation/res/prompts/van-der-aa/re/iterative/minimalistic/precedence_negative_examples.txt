@@ -1,0 +1,45 @@
+# Context
+
+You are given a list of sentences, each with their own id (e.g., "Sentence 0"), that describes a business process.
+
+# Task
+
+Extract precedence constraints if you think that the following definitions are fulfilled.
+
+## Definitions: precedence
+
+- ** action **: a verb describing a task execution; often transitive in combination with an object; an action is either a source action or a target action depending on whether it is the restricting or the restricted action
+- ** precedence **: The target action can only be executed if the source action is executed before.
+
+## Negation
+
+A negative precedence constraint means that the source action must not precede the target action.
+
+## Format
+
+Print the constraints line by line prefixed with the sentence id in the following form (<...> are placeholders, <negative> is TRUE if the sentence describes a negative constraint, else: FALSE):
+<sentence id>	<negative>	precedence	<source action>	<target action>
+
+# Format example
+
+## Input
+Sentence 0: After signing the contract, the product can be advertised.
+
+## Output
+0	FALSE	precedence	sign contract	advertise product
+
+# Negative examples (NO precedence constraint there!)
+Precedence constraints are often mixed up with other constraint types. Here are some example sentences that do not cover precedence constraints, and it is explained why there is no precedence constraint:
+Sentence 1: After throwing the ball, the distance is measured. (Explanation: The sentence suggests that the distance is ALWAYS measured after throwing the ball.)
+Sentence 2: When the car has been painted, it is always left to dry. (Explanation: The car is always left to dry after painting it.)
+Sentence 3: First, the game is promoted, then it is released. (Explanation: Releasing the game follows game promotion, but it rather sounds like a mandatory succeeding step.)
+
+# Important Restriction
+
+Restriction 1: Sentences do never contain more than three constraints. Most have less. Thus, extract constraints conservatively, i.e., only in case of a high confidence.
+
+Restriction 2: You may use the context between sentences, but constraints are always only between actions of the same sentence.
+
+# Notes
+
+Do not use any code formatting.

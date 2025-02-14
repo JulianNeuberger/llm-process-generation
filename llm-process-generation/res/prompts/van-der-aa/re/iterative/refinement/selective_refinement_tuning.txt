@@ -1,0 +1,45 @@
+# Context
+
+Below that you are given a list of constraints that restrict actions of a business process. Using a GPT model the constraints have been extracted from natural language sentences, which are provided as well.
+
+# Task
+
+Some of the constraints are invalid. Your task is to create a refined list of constraints by selecting a subset of the most plausible constraints. A constraint is plausible if the meaning of the constraint (see definitions of the constraints below) conforms exactly to what is stated in the sentence. Pay special attention to precedence constraints, since they are recognized currently poorly recognized. You can also add a new constraint if you think that one is missing.
+
+Below you find examples for possible inputs and the expected outputs, which are intended to detail your task further:
+
+## Example 1:
+### Input
+Sentence 0: After signing the contract, the product can be advertised.
+Sentence 1: After signing the contract, the product is advertised but never before.
+Sentence 2: When the manager is called, the request needs to be forwarded to the secretary, too.
+
+Constraints:
+0	FALSE	response	sign contract	advertise product
+1	FALSE	precedence	sign contract	advertise product
+2	FALSE	response	call manager	forward request
+
+### Output
+0	FALSE	precedence	sign contract	advertise product
+1	FALSE	succession	sign contract	advertise product
+2	FALSE	response	call manager	forward request
+
+## Example 2:
+Sentence 0: When the form is digitally signed, it may be forwarded to the customer.
+Sentence 1: Contacting the manager or contacting the team leader requires to write an email to the support first.
+
+Constraints:
+0	FALSE	response	sign form	forward form
+0	FALSE	precedence	sign form	forward form
+1	FALSE	succession	write email	contact manager
+1	FALSE	response	write email	contact manager
+
+### Output:
+0	FALSE	precedence	sign form	forward form
+1	FALSE	precedence	write email	contact manager
+1	FALSE	response	write email	contact team leader
+
+# Format
+
+Print the constraints line by line prefixed with the original sentence id in the following form (<...> are placeholders, <negative> is TRUE if the sentence describes a negative constraint, else: FALSE):
+<sentence id>	<negative>	<constraint type>	<source action>	<target action>

@@ -1,0 +1,52 @@
+# Task Description
+
+You are an algorithm tasked with extracting declarative process models from natural language process descriptions.
+The process descriptions consist of a series of actions, each described by a predicate and an object.
+You are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on), that describes a business process.
+
+# Definition
+
+## Type definitions for extraction
+
+- ** ACTION **: usually a verb describing a task execution; very often a predicate and object (i.e., a transitive verb and some physical or digital object on which is being acted on).
+- ** CONSTRAINT **: defines if and how actions can be executed. Always has a source / head action and sometimes a target / tail action, depending on the type. If a constraint has a head action, the tail action is restricted in a way defined by the type.
+
+## Constraint type to extract
+- ** succession **: The target action cannot be executed before the source action, but once the source action has been executed, it is mandatory to also execute the target action.
+
+## Constraint types you MUST NOT extract (use it just as context for deciding whether to extract as succession constraint or rather leaving it for later extracting one of the other constraints):
+- ** init **: marks an action as the start of an entire process, i.e. it describes the start of a process instance. This action is the source / head action of the init constraint. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is started for an init constraint to apply. Signal words alone are not sufficient here.
+
+- ** end **: marks an action as the end of the whole process. The action is the source / head action. There is no target / tail action. Note that it must be explicitly stated that the PROCESS is ended for an end constraint to apply. Signal words alone are not sufficient here.
+
+- ** precedence **: if the head action is executed the tail action CAN be executed as well. Thus, the head action is a precondition for executing the tail action.
+
+- ** response **: if the head action was executed, the tail action has to be executed, too. Thus, executing the tail action is mandatory in this case.
+
+## Negation
+
+Additionally, you may encounter negative succession constraints describing that if the source action is carried out the target action must not be executed and if the target action is executed it must not be preceded by the source action. A negation is NOT a constraint type itself.
+
+# Format
+
+Print one constraint per line prefixed with the sentence index (starting with 0), where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the type of the constraint, and the extracted actions by tabs in the following form (<...> are placeholders):
+
+<sentence id>	<negative>	succession	<source action>	<target action>
+
+# Format example
+
+## Input
+
+Sentence 0: After signing the contract, the product is advertised but never before.
+
+## Output
+0	FALSE	succession	sign contract	advertise product
+
+# Important Restriction
+
+Restriction 1: Do not extract more than three constraints per sentence. Most have less. Some may not contain any constraints at all!
+
+Restriction 2: You may use the context between sentences, but constraints are always only between actions of the same sentence.
+
+# Notes
+Do not use any code formatting.

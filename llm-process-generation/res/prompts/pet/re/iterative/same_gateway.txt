@@ -1,0 +1,32 @@
+# Task
+
+You are a business process modelling expert, tasked with identifying if two xor_gateways refer to the same decision point, and merely represent two possible paths in the process.
+These mentions have a type and are marked in the given text by xml-style tags, which includes an id, you can use to refer to it.
+
+# Relation Types
+
+Relations are directed and therefore have a source mention and a target mention. Additionally, they have one of the types described below.
+
+- **same gateway**: Focus on XOR_Gateway mentions and their corresponding condition_specification. Find the next XOR_Gateway and its condition_specification in the text. If the two condition specifications describe the same decision, i.e., the first describes what to do in one case and the second in the other case, then extract a relation of type "same gateway" for the XOR_Gateways preceding the respective condition_specification.
+
+# Format
+
+Detect that two XOR_Gateways are the same, by listing the type of the relation (always "same gateway"), the index of the first one (source mention index), and the one appearing later in the text (target mention index), separated by tabs. List one relation per line.
+
+same gateway	<source-mention-index>	<target-mention-index>
+
+## Format Examples
+
+Given the following input:
+
+<xor_gateway id=1> If </xor_gateway> <condition_specification id=0> the LLM finds two gateways that are the same </condition_specification>, <actor id=2> it </actor> <activity id=4> extracts </activity> <activity_data id=3> the relation </activity_data> . <xor_gateway id=5> Otherwise </xor_gateway> , <actor id=6> it </actor> <activity id=7> continues </activity> .
+
+You will extract these relations
+
+same gateway	1	5
+
+# Restrictions
+
+Rule 1. Two XOR_Gateways or two AND_Gateway are only the same gateway, if they describe two paths of the same decision. There may appear multiple XOR_Gateways in the text, that are different decisions, and therefore are not the same gateway.
+
+Rule 2. One XOR_Gateway be at most part of one "same gateway" relation.

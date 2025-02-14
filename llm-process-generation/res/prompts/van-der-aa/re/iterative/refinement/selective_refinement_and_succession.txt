@@ -1,0 +1,42 @@
+# Context
+
+You are given a list of sentences, each with their own id (e.g., "Sentence 0"), that describes a business process. Below that you are given a list of constraints that restrict actions described in those sentences.
+
+# Task
+## Definition: ** action **:
+a verb describing a task execution; often transitive in combination with an object; an action is either a source action or a target action depending on whether it is the restricting or the restricted action
+
+## Definitions: ** constraints **
+The following describes the abstract meaning of a constraint if you extract it. The concrete meaning depends then on the concrete actions you extract.
+- ** precedence **: the source action needs to precede the target action; often written as a combination of a conditional clause and a modal verb (e.g., can) constraining the target action
+- ** response **: If the source action is executed, the target action is (always) executed as well. But it is not mandatory to execute the source action before; often written as a description of strict sequence of two actions
+- ** succession **: If the source action is executed, the target action MUST be executed as well. And it is mandatory to execute the source action before the target action!
+- ** init **: if the source action is said to start a process or process instance. There is no target action.
+- ** end **: if the source action is said to end a process or process instance. There is no target action.
+
+## Negation
+A negative constraint inverts the implication for the target action. For instance, in case of a precedence constraint this means that the target action must not be preceded by the source action.
+
+## Task description
+Several constraints provided are invalid and one constraint type (succession) is currently missing. Your task is to create a refined list of constraints by carefully selecting or creating constraints for each sentence according to the following criteria:
+1. The meaning of the constraint (see definitions of the constraints below) must be very close to the utterance in the sentence. Reflect about this and if this is not the case, discard the constraint.
+2. The constraint types precedence and response can easily be mixed up. If you encounter both, you have three options:
+    a. discard precedence and response (always both of them!) and create a succession constraint with the same arguments or
+    b. discard at least one of the two constraints. Carefully check the concrete meaning of the constraints (see criterion 1 for further instructions)
+
+# Format
+
+Print the constraints line by line prefixed with the original sentence id in the following form (<...> are placeholders, <negative> is TRUE if the sentence describes a negative constraint, else: FALSE):
+<sentence id>	<negative>	<constraint type>	<source action>	<target action>
+
+# Important Restriction
+
+Restriction 1: Sentences do never contain more than three constraints. Most have less. Thus, extract constraints conservatively, i.e., only in case of a high confidence.
+
+Restriction 2: You may use the context between sentences, but constraints are always only between actions of the same sentence.
+
+Restriction 3: Use exactly the format of the constraints provided as input when creating your response. Only print the constraints, nothing else.
+
+# Notes
+
+Do not use any code formatting.

@@ -1,0 +1,19 @@
+Your task is to extract declarative process models from natural language process descriptions.
+The process descriptions consist of a series of actions, each described by a predicate and an object.
+Your goal is to identify constraints between these actions, which dictate the ordering and existence of actions within
+the process. Constraints can be one of the following types:
+
+init: Marks an action as the start of the entire process. It has no target action.
+end: Marks an action as the end of the whole process. It has no target action.
+precedence: Specifies that the tail action can only be executed if the head action was already executed before.
+response: Requires that if the head action was executed, the tail action must also be executed.
+succession: Specifies that if the head action is executed, the tail action needs to be executed as well, and vice versa.
+
+Additionally, you may encounter negations of constraints, indicated by statements like "do not" or "must not."
+
+Please ensure the correct identification and formatting of constraints in the given text. Output one constraint
+per line, including whether the constraint is negated (TRUE or FALSE), the type of constraint, and the extracted
+head and tail actions separated by tabs. Stick closely to the provided examples and descriptions, and be careful
+to distinguish between precedence, response, and succession constraints.
+
+Please return raw text, do not use any formatting.

@@ -1,0 +1,11 @@
+# Task Description
+
+You are a business process modelling expert, whose task is to extract declarative process models from natural language process descriptions.
+These process descriptions contain textual descriptions of actions that process participants can or must perform, each a predicate and object describing a task. Predicate is usually a transitive verb, and object is some physical or digital object on which is being acted on.
+
+Please extract these actions.
+
+
+# Format
+
+Write one action per line, without any additional formatting.

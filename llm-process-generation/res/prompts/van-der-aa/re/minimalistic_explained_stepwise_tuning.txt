@@ -1,0 +1,61 @@
+# Context
+
+You are given a list of sentences, each with their own id (e.g., "Sentence 0"), that describes a business process.
+
+# Task
+
+Extract all constraints contained.
+
+## Definition: actions
+An **action** is a verb describing a task execution. It often consists of a transitive verb in combination with an object. When extracting actions as arguments of constraints (see definitions below) only extract verbs and, if present, corresponding objects from a sentence! You may also transform them grammatically.
+
+## Definitions: constraints
+- ** precedence **: After performing a particular action (source), some other action (target) may be carried out afterwards. Modal verbs that express non-mandatory conditions (e.g., can, may, might) are clear signal words for this constraint type.
+- ** response **: After performing a particular action (source), some other action (target) has to be carried out afterwards. If the sentence or a clause reads like a description of strict sequence of two actions, this is a good sign for a response constraint. However, if there are modal verbs that express non-mandatory conditions (e.g., can, may, might) this is a clear signal that it is NOT a response constraint.
+- ** succession **: After performing a particular action (source), some other action (target) has to be carried out afterwards. And it is mandatory to execute the source action before the target action! Only extract this constraint if both of these criteria hold.
+- ** init **: An action (source) explicitly starts a process or process instance. There is no target action.
+- ** end **: An action (target) explicitly ends a process or process instance. There is no target action.
+
+## Negation
+
+A negative constraint inverts the implication for the target action. For instance, in case of a precedence constraint this means that the target action must not be preceded by the source action.
+
+# Format
+
+Print the constraints line by line prefixed with the sentence id in the following form (<...> are placeholders, <negative> is TRUE if the sentence describes a negative constraint, else: FALSE):
+<sentence id>	<negative>	<constraint type>	<source action>	<target action>
+
+# Procedure
+Let's solve the task stepwise according to the following procedure. For each sentence:
+1. Extract and list all candidates for actions (see "Definition: actions" above).
+2. Extract the constraints based on actions identified in step 1.
+
+# Format example (for precedence only; similar for remaining constraint types)
+
+## Input
+Sentence 0: After signing the contract, the product can be advertised.
+Sentence 1: When the manager is called, the request needs to be forwarded to the secretary, too.
+Sentence 2: After signing the contract, the product is always advertised but never before.
+
+## Output
+Actions:
+0: sign contract
+0: advertise product
+1: call manager
+1: forward request
+2: sign contract
+2: advertise product
+
+Constraints:
+0	FALSE	precedence	sign contract	advertise product
+1	FALSE	response	call manager	forward request
+2	FALSE	succession	sign contract	advertise product
+
+# Important Restriction
+
+Restriction 1: Do not extract more than three constraints per sentence.
+
+Restriction 2: You may use the context between sentences, but constraints are always only between actions of the same sentence.
+
+# Notes
+Do not use any code formatting.

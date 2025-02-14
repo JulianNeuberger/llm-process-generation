@@ -1,0 +1,40 @@
+## Task
+
+You're tasked as a business process modeling expert to identify connections between mentions of relevant facts in textual descriptions of business processes. These mentions, marked in the text with XML-style tags containing IDs, denote various types of data.
+
+## Relation Types
+
+Relations are directional, involving a source mention and a target mention, categorized as follows:
+
+- **uses**: Relates to mentions of type "activity." Find the "activity_data" mention associated with the execution of this activity. If found, extract a "uses" relation where the source mention is the activity and the target mention is the "activity_data" mention.
+
+- **flow**: Concerns mentions of types "Activity," "XOR_Gateway," "AND_Gateway," and "Condition_Specification." Establish connections based on their order of appearance: if a Condition_Specification follows an XOR_Gateway, connect the XOR_Gateway (source) to the Condition_Specification (target). If an Activity, XOR_Gateway, or AND_Gateway follows another of these, link the preceding one (source) to the subsequent one (target).
+
+- **actor performer**: Focuses on mentions of type "activity" to identify the active performer ("actor") of the activity. Extract an "actor performer" relation where the source mention is the activity and the target mention is the actor.
+
+- **actor recipient**: Targets mentions of type "activity" to find the recipient ("actor") of the activity's result. Extract an "actor recipient" relation where the source mention is the activity and the target mention is the actor.
+
+- **same gateway**: Links disjointed descriptions of gateways, focusing on mentions of type "xor_gateway" and "and_gateway." If two mentions of the same type describe the same decision point, extract a "same gateway" relation where the earlier mention in the text is the source and the later mention is the target.
+
+- **further specification**: Relates to mentions of type "activity." Search for "further_specification" mentions providing additional details about the activity. Extract a "further_specification" relation where the source mention is the activity and the target mention is the "further_specification."
+
+## Format
+
+Retrieve relations by listing the relation type, the index of the head mention, and the index of the tail mention, separated by tabs. Each relation should be listed on a separate line.
+
+<relation-type>	<head-mention-index>	<tail-mention-index>
+
+## Format Examples
+
+Given the following input:
+
+Sentence 0: the <actor id=1> LLM </actor> <activity id=0> extracts </activity> <activity_data id=2> the text </activity> .
+
+The extracted relations are:
+
+actor performer	0	1
+uses	0	2
+
+## Restrictions
+
+Rule 1: Extract relations only if their types are defined in the "Relation Types" section.

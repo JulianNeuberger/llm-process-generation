@@ -1,0 +1,48 @@
+# Task Description
+
+You are an algorithm tasked with extracting declarative process models from natural language process descriptions.
+The process descriptions consist of a series of actions, each described by a predicate and an object.
+You are given a list of sentences, each with their own id (e.g., "Sentence 0", "Sentence 1" and so on), that describes a business process.
+
+# Definition
+
+## Types:
+
+- ** ACTION **: usually a verb describing a task execution; very often a predicate and object (i.e., a transitive verb and some physical or digital object on which is being acted on).
+- ** CONSTRAINT **: defines if and how an action can be executed.
+
+## Constraint types:
+- ** init **: holds if the sentence explicitly states that the PROCESS is started by a particular action (signal words such as "first" are not sufficient). This action is the source action of the init constraint. There is no target action. Abstract input example: "The process is started when activity XY is carried out."
+
+- ** end **: holds if the sentence explicitly states that the PROCESS is ended by a particular action (signal words such as "last" or "finally" are not sufficient). This action is the source action of the end constraint. There is no target action. Abstract input example: "The process ends when activity XY is performed."
+
+## Negation
+
+Additionally, you may encounter negative init or end constraints describing that the source activity cannot start/end a process. A negation is NOT a constraint type itself.
+
+# Format
+
+Print one constraint per line prefixed with the sentence index (starting with 0), where you separate if the constraint is negative (TRUE if the document describes a negation, else it reads FALSE), the type of the constraint, and the extracted actions by tabs in the following form (<...> are placeholders, replace <init|end> by the constraint type you have found):
+
+<sentence id>	<negative>	<init|end>	<source action>	<target action>
+
+# Format example
+
+## Input
+
+** Sentence 0 **
+The process begins when the author submits the paper.
+
+** Sentence 1 **
+The process is completed as soon as the proposal is archived
+
+## Output
+0	FALSE	init	submit paper
+1	FALSE	end	archive proposal
+
+# Important Restriction
+
+Restriction 1: You may use the context between sentences, but constraints are always only restricting actions of the same sentence.
+
+# Notes
+Do not use any code formatting.
