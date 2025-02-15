@@ -297,7 +297,9 @@ if __name__ == "__main__":
 
 
     def boxplot_from_data(directory_path: str, ans_df, pow_df, parse_err, retries):
-        ans_df_melted = ans_df.reset_index().melt(id_vars=['Tag', 'iteration'], value_vars=['P', 'R', 'F1'],
+        # use micro averaged scores for plotting
+        ans_df_micro = ans_df.loc[ans_df.index == 'Micro_Avg']
+        ans_df_melted = ans_df_micro.reset_index().melt(id_vars=['Tag', 'iteration'], value_vars=['P', 'R', 'F1'],
                                                   var_name='Metric', value_name='Value')
         plt.figure(figsize=(8, 6))
         sns.boxplot(x='Metric', y='Value', data=ans_df_melted, width=0.5, showmeans=True)
@@ -414,11 +416,11 @@ if __name__ == "__main__":
 
 
     exp_type = "pet_md"
-    mod_name = "L3.3-MS-Nevoria-70b-Q4_K_S"
+    mod_name = "ollama-shuttle-3-Q4_K_S"
     total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # dir_path = "res\\efficiency\\pet-md\\ollama-llama3.3-70b-instruct-Q4_K_M\\2025-02-05_13-22-40\\"
+    # dir_path = "res\\efficiency\\pet-md\\ultiima-72b-Q4_K_S\\2025-02-14_21-51-44\\"
 
     if exp_type == "pet_md":
         dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
@@ -438,8 +440,4 @@ if __name__ == "__main__":
     answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
     list_retries = parse_retries(dir_path)
     boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    # pd.set_option('display.max_rows', None)
-    # pd.set_option('display.max_columns', None)
-    # print(answer_df)
-    # print(power_df)
     calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)

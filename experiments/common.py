@@ -273,8 +273,8 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
     if model_name.startswith("solar-pro-preview-instruct-GGUF:Q4_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/MaziyarPanahi/solar-pro-preview-instruct-GGUF:Q4_K_S", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("ollama-shuttle-3"):
-        return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/shuttle-3-GGUF:Q4_K_M", temperature=0.5,
+    if model_name.startswith("ollama-shuttle-3-Q4_K_S"):
+        return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/shuttle-3-GGUF:Q4_K_S", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("ollama-llama3.3-70b-instruct-Q4_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/Llama-3.3-70B-Instruct-GGUF:Q4_K_S", temperature=0.5,
