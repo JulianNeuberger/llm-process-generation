@@ -416,7 +416,7 @@ if __name__ == "__main__":
 
 
     exp_type = "pet_md"
-    mod_name = "ollama-calme3.2-instruct-78b-Q4_K_S"
+    mod_name = "ultiima-72b-Q3_K_S"
     total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -441,4 +441,4 @@ if __name__ == "__main__":
     answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
     list_retries = parse_retries(dir_path)
     boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    # calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
