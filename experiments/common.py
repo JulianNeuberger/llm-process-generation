@@ -304,5 +304,6 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/ultiima-72B-GGUF:Q3_K_S", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
     if model_name.startswith("L3.3-MS-Nevoria-70b-Q4_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/L3.3-MS-Nevoria-70b-GGUF:Q4_K_S", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-
+    if model_name.startswith("ultiima-32b-Q6_K"):
+        return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/ultiima-32B-GGUF:Q6_K", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
     raise ValueError(f'Unknown model with name "{model_name}"')
