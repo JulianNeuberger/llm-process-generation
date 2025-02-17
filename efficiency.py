@@ -435,7 +435,7 @@ if __name__ == "__main__":
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     # dir_path must end with "/"
-    # dir_path = "res/efficiency/pet-md/ultiima-72b-Q4_K_S/2025-02-14_21-51-44/"
+    # dir_path = "res/efficiency/pet-md/ultiima-32b-Q4_K_S/2025-02-12_15-01-27/"
 
     if exp_type == "pet_md":
         dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
