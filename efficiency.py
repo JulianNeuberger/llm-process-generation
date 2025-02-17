@@ -430,7 +430,7 @@ if __name__ == "__main__":
             err_df_combined.to_excel(writer, sheet_name="errors", index=False)
 
     exp_type = "pet_md"
-    mod_name = "ultiima-32b-IQ4_XS"
+    mod_name = "calme3.2-instruct-78b-IQ4_XS"
     total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
