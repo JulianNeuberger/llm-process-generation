@@ -414,6 +414,20 @@ if __name__ == "__main__":
             combined_ans.to_excel(writer, sheet_name='Answer_Stats', index=False)
             err_df.to_excel(writer, sheet_name='Error_Stats', index=False)
 
+    # write data from single iterations to an excel-file for T-Test
+    def to_excel(directory_path, ans_df, pow_df, parse_errs: list, retries: list):
+        file_path = os.path.join(directory_path, "by_iteration.xlsx")
+        # use micro averaged scores
+        ans_df_micro = ans_df.loc[ans_df.index == 'Micro_Avg']
+        # convert lists to df
+        err_df_combined = pd.DataFrame({
+            'parse_err': parse_errs,
+            'retries': retries
+        })
+        with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
+            ans_df_micro.to_excel(writer, sheet_name="answers", index=False)
+            pow_df.to_excel(writer, sheet_name="power", index=False)
+            err_df_combined.to_excel(writer, sheet_name="errors", index=False)
 
     exp_type = "pet_md"
     mod_name = "ultiima-32b-IQ4_XS"
@@ -440,5 +454,6 @@ if __name__ == "__main__":
 
     answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
     list_retries = parse_retries(dir_path)
+    to_excel(dir_path, answer_df, power_df, list_parse_errors, list_retries)
     boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
     calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
