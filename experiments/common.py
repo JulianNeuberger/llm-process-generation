@@ -264,52 +264,54 @@ def chat_model_for_name(model_name: str) -> BaseChatModel:
         return langchain_openai.ChatOpenAI(model_name=local_model_name, temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8020/v1")
 
-    if model_name.startswith("calme2.1-qwen2.5-72b"):
+    if model_name.startswith("ollama-calme2.1-qwen2.5-72b"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/calme-2.1-qwen2.5-72b-GGUF:Q4_K_M", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("solar-pro-preview-instruct-GGUF:Q4_K_M"):
+    if model_name.startswith("ollama-solar-pro-preview-instruct-GGUF:Q4_K_M"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/MaziyarPanahi/solar-pro-preview-instruct-GGUF:Q4_K_M", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("solar-pro-preview-instruct-GGUF:Q4_K_S"):
+    if model_name.startswith("ollama-solar-pro-preview-instruct-GGUF:Q4_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/MaziyarPanahi/solar-pro-preview-instruct-GGUF:Q4_K_S", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("shuttle-3-Q4_K_S"):
+    if model_name.startswith("ollama-shuttle-3-Q4_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/shuttle-3-GGUF:Q4_K_S", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("llama3.3-70b-instruct-Q4_K_S"):
+    if model_name.startswith("ollama-llama3.3-70b-instruct-Q4_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/Llama-3.3-70B-Instruct-GGUF:Q4_K_S", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("llama3.3-70b-instruct-Q2"):
+    if model_name.startswith("ollama-llama3.3-70b-instruct-Q2"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q2_K", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("llama3.3-70b-instruct-Q3_K_S"):
+    if model_name.startswith("ollama-llama3.3-70b-instruct-Q3_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Llama-3.3-70B-Instruct-GGUF:Q3_K_S", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("deepseek-r1-32b"):
+    if model_name.startswith("ollama-deepseek-r1-32b"):
         return langchain_openai.ChatOpenAI(model_name="deepseek-r1:32b", temperature=0.5,
                                            openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("lamarck-14B"):
+    if model_name.startswith("ollama-lamarck-14B"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Lamarck-14B-v0.7-GGUF:Q2_K", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("calme3.2-instruct-78b-Q4_K_S"):
+    if model_name.startswith("ollama-calme3.2-instruct-78b-Q4_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/calme-3.2-instruct-78b-GGUF:Q4_K_S", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("ultiima-32b-Q4_K_S"):
+    if model_name.startswith("ollama-ultiima-32b-Q4_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/ultiima-32B-GGUF:Q4_K_S", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("orca2-13b-Q4_K_S"):
+    if model_name.startswith("ollama-orca2-13b-Q4_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/Orca-2-13b-GGUF:Q4_K_S", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("Qwen2.5-72B-Instruct-Q4_K_M"):
+    if model_name.startswith("ollama-Qwen2.5-72B-Instruct-Q4_K_M"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/Qwen2.5-72B-Instruct-GGUF:Q4_K_M", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("ultiima-72b-Q4_K_S"):
+    if model_name.startswith("ollama-ultiima-72b-Q4_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/ultiima-72B-GGUF:Q4_K_S", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("ultiima-72b-Q3_K_S"):
+    if model_name.startswith("ollama-ultiima-72b-Q3_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/ultiima-72B-GGUF:Q3_K_S", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("L3.3-MS-Nevoria-70b-Q4_K_S"):
+    if model_name.startswith("ollama-L3.3-MS-Nevoria-70b-Q4_K_S"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/L3.3-MS-Nevoria-70b-GGUF:Q4_K_S", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("ultiima-32b-Q6_K"):
+    if model_name.startswith("ollama-ultiima-32b-Q6_K"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/ultiima-32B-GGUF:Q6_K", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("ultiima-72b-Q2_K"):
+    if model_name.startswith("ollama-ultiima-72b-Q2_K"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/ultiima-72B-GGUF:Q2_K", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("ultiima-32b-IQ4_XS"):
+    if model_name.startswith("ollama-ultiima-32b-IQ4_XS"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/mradermacher/ultiima-32B-i1-GGUF:IQ4_XS", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
-    if model_name.startswith("calme3.2-instruct-78b-IQ4_XS"):
+    if model_name.startswith("ollama-calme3.2-instruct-78b-IQ4_XS"):
         return langchain_openai.ChatOpenAI(model_name="hf.co/bartowski/calme-3.2-instruct-78b-GGUF:IQ4_XS", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
+    if model_name.startswith("ollama-mistral-large:123b-instruct-2407-q4_K_S"):
+        return langchain_openai.ChatOpenAI(model_name="mistral-large:123b-instruct-2407-q4_K_S", temperature=0.5, openai_api_base="http://132.180.195.1:8007/v1")
     raise ValueError(f'Unknown model with name "{model_name}"')
