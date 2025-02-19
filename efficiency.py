@@ -430,7 +430,7 @@ if __name__ == "__main__":
             err_df_combined.to_excel(writer, sheet_name="errors", index=False)
 
     exp_type = "pet_md"
-    mod_name = "ollama-Lamarckvergence-14B-Q4_K_S"
+    mod_name = "ollama-Lamarckvergence-14B-Q8_0"
     total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
