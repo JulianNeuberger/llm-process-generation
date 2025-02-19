@@ -6,6 +6,7 @@ import threading
 import time
 from threading import Thread, Lock
 
+
 class PowerLogger:
     def __init__(self, func, log_path, args=None):
         self.func = func
