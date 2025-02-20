@@ -430,7 +430,7 @@ if __name__ == "__main__":
             err_df_combined.to_excel(writer, sheet_name="errors", index=False)
 
     exp_type = "pet_md"
-    mod_name = "ollama-solar-pro-preview-instruct-GGUF:IQ4_XS"
+    mod_name = "ollama-mistral-large:123b-instruct-2407-q2_K"
     total_iter = 5
     date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
