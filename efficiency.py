@@ -17,7 +17,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
-    def run_experiments(experiment_type: str, directory_path: str, model_name: str, iter: int):
+    def run_experiments(experiment_type: str, directory_path: str, model_name: str, iteration: int):
 
         if experiment_type == "pet_md":
             # copy of pet_md
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
             num_shots = 3
 
-            storage = directory_path + f"answers/iteration{iter}.json"
+            storage = directory_path + f"answers/iteration{iteration}.json"
 
             # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
             importer = data.PetImporter("res/data/pet/all.new.jsonl")
@@ -44,15 +44,15 @@ if __name__ == "__main__":
                 seed=42,
             )
 
-            formatters = [
-                format.PetActivityListingFormattingStrategy(["mentions"]),
-                format.PetActorListingFormattingStrategy(["mentions"]),
-                format.PetDataListingFormattingStrategy(["mentions"]),
-                format.PetFurtherListingFormattingStrategy(["mentions"]),
-                format.PetXorListingFormattingStrategy(["mentions"]),
-                format.PetConditionListingFormattingStrategy(["mentions"]),
-                format.PetAndListingFormattingStrategy(["mentions"]),
-            ]
+            # formatters = [
+            #     format.PetActivityListingFormattingStrategy(["mentions"]),
+            #     format.PetActorListingFormattingStrategy(["mentions"]),
+            #     format.PetDataListingFormattingStrategy(["mentions"]),
+            #     format.PetFurtherListingFormattingStrategy(["mentions"]),
+            #     format.PetXorListingFormattingStrategy(["mentions"]),
+            #     format.PetConditionListingFormattingStrategy(["mentions"]),
+            #     format.PetAndListingFormattingStrategy(["mentions"]),
+            # ]
 
             # formatters = [
             #     format.IterativePetMentionListingFormattingStrategy(
@@ -117,14 +117,14 @@ if __name__ == "__main__":
             #     ),
             # ]
 
-            # formatters = [
-            #     format.PetMentionListingFormattingStrategy(
-            #         steps=["mentions"],
-            #         only_tags=None,
-            #         generate_descriptions=False,
-            #         prompt="pet/md/unified.txt",
-            #     )
-            # ]
+            formatters = [
+                format.PetMentionListingFormattingStrategy(
+                    steps=["mentions"],
+                    only_tags=None,
+                    generate_descriptions=False,
+                    prompt="pet/md/unified.txt",
+                )
+            ]
 
             print("Using folds:")
             print("------------")
@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
             num_shots = 1
 
-            storage = directory_path + f"answers/iteration{iter}.json"
+            storage = directory_path + f"answers/iteration{iteration}.json"
 
             # formatter = format.PetMentionListingFormattingStrategy(["mentions"])
             importer = data.PetImporter("res/data/pet/all.new.jsonl")
@@ -174,29 +174,29 @@ if __name__ == "__main__":
                 importer.do_import(), num_shots, strategy="similarity"
             )
 
-            # formatters = [format.PetRelationListingFormattingStrategy(steps=["relations"])]
-            formatters = [
-                format.PetIterativeRelationListingFormattingStrategy(
-                    ["relations"],
-                    "pet/re/iterative/same_gateway.txt",
-                    only_tags=["same gateway"],
-                ),
-                format.PetIterativeRelationListingFormattingStrategy(
-                    ["relations"],
-                    "pet/re/iterative/flow.txt",
-                    only_tags=["flow"],
-                ),
-                format.PetIterativeRelationListingFormattingStrategy(
-                    ["relations"],
-                    "pet/re/iterative/remaining.txt",
-                    only_tags=[
-                        "uses",
-                        "actor performer",
-                        "actor recipient",
-                        "further specification",
-                    ],
-                ),
-            ]
+            formatters = [format.PetRelationListingFormattingStrategy(steps=["relations"])]
+            # formatters = [
+            #     format.PetIterativeRelationListingFormattingStrategy(
+            #         ["relations"],
+            #         "pet/re/iterative/same_gateway.txt",
+            #         only_tags=["same gateway"],
+            #     ),
+            #     format.PetIterativeRelationListingFormattingStrategy(
+            #         ["relations"],
+            #         "pet/re/iterative/flow.txt",
+            #         only_tags=["flow"],
+            #     ),
+            #     format.PetIterativeRelationListingFormattingStrategy(
+            #         ["relations"],
+            #         "pet/re/iterative/remaining.txt",
+            #         only_tags=[
+            #             "uses",
+            #             "actor performer",
+            #             "actor recipient",
+            #             "further specification",
+            #         ],
+            #     ),
+            # ]
 
             print("Using folds:")
             print("------------")
