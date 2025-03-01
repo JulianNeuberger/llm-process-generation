@@ -39,7 +39,7 @@ class BaseFormattingStrategy(abc.ABC, typing.Generic[TDocument]):
 
     def input(self, document: TDocument) -> str:
         """
-        Formats document so it can be used as input for prompts.
+        Formats document, so it can be used as input for prompts.
 
         :param document: document to format
         :return: formatted document as string
