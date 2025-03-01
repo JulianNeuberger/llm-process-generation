@@ -14,7 +14,7 @@ from experiments import sampling, power
 from experiments.parse import parse_experiments, get_scores
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+from datetime import datetime
 if __name__ == "__main__":
     def run_experiments(experiment_type: str, directory_path: str, model_name: str, iteration: int):
 
@@ -369,6 +369,58 @@ if __name__ == "__main__":
         std = round(series.std(), 4)
         return mean, std
 
+    # plot power draw over time and mark when a new document is loaded
+    def plot_power_draw(directory_path: str, short_flag: bool):
+        power_directory = os.fsencode(directory_path + "power")
+        for power_file in os.listdir(power_directory):
+            filepath = directory_path + "power/" + os.fsdecode(power_file)
+            start_idx = filepath.find("iteration")
+            end_idx = filepath.find(".dat")
+            current_iter = filepath[start_idx + len("iteration"):end_idx]
+            data = []
+
+            with open(filepath, 'r') as file:
+                lines = file.readlines()
+                if short_flag:
+                    num_elements = len(lines)
+                    lines = lines[:int(num_elements * 0.05)]
+                for line in lines:
+                    parts = re.split(r'\t+', line.strip())
+                    timestamp = datetime.strptime(parts[0], "%Y-%m-%d %H:%M:%S.%f")
+                    document = parts[1]
+                    power_draw = float(parts[3])
+                    data.append((timestamp, document, power_draw))
+
+            # Create a DataFrame
+            df = pd.DataFrame(data, columns=["Timestamp", "Document", "Value"])
+
+            # Convert the timestamps to seconds since the first timestamp
+            df["Time_Seconds"] = (df["Timestamp"] - df["Timestamp"].iloc[0]).dt.total_seconds()
+
+            # Plot the data
+            plt.figure(figsize=(10, 5))
+            plt.plot(df["Time_Seconds"], df["Value"], linestyle='-', label="Power Draw")
+
+            # Mark document changes
+            prev_doc = None
+            for j, row in df.iterrows():
+                if row["Document"] and row["Document"] != prev_doc:
+                    plt.axvline(row["Time_Seconds"], color='r', linestyle='--')
+                    prev_doc = row["Document"]
+
+            plt.xlabel("Time (Seconds)")
+            plt.ylabel("Power Draw")
+            plt.legend()
+            plt.xticks(rotation=45)
+
+            save_path = directory_path + "power_draw-boxplot" + current_iter + ".png"
+            # Save the plot to a file
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.close()
+        return
+
+
+
     # apply mean_std to dataframes and save as Excel file
     def calc_statistics_from_dataframe(directory_path: str, ans_df, pow_df, parse_errs: list, retries: list):
         # Combine results of all iterations for power df
@@ -432,28 +484,29 @@ if __name__ == "__main__":
     exp_type = "pet_md"
     mod_name = "ollama-c4ai-command-r-plus-08-2024-Q5_K_M"
     total_iter = 5
-    date_formatted = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    date_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     # dir_path must end with "/"
-    # dir_path = "res/efficiency/pet-md/ultiima-32b-Q4_K_S/2025-02-12_15-01-27/"
+    dir_path = "res/efficiency/pet-md/ollama-Lamarckvergence-14B-IQ4_XS/2025-02-19_17-08-42/"
 
-    if exp_type == "pet_md":
-        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    elif exp_type == "pet_re":
-        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    else:
-        dir_path = None
-
-    for i in range(1, total_iter + 1):
-        log_path = dir_path + f"power/iteration{i}.dat"
-        log_file = Path(log_path)
-        if log_file.is_file():
-            break
-        power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
-        power_logger.start_logging()
-
-    answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
-    list_retries = parse_retries(dir_path)
-    to_excel(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    # if exp_type == "pet_md":
+    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    # elif exp_type == "pet_re":
+    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    # else:
+    #     dir_path = None
+    #
+    # for i in range(1, total_iter + 1):
+    #     log_path = dir_path + f"power/iteration{i}.dat"
+    #     log_file = Path(log_path)
+    #     if log_file.is_file():
+    #         break
+    #     power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
+    #     power_logger.start_logging()
+    #
+    # answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
+    # list_retries = parse_retries(dir_path)
+    # to_excel(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    # boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    # calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    plot_power_draw(dir_path, True)
