@@ -370,6 +370,7 @@ if __name__ == "__main__":
         return mean, std
 
     # plot power draw over time and mark when a new document is loaded
+    # set short_flag to only print the first 5% of data (approx. 3 documents)
     def plot_power_draw(directory_path: str, short_flag: bool):
         power_directory = os.fsencode(directory_path + "power")
         for power_file in os.listdir(power_directory):
@@ -391,22 +392,22 @@ if __name__ == "__main__":
                     power_draw = float(parts[3])
                     data.append((timestamp, document, power_draw))
 
-            # Create a DataFrame
             df = pd.DataFrame(data, columns=["Timestamp", "Document", "Value"])
 
-            # Convert the timestamps to seconds since the first timestamp
+            # Convert the timestamps to seconds
             df["Time_Seconds"] = (df["Timestamp"] - df["Timestamp"].iloc[0]).dt.total_seconds()
 
-            # Plot the data
             plt.figure(figsize=(10, 5))
             plt.plot(df["Time_Seconds"], df["Value"], linestyle='-', label="Power Draw")
 
-            # Mark document changes
             prev_doc = None
+            first_change = True  # don't plot a line at the start
             for j, row in df.iterrows():
                 if row["Document"] and row["Document"] != prev_doc:
-                    plt.axvline(row["Time_Seconds"], color='r', linestyle='--')
+                    if not first_change:
+                        plt.axvline(row["Time_Seconds"], color='r', linestyle='--')
                     prev_doc = row["Document"]
+                    first_change = False
 
             plt.xlabel("Time (Seconds)")
             plt.ylabel("Power Draw")
@@ -414,7 +415,6 @@ if __name__ == "__main__":
             plt.xticks(rotation=45)
 
             save_path = directory_path + "power_draw-boxplot" + current_iter + ".png"
-            # Save the plot to a file
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             plt.close()
         return
@@ -487,26 +487,26 @@ if __name__ == "__main__":
     date_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     # dir_path must end with "/"
-    dir_path = "res/efficiency/pet-md/ollama-Lamarckvergence-14B-IQ4_XS/2025-02-19_17-08-42/"
+    # dir_path = "res/efficiency/pet-md/solar-pro-preview-instruct-Q4_K_S/2025-02-12_12-10-47/"
 
-    # if exp_type == "pet_md":
-    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    # elif exp_type == "pet_re":
-    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    # else:
-    #     dir_path = None
-    #
-    # for i in range(1, total_iter + 1):
-    #     log_path = dir_path + f"power/iteration{i}.dat"
-    #     log_file = Path(log_path)
-    #     if log_file.is_file():
-    #         break
-    #     power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
-    #     power_logger.start_logging()
-    #
-    # answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
-    # list_retries = parse_retries(dir_path)
-    # to_excel(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    # boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    # calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    if exp_type == "pet_md":
+        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    elif exp_type == "pet_re":
+        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    else:
+        dir_path = None
+
+    for i in range(1, total_iter + 1):
+        log_path = dir_path + f"power/iteration{i}.dat"
+        log_file = Path(log_path)
+        if log_file.is_file():
+            break
+        power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
+        power_logger.start_logging()
+
+    answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
+    list_retries = parse_retries(dir_path)
+    to_excel(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
     plot_power_draw(dir_path, True)
