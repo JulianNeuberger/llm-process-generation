@@ -414,12 +414,10 @@ if __name__ == "__main__":
             plt.legend()
             plt.xticks(rotation=45)
 
-            save_path = directory_path + "power_draw-boxplot" + current_iter + ".png"
+            save_path = directory_path + "power_draw-plot" + current_iter + ".png"
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             plt.close()
         return
-
-
 
     # apply mean_std to dataframes and save as Excel file
     def calc_statistics_from_dataframe(directory_path: str, ans_df, pow_df, parse_errs: list, retries: list):
@@ -487,7 +485,7 @@ if __name__ == "__main__":
     date_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     # dir_path must end with "/"
-    # dir_path = "res/efficiency/pet-md/solar-pro-preview-instruct-Q4_K_S/2025-02-12_12-10-47/"
+    # dir_path = "res/efficiency/pet-md/ollama-calme3.2-instruct-78b-Q4_K_S/2025-02-09_18-49-39/"
 
     if exp_type == "pet_md":
         dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
