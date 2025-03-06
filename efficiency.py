@@ -480,12 +480,12 @@ if __name__ == "__main__":
 
 
     exp_type = "pet_md"
-    mod_name = "ollama-c4ai-command-r-plus-08-2024-Q5_K_M"
+    mod_name = "ollama-Qwen2.5-72B-Instruct-Q4_K_S"
     total_iter = 5
     date_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     # dir_path must end with "/"
-    # dir_path = "res/efficiency/pet-md/ollama-calme3.2-instruct-78b-Q4_K_S/2025-02-09_18-49-39/"
+    # dir_path = "res/efficiency/pet-md/ultiima-32b-Q4_K_S/2025-02-12_15-01-27/"
 
     if exp_type == "pet_md":
         dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
