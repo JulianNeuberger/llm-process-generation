@@ -69,16 +69,16 @@ class PowerMeasurementThread(Thread):
             return
 
         completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.instant,memory.used', '--format=csv'],
-                                           capture_output=True, text=True)
-        output = completed_process.stdout.strip()
-        print(output)
+                                           capture_output=True)
+        process_output = completed_process.stdout.decode("utf-8")
         current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-        power_usage, memory_usage = map(float, output.split(','))
+        lines = process_output.splitlines()
+        power = lines[1].split(' ')[0] if len(lines) > 1 else "error"
 
         pathlib.Path(self.log_path).parent.mkdir(exist_ok=True, parents=True)
         with open(self.log_path, "a") as f:
             f.write(f"{current_date}\t\t{self.current_document.id if self.current_document else 'None'}\t\t"
-                    f"{self.current_fold_id if self.current_fold_id else 'None'}\t\t{power_usage}\t\t{memory_usage}\n")
+                    f"{self.current_fold_id if self.current_fold_id else 'None'}\t\t{power}\n")
 
         with self.lock:
             if self.running:
