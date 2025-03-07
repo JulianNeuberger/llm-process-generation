@@ -480,7 +480,7 @@ if __name__ == "__main__":
 
 
     exp_type = "pet_md"
-    mod_name = "ollama-Qwen2.5-72B-Instruct-Q4_K_S"
+    mod_name = "ollama-Lamarckvergence-14B-IQ4_NL"
     total_iter = 5
     date_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
