@@ -71,6 +71,7 @@ class PowerMeasurementThread(Thread):
         completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.instant,memory.used', '--format=csv'],
                                            capture_output=True, text=True)
         output = completed_process.stdout.strip()
+        print(output)
         current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         power_usage, memory_usage = map(float, output.split(','))
 
