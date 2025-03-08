@@ -303,8 +303,9 @@ if __name__ == "__main__":
         ans_df_melted = ans_df_micro.reset_index().melt(id_vars=['Tag', 'iteration'], value_vars=['P', 'R', 'F1'],
                                                         var_name='Metric', value_name='Value')
         plt.figure(figsize=(8, 6))
+        plt.title(f"{model_name}")
         sns.boxplot(x='Metric', y='Value', data=ans_df_melted, width=0.5, showmeans=True)
-        save_path_ans = directory_path + model_name + "-ans-boxplot.png"
+        save_path_ans = directory_path + f"ans-boxplot-{model_name}.png"
         plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
         plt.close()
 
@@ -316,8 +317,9 @@ if __name__ == "__main__":
         sns.boxplot(data=retries, width=0.5, showmeans=True, ax=axes[1])
         axes[1].set_ylabel('Total number of retries')
 
+        plt.title(f"{model_name}")
         plt.tight_layout()
-        save_path_err = directory_path + model_name + "err-boxplot.png"
+        save_path_err = directory_path + f"err-boxplot-{model_name}.png"
         plt.savefig(save_path_err, dpi=300, bbox_inches='tight')
         plt.close()
 
@@ -334,10 +336,10 @@ if __name__ == "__main__":
         # Plot avg. power draw
         sns.boxplot(data=pow_df['avg. power draw'], width=0.5, showmeans=True, ax=axes[2])
         axes[2].set_ylabel('Avg. Power Draw in W')
-
+        plt.title(f"{model_name}")
         plt.tight_layout()
 
-        save_path_pow = directory_path + model_name + "-pow-boxplot.png"
+        save_path_pow = directory_path + f"pow-boxplot-{model_name}.png"
         plt.savefig(save_path_pow, dpi=300, bbox_inches='tight')
         plt.close()
 
@@ -411,14 +413,15 @@ if __name__ == "__main__":
                         plt.axvline(row["Time_Seconds"], color='r', linestyle='--')
                     prev_doc = row["Document"]
                     first_change = False
-
+            average_power = df["Value"].mean()
+            plt.axhline(average_power, color='b', linestyle='--', label=f"Avg Power: {average_power:.2f} W")
             plt.xlabel("Time [s}")
             plt.ylabel("Power Draw [W]")
             plt.title(f"{model_name}")
             plt.legend()
             plt.xticks(rotation=45)
 
-            save_path = directory_path + model_name + "-power_draw-plot" + current_iter + ".png"
+            save_path = directory_path + f"power_draw-plot-{model_name}-iter" + current_iter + ".png"
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             plt.close()
         return
@@ -463,7 +466,7 @@ if __name__ == "__main__":
         }
         err_df = pd.DataFrame(err_data)
 
-        with pd.ExcelWriter(directory_path + model_name + "efficiency.xlsx", engine='xlsxwriter') as writer:
+        with pd.ExcelWriter(directory_path + f"stats_calculated-{model_name}.xlsx", engine='xlsxwriter') as writer:
             # Save the DataFrames to separate sheets
             new_pow_df.to_excel(writer, sheet_name='Power_Stats', index=False)
             combined_ans.to_excel(writer, sheet_name='Answer_Stats', index=False)
@@ -471,7 +474,9 @@ if __name__ == "__main__":
 
     # write data from single iterations to an excel-file for T-Test
     def to_excel(directory_path, ans_df, pow_df, parse_errs: list, retries: list):
-        file_path = os.path.join(directory_path, "by_iteration.xlsx")
+        parts = directory_path.split("ollama-")[1].split("/")
+        model_name = parts[0]
+        file_path = directory_path + f"stats_by_iteration-{model_name}.xlsx"
         # use micro averaged scores
         ans_df_micro = ans_df.loc[ans_df.index == 'Micro_Avg']
         # convert lists to df
@@ -490,8 +495,8 @@ if __name__ == "__main__":
     total_iter = 5
     date_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # dir_path direkt angeben (Ordner mit Timestamp als Name)
-    dir_path = "res/efficiency/pet-md/ollama-ultiima-32b-Q6_K/2025-02-17_08-04-19"
+    # dir_path direkt angeben (Ordner der "answers" und "power" beinhaltet)
+    dir_path = "res/efficiency/pet-md/ollama-ultiima-72b-Q4_K_S/2025-02-14_21-51-44"
     if not dir_path.endswith("/"):
         dir_path += "/"
 
@@ -512,9 +517,9 @@ if __name__ == "__main__":
     #     power_logger.start_logging()
 
     # unbenötigte Statistiken auskommentieren
-    # answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
-    # list_retries = parse_retries(dir_path)
-    # to_excel(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    # boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    # calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    plot_power_draw(dir_path, 0.05)
+        answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
+        list_retries = parse_retries(dir_path)
+        to_excel(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+        boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+        calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+        plot_power_draw(dir_path, 0.05)
