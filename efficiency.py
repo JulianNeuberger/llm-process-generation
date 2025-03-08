@@ -296,13 +296,15 @@ if __name__ == "__main__":
 
 
     def boxplot_from_data(directory_path: str, ans_df, pow_df, parse_err, retries):
+        parts = directory_path.split("ollama-")[1].split("/")
+        model_name = parts[0]
         # use micro averaged scores for plotting
         ans_df_micro = ans_df.loc[ans_df.index == 'Micro_Avg']
         ans_df_melted = ans_df_micro.reset_index().melt(id_vars=['Tag', 'iteration'], value_vars=['P', 'R', 'F1'],
                                                         var_name='Metric', value_name='Value')
         plt.figure(figsize=(8, 6))
         sns.boxplot(x='Metric', y='Value', data=ans_df_melted, width=0.5, showmeans=True)
-        save_path_ans = directory_path + "ans-boxplot.png"
+        save_path_ans = directory_path + model_name + "-ans-boxplot.png"
         plt.savefig(save_path_ans, dpi=300, bbox_inches='tight')
         plt.close()
 
@@ -315,7 +317,7 @@ if __name__ == "__main__":
         axes[1].set_ylabel('Total number of retries')
 
         plt.tight_layout()
-        save_path_err = directory_path + "err-boxplot.png"
+        save_path_err = directory_path + model_name + "err-boxplot.png"
         plt.savefig(save_path_err, dpi=300, bbox_inches='tight')
         plt.close()
 
@@ -335,7 +337,7 @@ if __name__ == "__main__":
 
         plt.tight_layout()
 
-        save_path_pow = directory_path + "pow-boxplot.png"
+        save_path_pow = directory_path + model_name + "-pow-boxplot.png"
         plt.savefig(save_path_pow, dpi=300, bbox_inches='tight')
         plt.close()
 
@@ -371,8 +373,10 @@ if __name__ == "__main__":
 
     # plot power draw over time and mark when a new document is loaded
     # set short_flag to only print the first 5% of data (approx. 3 documents)
-    def plot_power_draw(directory_path: str, short_flag: bool):
+    def plot_power_draw(directory_path: str, percentage: float):
         power_directory = os.fsencode(directory_path + "power")
+        parts = directory_path.split("ollama-")[1].split("/")
+        model_name = parts[0]
         for power_file in os.listdir(power_directory):
             filepath = directory_path + "power/" + os.fsdecode(power_file)
             start_idx = filepath.find("iteration")
@@ -382,9 +386,8 @@ if __name__ == "__main__":
 
             with open(filepath, 'r') as file:
                 lines = file.readlines()
-                if short_flag:
-                    num_elements = len(lines)
-                    lines = lines[:int(num_elements * 0.05)]
+                num_elements = len(lines)
+                lines = lines[:int(num_elements * percentage)]
                 for line in lines:
                     parts = re.split(r'\t+', line.strip())
                     timestamp = datetime.strptime(parts[0], "%Y-%m-%d %H:%M:%S.%f")
@@ -409,18 +412,21 @@ if __name__ == "__main__":
                     prev_doc = row["Document"]
                     first_change = False
 
-            plt.xlabel("Time (Seconds)")
-            plt.ylabel("Power Draw")
+            plt.xlabel("Time [s}")
+            plt.ylabel("Power Draw [W]")
+            plt.title(f"{model_name}")
             plt.legend()
             plt.xticks(rotation=45)
 
-            save_path = directory_path + "power_draw-plot" + current_iter + ".png"
+            save_path = directory_path + model_name + "-power_draw-plot" + current_iter + ".png"
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
             plt.close()
         return
 
     # apply mean_std to dataframes and save as Excel file
     def calc_statistics_from_dataframe(directory_path: str, ans_df, pow_df, parse_errs: list, retries: list):
+        parts = directory_path.split("ollama-")[1].split("/")
+        model_name = parts[0]
         # Combine results of all iterations for power df
         combined_pow = pow_df.agg(
             {
@@ -457,7 +463,7 @@ if __name__ == "__main__":
         }
         err_df = pd.DataFrame(err_data)
 
-        with pd.ExcelWriter(directory_path + "efficiency.xlsx", engine='xlsxwriter') as writer:
+        with pd.ExcelWriter(directory_path + model_name + "efficiency.xlsx", engine='xlsxwriter') as writer:
             # Save the DataFrames to separate sheets
             new_pow_df.to_excel(writer, sheet_name='Power_Stats', index=False)
             combined_ans.to_excel(writer, sheet_name='Answer_Stats', index=False)
@@ -484,27 +490,31 @@ if __name__ == "__main__":
     total_iter = 5
     date_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    # dir_path must end with "/"
-    # dir_path = "res/efficiency/pet-md/ultiima-72b-Q4_K_S/2025-02-14_21-51-44/"
+    # dir_path direkt angeben (Ordner mit Timestamp als Name)
+    dir_path = "res/efficiency/pet-md/ollama-ultiima-32b-Q6_K/2025-02-17_08-04-19"
+    if not dir_path.endswith("/"):
+        dir_path += "/"
 
-    if exp_type == "pet_md":
-        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    elif exp_type == "pet_re":
-        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    else:
-        dir_path = None
+    # diesen Teil auskommentieren und dir_path oben direkt angeben, falls nur Statistiken und Plots benötigt werden
+    # if exp_type == "pet_md":
+    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    # elif exp_type == "pet_re":
+    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    # else:
+    #     dir_path = None
+    #
+    # for i in range(1, total_iter + 1):
+    #     log_path = dir_path + f"power/iteration{i}.dat"
+    #     log_file = Path(log_path)
+    #     if log_file.is_file():
+    #         break
+    #     power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
+    #     power_logger.start_logging()
 
-    for i in range(1, total_iter + 1):
-        log_path = dir_path + f"power/iteration{i}.dat"
-        log_file = Path(log_path)
-        if log_file.is_file():
-            break
-        power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
-        power_logger.start_logging()
-
-    answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
-    list_retries = parse_retries(dir_path)
-    to_excel(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    plot_power_draw(dir_path, True)
+    # unbenötigte Statistiken auskommentieren
+    # answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
+    # list_retries = parse_retries(dir_path)
+    # to_excel(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    # boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    # calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    plot_power_draw(dir_path, 0.05)
