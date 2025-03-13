@@ -74,11 +74,12 @@ class PowerMeasurementThread(Thread):
         current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         lines = process_output.splitlines()
         power = lines[1].split(' ')[0] if len(lines) > 1 else "error"
-        memory = lines[1].split(' ')[2] if len(lines) > 1 else "error"
+        memory = lines[1].split(' ')[2]
+        memory_unit = lines[1].split(' ')[3]
         pathlib.Path(self.log_path).parent.mkdir(exist_ok=True, parents=True)
         with open(self.log_path, "a") as f:
             f.write(f"{current_date}\t\t{self.current_document.id if self.current_document else 'None'}\t\t"
-                    f"{self.current_fold_id if self.current_fold_id else 'None'}\t\t{power}\t{memory}\n")
+                    f"{self.current_fold_id if self.current_fold_id else 'None'}\t{power}\t{memory}\t{memory_unit}\n")
 
         with self.lock:
             if self.running:
