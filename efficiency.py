@@ -491,7 +491,7 @@ if __name__ == "__main__":
 
 
     exp_type = "pet_md"
-    mod_name = "ollama-Lamarckvergence-14B-IQ4_NL"
+    mod_name = "mistral-large:123b-instruct-2407-q2_K"
     total_iter = 5
     date_formatted = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
