@@ -68,18 +68,18 @@ class PowerMeasurementThread(Thread):
         if not self.running:
             return
 
-        completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.instant,memory.used', '--format=csv'],
+        completed_process = subprocess.run(['nvidia-smi', '--query-gpu=power.draw.instant,memory.used,pstate', '--format=csv'],
                                            capture_output=True)
         process_output = completed_process.stdout.decode("utf-8")
         current_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
         lines = process_output.splitlines()
         power = lines[1].split(' ')[0] if len(lines) > 1 else "error"
         memory = lines[1].split(' ')[2]
-        memory_unit = lines[1].split(' ')[3]
+        pstate = lines[1].split(' ')[4] # P0 = max performance; P12 = min performance
         pathlib.Path(self.log_path).parent.mkdir(exist_ok=True, parents=True)
         with open(self.log_path, "a") as f:
-            f.write(f"{current_date}\t\t{self.current_document.id if self.current_document else 'None'}\t\t"
-                    f"{self.current_fold_id if self.current_fold_id else 'None'}\t{power}\t{memory}\t{memory_unit}\n")
+            f.write(f"{current_date}\t{self.current_document.id if self.current_document else 'None'}\t"
+                    f"{self.current_fold_id if self.current_fold_id else 'None'}\t{power}\t{memory}\t{pstate}\n")
 
         with self.lock:
             if self.running:
