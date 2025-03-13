@@ -350,21 +350,21 @@ def print_experiment_results(
 
 def main():
     importers = {
-        "pet": data.PetImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/pet/all.new.jsonl"),
-        "quishpi-re": data.VanDerAaSentenceImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data"
+        "pet": data.PetImporter("C:/Users/Felix/Documents/llm-process-generation/res/data/pet/all.new.jsonl"),
+        "quishpi-re": data.VanDerAaSentenceImporter("C:/Users/Felix/Documents/llm-process-generation/res/data"
                                                     "/quishpi/csv"),
-        "quishpi-md": data.QuishpiImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/quishpi", exclude_tags=["entity"]),
+        "quishpi-md": data.QuishpiImporter("C:/Users/Felix/Documents/llm-process-generation/res/data/quishpi", exclude_tags=["entity"]),
         "van-der-aa-re": data.VanDerAaSentenceImporter(
-            "C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/van-der-aa/datacollection.csv"
+            "C:/Users/Felix/Documents/llm-process-generation/res/data/van-der-aa/datacollection.csv"
         ),
         "van-der-aa-md": data.VanDerAaImporter(
-            "C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/van-der-aa/datacollection.csv"
+            "C:/Users/Felix/Documents/llm-process-generation/res/data/van-der-aa/datacollection.csv"
         ),
-        "analysis": data.PetImporter("C:/Users/Felix/Documents/GitHub/llm-process-generation/res/data/pet/all.new.jsonl"),
+        "analysis": data.PetImporter("C:/Users/Felix/Documents/llm-process-generation/res/data/pet/all.new.jsonl"),
     }
 
-    answer_file = "../res/answers/ollama-llama3.3-70b-instruct/pet-md/iteration1_answers.json"
-    # answer_file = "../res/answers/gpt-4o-2024-05-13/pet-md/2024-05-28_14-47-32.json"
+    # answer_file = "../res/answers/ollama-llama3.3-70b-instruct/pet-md/iteration1_answers.json"
+    answer_file = "C:/Users/Felix/Documents/llm-process-generation/res/answers/gpt-4o-2024-05-13/pet-md/2024-05-28_14-47-32.json"
 
     importer = None
     for k, v in importers.items():
