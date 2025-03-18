@@ -19,6 +19,7 @@ from data import PetImporter
 from data.base import BaseImporter
 from experiments.sampling import random_sample_examples
 from format import BaseFormattingStrategy
+from time import sleep
 from experiments.iterative import run_iterative_document_prompt_getting_doc # depends on the amount of formatters, can be used non-iterative 
 
 # check if the sentence tokenizer models are downloaded
@@ -292,6 +293,9 @@ def annotate_by_formatters(
 
         # save document
         resulting_docs.append(doc)
+
+        # sleep to not spam
+        sleep(1.5)
     
     return resulting_docs
 

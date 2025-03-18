@@ -138,7 +138,7 @@ if False:
 # ====================================================================
 # Step 2. Mention Detection step for models.
 # ====================================================================
-if True:
+if False:
     # create formatters depending on strategy
     if iterative_strategy:
         formatters = [

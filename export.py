@@ -5,15 +5,16 @@ import random
 
 import data
 import numpy as np
+from tqdm import tqdm
 
 # set up indexes of SAP-SAM and PET
 test_case: str = "test#2"
 
-SAP_SAM_AMOUNT = 203 # first 207 lines of jsonl are SAP-SAM Models
+SAP_SAM_AMOUNT = 203 # first 203 lines of jsonl are SAP-SAM Models
 PET_AMOUNT = 41 # the following 41 lines are PET Models
-N_SAMPLES = 100 # amount of samples that will be taken from SAP-SAM Models for learning
+N_SAMPLES = 150 # amount of samples that will be taken from SAP-SAM Models for learning
 
-assert 10 <= N_SAMPLES <= SAP_SAM_AMOUNT, f"Incorrect amount of samples. At least 10, at most {SAP_SAM_AMOUNT}"
+assert 0 <= N_SAMPLES <= SAP_SAM_AMOUNT, f"Incorrect amount of samples. At least 10, at most {SAP_SAM_AMOUNT}"
 
 def to_jerex(dataset: typing.List[data.PetDocument], out_dir: typing.Union[str, pathlib.Path]) -> None:
     def token_sentence_idx(token: data.PetToken, document: data.PetDocument) -> int:
@@ -33,7 +34,7 @@ def to_jerex(dataset: typing.List[data.PetDocument], out_dir: typing.Union[str, 
                     "type": mention.type,
                     "pos": [
                         start_in_sentence,
-                        start_in_sentence + len(mention.token_document_indices) + 1
+                        start_in_sentence + len(mention.token_document_indices) # + 1 # adding one looks like an error !!!
                     ],
                     "name": mention.text(document)
                 })
@@ -72,7 +73,7 @@ def to_jerex(dataset: typing.List[data.PetDocument], out_dir: typing.Union[str, 
 
         return document_dict
 
-    lines = [dump_doc(d) for d in dataset]
+    lines = [dump_doc(d) for d in tqdm(dataset, desc="Processing documents")]
 
     # define all indexes that we have for SAP-SAM and PET
     sap_sam_indexes = list(range(0, SAP_SAM_AMOUNT))
@@ -83,8 +84,8 @@ def to_jerex(dataset: typing.List[data.PetDocument], out_dir: typing.Union[str, 
     # Train JEREX using SAP-SAM models only and check results using the whole PET-Dataset
     if test_case == "test#1":
         # define amounts of samples from SAP-SAM Dataset
-        num_train = int(N_SAMPLES * 0.7) # int(len(lines) * 0.7)
-        num_dev = int(N_SAMPLES * 0.3) # int(len(lines) * 0.1)
+        num_train = int(N_SAMPLES * 1.0) # int(N_SAMPLES * 0.7)
+        num_dev = int(N_SAMPLES * 0.0) # int(N_SAMPLES * 0.3)
         # find indexes of train and validation dataset
         train_indexes = set(np.random.choice(sap_sam_indexes, size=num_train, replace=False))
         # exclude indexes that were selected for training
@@ -96,11 +97,11 @@ def to_jerex(dataset: typing.List[data.PetDocument], out_dir: typing.Union[str, 
     # Train JEREX using some small amount of PET models and additional amount of SAP-SAM models, test with the same set of PET-Models
     elif test_case == "test#2":
         # define a seed to always split PET-Dataset in the same manner
-        random.seed(42)
+        random.seed(233)
         # split PET-Dataset
         random.shuffle(pet_indexes) # shuffle indexes
         num_train_pet = int(PET_AMOUNT * 0.5)
-        num_dev_pet = int(PET_AMOUNT * 0.1)
+        num_dev_pet = PET_AMOUNT - num_train_pet # int(PET_AMOUNT * 0.1)
         # get indexes of PET for future selection
         pet_train_indexes = set(pet_indexes[:num_train_pet])
         pet_dev_indexes = set(pet_indexes[num_train_pet: num_train_pet + num_dev_pet])
@@ -108,8 +109,8 @@ def to_jerex(dataset: typing.List[data.PetDocument], out_dir: typing.Union[str, 
 
         # now select models from SAP-SAM
         np.random.seed(seed=None)
-        num_train_sap_sam = int(N_SAMPLES * 0.7) # int(len(lines) * 0.7)
-        num_dev_sap_sam = int(N_SAMPLES * 0.3) # int(len(lines) * 0.1)
+        num_train_sap_sam = int(N_SAMPLES * 1.0) # int(N_SAMPLES * 0.7)
+        num_dev_sap_sam = int(N_SAMPLES * 0.0) # int(N_SAMPLES * 0.3)
         # select indexes for SAP-SAM Models
         sap_sam_train_indexes = set(np.random.choice(sap_sam_indexes, size=num_train_sap_sam, replace=False))
         # exclude indexes that were selected for training
