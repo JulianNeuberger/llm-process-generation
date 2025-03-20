@@ -14,7 +14,7 @@ You are tasked with extracting mentions of process relevant elements from a natu
 
 - **Activity Data**: Look for Activity mentions in the text, and find the grammatical object that this Activity produces or takes as input. Extract it (including any determiners, if present) as an Activity Data.
 
-- **Actor**: Focus at Activity mentions in the given text. Extract the person, department, or similar role that executes the Activity. Do not include the determiner if it is present, e.g. extract "student" from "First the student studies for their exam".
+- **Actor**: Focus at Activity mentions in the given text. Extract the person, department, or similar role that executes the Activity. Include the determiner if it is present, e.g. extract "the student" from "First the student studies for their exam".
 
 - **Further Specification**: Look for mentions of type Activity and extract descriptions of **how** or **why** this Activity is being executed, including means, and manner. It is always located in the same sentence. Example: If the sentence is "She submits the report after a thorough review," extract "a thorough review" as Further Specification.
 
