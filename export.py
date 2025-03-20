@@ -8,7 +8,7 @@ import numpy as np
 from tqdm import tqdm
 
 # set up indexes of SAP-SAM and PET
-test_case: str = "test#2"
+test_case: str = "test#2" # "test#1" or "test#2"
 
 SAP_SAM_AMOUNT = 203 # first 203 lines of jsonl are SAP-SAM Models
 PET_AMOUNT = 41 # the following 41 lines are PET Models
@@ -131,6 +131,7 @@ def to_jerex(dataset: typing.List[data.PetDocument], out_dir: typing.Union[str, 
     print("Validation size:", len(dev), "samples.")
     print("Test size:", len(test), "samples.")
 
+    # save the results
     out_file = pathlib.Path(out_dir) / "train.json"
     with open(out_file, "w", encoding="utf8") as f:
         json.dump(train, f)
@@ -143,6 +144,7 @@ def to_jerex(dataset: typing.List[data.PetDocument], out_dir: typing.Union[str, 
     with open(out_file, "w", encoding="utf8") as f:
         json.dump(test, f)
 
+    # save types of entities and relations
     entity_types = set(m.type for d in dataset for m in d.mentions)
     relation_types = set(r.type for d in dataset for r in d.relations)
 
