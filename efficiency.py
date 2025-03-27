@@ -5,7 +5,6 @@ import re
 import statistics
 import pandas as pd
 import nltk
-import tiktoken
 from dotenv import load_dotenv
 from langchain_core.language_models import BaseChatModel
 from pathlib import Path
@@ -568,25 +567,25 @@ if __name__ == "__main__":
         dir_path += "/"
 
     # diesen Teil auskommentieren und dir_path oben direkt angeben, falls nur Statistiken und Plots benötigt werden
-    # if exp_type == "pet_md":
-    #     dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
-    # elif exp_type == "pet_re":
-    #     dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
-    # else:
-    #     dir_path = None
+    if exp_type == "pet_md":
+        dir_path = f"res/efficiency/pet-md/{mod_name}/{date_formatted}/"
+    elif exp_type == "pet_re":
+        dir_path = f"res/efficiency/pet-re/{mod_name}/{date_formatted}/"
+    else:
+        dir_path = None
 
-    # for i in range(1, total_iter + 1):
-    #     log_path = dir_path + f"power/iteration{i}.dat"
-    #     log_file = Path(log_path)
-    #     if log_file.is_file():
-    #         break
-    #     power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
-    #     power_logger.start_logging()
+    for i in range(1, total_iter + 1):
+        log_path = dir_path + f"power/iteration{i}.dat"
+        log_file = Path(log_path)
+        if log_file.is_file():
+            break
+        power_logger = power.PowerLogger(run_experiments, log_path, [exp_type, dir_path, mod_name, i])
+        power_logger.start_logging()
 
-        # unbenötigte Statistiken auskommentieren
-        answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
-        list_retries = parse_retries(dir_path)
-        to_excel(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-        boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-        calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
-    #   plot_power_draw(dir_path, 0.05)
+    # unbenötigte Statistiken auskommentieren
+    answer_df, power_df, list_parse_errors = parse_results(dir_path, False)
+    list_retries = parse_retries(dir_path)
+    to_excel(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    boxplot_from_data(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    calc_statistics_from_dataframe(dir_path, answer_df, power_df, list_parse_errors, list_retries)
+    plot_power_draw(dir_path, 0.05)
