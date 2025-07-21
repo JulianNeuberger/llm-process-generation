@@ -123,7 +123,6 @@ def relation_f1_stats(
     print_only_tags: typing.Optional[typing.List[str]],
     verbose: bool = False,
 ) -> typing.Dict[str, Stats]:
-    print(predicted_documents,ground_truth_documents)
     return _f1_stats(
         predicted_documents=predicted_documents,
         ground_truth_documents=ground_truth_documents,

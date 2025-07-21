@@ -10,9 +10,9 @@ from tqdm import tqdm
 # set up indexes of SAP-SAM and PET
 test_case: str = "test#2" # "test#1" or "test#2"
 
-SAP_SAM_AMOUNT = 203 # first 203 lines of jsonl are SAP-SAM Models
+SAP_SAM_AMOUNT = 423 # first 203 lines of jsonl are SAP-SAM Models
 PET_AMOUNT = 41 # the following 41 lines are PET Models
-N_SAMPLES = 150 # amount of samples that will be taken from SAP-SAM Models for learning
+N_SAMPLES = 400 # amount of samples that will be taken from SAP-SAM Models for learning
 
 assert 0 <= N_SAMPLES <= SAP_SAM_AMOUNT, f"Incorrect amount of samples. At least 10, at most {SAP_SAM_AMOUNT}"
 
@@ -91,13 +91,17 @@ def to_jerex(dataset: typing.List[data.PetDocument], out_dir: typing.Union[str, 
         # exclude indexes that were selected for training
         resting_indexes = list(set(sap_sam_indexes).difference(train_indexes))
         dev_indexes = set(np.random.choice(resting_indexes, size=num_dev, replace=False))
-        test_indexes = set(pet_indexes)
+
+        # in case of creation of test dataset
+        # test_indexes = set(pet_indexes)
+        dev_indexes = set(pet_indexes) # use all PET-Models for validation
+        test_indexes = set()
     
     # test case #2
     # Train JEREX using some small amount of PET models and additional amount of SAP-SAM models, test with the same set of PET-Models
     elif test_case == "test#2":
         # define a seed to always split PET-Dataset in the same manner
-        random.seed(233)
+        random.seed(322)
         # split PET-Dataset
         random.shuffle(pet_indexes) # shuffle indexes
         num_train_pet = int(PET_AMOUNT * 0.5)
@@ -163,7 +167,7 @@ def to_jerex(dataset: typing.List[data.PetDocument], out_dir: typing.Union[str, 
 
 
 if __name__ == "__main__":
-    in_path = pathlib.Path(__file__).parent / "res" / "data" / "annotate" / "sap sam" / "sap_sam_models_512_tokens.jsonl"
+    in_path = pathlib.Path(__file__).parent / "res" / "data" / "annotate" / "sap sam" / "joint_models.jsonl"
     dataset = data.PetImporter(str(in_path)).do_import()
     out_path = pathlib.Path(__file__).parent / "res" / "data" / "jerex" / test_case
     out_path.mkdir(exist_ok=True, parents=True)

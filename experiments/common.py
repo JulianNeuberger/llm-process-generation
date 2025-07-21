@@ -97,16 +97,26 @@ def run_single_document_prompt(
 
     formatted_input_document = formatter.input(current_prediction)
 
-    prompt_as_text = prompt.format(
-        input=formatted_input_document,
-        steps=", ".join(formatter.steps),
-        hint=input_document.get_hint(), # Ivan Khrop, provide hints for LLM for better annotation
-    )
-    prompt_as_messages = prompt.format_prompt(
-        input= formatted_input_document,
-        steps=", ".join(formatter.steps),
-        hint=input_document.get_hint(), # Ivan Khrop, provide hints for LLM for better annotation
-    )
+    if HintsProvider.use_hint:
+        prompt_as_text = prompt.format(
+            input=formatted_input_document,
+            steps=", ".join(formatter.steps),
+            hint=input_document.get_hint(), # Ivan Khrop, provide hints for LLM for better annotation
+        )
+        prompt_as_messages = prompt.format_prompt(
+            input= formatted_input_document,
+            steps=", ".join(formatter.steps),
+            hint=input_document.get_hint(), # Ivan Khrop, provide hints for LLM for better annotation
+        )
+    else:
+        prompt_as_text = prompt.format(
+            input=formatted_input_document,
+            steps=", ".join(formatter.steps),
+        )
+        prompt_as_messages = prompt.format_prompt(
+            input=formatted_input_document,
+            steps=", ".join(formatter.steps),
+        )
 
     num_input_tokens = chat_model.get_num_tokens(prompt_as_text)
     if isinstance(chat_model, langchain_openai.ChatOpenAI):

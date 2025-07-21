@@ -22,6 +22,7 @@ from annotate_sap_sam.utils import (
     get_double_assigned_tokens, # tokens that were assigned to more than one mention
     double_assigned_remove, # remove mentions that are assigned to one token
 )
+from experiments.iterative import run_iterative_document_prompt_getting_doc # iterative prompt for annotation
 from annotate_sap_sam.hint_provider import HintsProvider # provides hints for iterative annotation
 
 # define paths to data foldes and files
@@ -60,7 +61,7 @@ gpt_chat_model: BaseChatModel = experiments.chat_model_for_name(model_name, 0)
 
 # special requirements
 iterative_strategy = False # specify True to use iterative prompt
-use_graph_model = True # specify True to use prompt with graph ground truth model
+use_graph_model = False # specify True to use prompt with graph ground truth model
 num_shots = 4 # amount of examples to take
 seed = 42 # just a randomizer seed
 
@@ -132,7 +133,7 @@ if False:
         documents=converted_to_pet_models, 
         path=sap_sam_json_file
     ), "Models were not converted into PetDocument format."
-    print(f"PetDocumemts with tokens are saved to {str(sap_sam_json_file)}")
+    print(f"PetDocuments with tokens are saved to {str(sap_sam_json_file)}")
 
 
 # ====================================================================
@@ -241,7 +242,7 @@ if False:
         documents=md_extracted_new, 
         path=sap_sam_json_file
     ), "Models were not annotated with mentions."
-    print(f"PetDocumemts with mentions are saved to {str(sap_sam_json_file)}")
+    print(f"PetDocuments with mentions are saved to {str(sap_sam_json_file)}")
 
 
 # ====================================================================
@@ -260,7 +261,7 @@ if False:
         # check the document
         problematic_tokens = get_double_assigned_tokens(pet_document=document)
         # report the amount of problematic tokens
-        print("Amount of problematic tokens:", len(problematic_tokens))
+        print("\nAmount of problematic tokens:", len(problematic_tokens))
         # solve disambiguity in mentions
         double_assigned_remove(pet_document=document, double_assigned=problematic_tokens)
     
@@ -269,7 +270,7 @@ if False:
         documents=documents, 
         path=sap_sam_json_file
     ), "Models after correction of mentions were not saved."
-    print(f"PetDocumemts after correction of mentions are saved to {str(sap_sam_json_file)}")
+    print(f"PetDocuments after correction of mentions are saved to {str(sap_sam_json_file)}")
 
 
 # ====================================================================
@@ -313,7 +314,7 @@ if False:
         documents=er_extracted_new, 
         path=sap_sam_json_file
     ), "Entity Resolution was not finished."
-    print(f"PetDocumemts with entities are saved to {str(sap_sam_json_file)}")
+    print(f"PetDocuments with entities are saved to {str(sap_sam_json_file)}")
 
 
 # ====================================================================
@@ -382,7 +383,7 @@ if False:
         documents=re_extracted_new, 
         path=sap_sam_json_file
     ), "Relation Extraction was not finished."
-    print(f"PetDocumemts with relations are saved to {str(sap_sam_json_file)}")
+    print(f"PetDocuments with relations are saved to {str(sap_sam_json_file)}")
 
 
 # ====================================================================
@@ -396,12 +397,40 @@ if False:
     )
 
     # apply post-processing
+    # remove entities that do not have mentions
     for doc in tqdm(importer._sap_sam_documents, desc="Post-Processing"):
         doc.entities = [entity for entity in doc.entities if len(entity.mention_indices) > 0]
+
+    # remove relations that do not match specific relation types
+    for doc in tqdm(importer._sap_sam_documents, desc="Post-Processing"):
+        doc.relations = [
+            relation for relation in doc.relations 
+            if relation.type in {
+                "uses",
+                "actor performer",
+                "actor recipient",
+                "further specification",
+                "same gateway",
+                "flow",
+            }
+        ]
+
+
+    # remove documents that do not have mentions, entities, or relations
+    importer._sap_sam_documents = [
+        doc for doc in importer._sap_sam_documents 
+        if len(doc.mentions) > 0 and len(doc.entities) > 0 and len(doc.relations) > 0
+    ]
 
     # save all the processed PetDocuments in jsonl file
     assert save_PetDocuments(
         documents=importer._sap_sam_documents, 
         path=sap_sam_json_file
     ), "Post-Processing was not finished."
-    print(f"PetDocumemts after post-processing are saved to {str(sap_sam_json_file)}")
+    print(f"PetDocuments after post-processing are saved to {str(sap_sam_json_file)}")
+
+# ====================================================================
+# Report the annotation duration for running iterative prompt
+# ====================================================================
+if False:
+    run_iterative_document_prompt_getting_doc.report()

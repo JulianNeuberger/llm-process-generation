@@ -5,9 +5,11 @@ from langchain_core.language_models import BaseChatModel
 import format
 from data import base
 from experiments import model, common
+from annotate_sap_sam.time_checker import TimeChecker
 
 TDocument = typing.TypeVar("TDocument", bound=base.DocumentBase)
 
+@TimeChecker
 def run_iterative_document_prompt_getting_doc(
     input_document: TDocument,
     formatters: typing.List[format.BaseFormattingStrategy[TDocument]],

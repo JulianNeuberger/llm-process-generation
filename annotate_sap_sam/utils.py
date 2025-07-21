@@ -236,6 +236,63 @@ class MixedDataImporter(BaseImporter[PetDocument]):
         return folds
 
 
+def _process_folds(
+    folds: list[dict[str, list[PetDocument]]],
+    formatters: list[BaseFormattingStrategy[PetDocument]],
+    *,
+    chat_model: BaseChatModel,
+    model_name: str,
+    dry_run: bool = False,
+) -> list[PetDocument]:
+    """
+    Process each fold using the provided formatters and chat model.
+
+    Parameters
+    ----------
+    folds: list[dict[str, list[PetDocument]]]
+        Folds that contain documents for annotation.
+    formatters: list[BaseFormattingStrategy[PetDocument]]
+        List of formatters that must be applied defining iterative or non-iterative approach.
+    chat_model: BaseChatModel
+        Model that will be used for annotation.
+    model_name: str
+        Name of model.
+    dry_run: bool = False
+        If this run is dry, then no changes will be made to the documents.
+
+    Returns
+    -------
+    list[PetDocument]
+        List of PetDocuments with annotations.
+    """
+
+    resulting_docs = list()
+    # for each fold (SAP-SAM Document) run a model and annotate it
+    for fold in tqdm(iterable=folds, desc="Annotation of documents"):
+        # documents for annotation
+        input_doc = fold["test"][0] # as only one element in the list
+        # examples
+        examples = fold["train"]
+        
+        # run annotation
+        doc = run_iterative_document_prompt_getting_doc(
+            input_document=input_doc,
+            formatters=formatters,
+            chat_model=chat_model,
+            example_docs=examples,
+            model_name=model_name,
+            dry_run=dry_run,
+        )
+
+        # save document
+        resulting_docs.append(doc)
+
+        # sleep to not spam
+        sleep(5.0)
+    
+    return resulting_docs
+
+
 def annotate_by_formatters(
         mixed_data_importer: MixedDataImporter,
         formatters: list[BaseFormattingStrategy[PetDocument]],
@@ -273,31 +330,47 @@ def annotate_by_formatters(
     """
     # create folds
     folds = mixed_data_importer.fold(num_shots=num_shots, seed=seed)
-    resulting_docs = list()
-    # for each fold (SAP-SAM Document) run a model and annotate it
-    for fold in tqdm(iterable=folds, desc="Annotation of documents"):
-        # documents for annotation
-        input_doc = fold["test"][0] # as only one element in the list
-        # examples
-        examples = fold["train"]
-        
-        # run annotation
-        doc = run_iterative_document_prompt_getting_doc(
-            input_document=input_doc,
-            formatters=formatters,
-            chat_model=chat_model,
-            example_docs=examples,
-            model_name=model_name,
-            dry_run=dry_run,
-        )
-
-        # save document
-        resulting_docs.append(doc)
-
-        # sleep to not spam
-        sleep(1.5)
     
-    return resulting_docs
+    return _process_folds(
+        folds=folds,
+        formatters=formatters,
+        chat_model=chat_model,
+        model_name=model_name,
+        dry_run=dry_run,
+    )
+
+
+def annnotate_pet_by_formatters(
+    formatters: list[BaseFormattingStrategy[PetDocument]],
+    folds: list[dict[str, list[PetDocument]]],
+    *,
+    chat_model: BaseChatModel,
+    model_name: str,
+    dry_run: bool,
+) -> list[PetDocument]:
+    """
+    Annotate PET-Dataset according to formatters (Mention Detection, Entity Resolution, Relation Extraction).
+
+    Parameters
+    ----------
+    formatters: list[BaseFormattingStrategy[PetDocument]]
+        List of formatters that must be applied defining iterative or non-iterative approach.
+    folds: list[dict[str, list[PetDocument]]]
+        Folds that contain PET-Dataset documents for annotation.
+    chat_model: BaseChatModel
+        Model that will be used for annotation.
+    model_name: str,
+        Name of model.
+    dry_run: bool
+        If this run is dry.
+    """
+    return _process_folds(
+        folds=folds,
+        formatters=formatters,
+        chat_model=chat_model,
+        model_name=model_name,
+        dry_run=dry_run,
+    )
 
 
 def get_double_assigned_tokens(pet_document: PetDocument) -> dict[int, list[str]]:

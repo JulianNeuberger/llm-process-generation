@@ -183,10 +183,10 @@ class PetEntity(base.SupportsPrettyDump[PetDocument]):
         return PetEntity(mention_indices=tuple(i for i in self.mention_indices))
 
     def get_tag(self, document: "PetDocument") -> str:
-        tags = set(document.mentions[i].type for i in self.mention_indices)
+        tags = set(document.mentions[i].type for i in self.mention_indices if i < len(document.mentions))
         if len(tags) > 1:
             print(f"Entity has mentions of mixed ner tags: {tags}")
-        return list(tags)[0]
+        return list(tags)[0] if len(tags) > 0 else "unknown"
 
     def pretty_dump(self, document: PetDocument) -> str:
         formatted_mentions = [

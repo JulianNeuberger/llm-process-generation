@@ -13,7 +13,7 @@ tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 # paths and folders
 models_folder = "sap sam"
 base_path = Path(__file__).parent.joinpath("res", "data")
-sap_sam_json_file = base_path.joinpath("annotate", models_folder, "sap_sam_models.jsonl")
+sap_sam_json_file = base_path.joinpath("annotate", models_folder, "All Available Models.jsonl")
 pet_models_json_file = base_path.joinpath("pet", "all_new.jsonl")
 
 # create importer
@@ -49,6 +49,8 @@ def token_stats(documents: list[PetDocument], dataset_name: str, n_max: int = 51
 
     # Display the tokens and their count
     print("Maximal amount of tokens:", n_max)
+    print("Average amount of tokens:", round(sum(data) / len(data), 2))
+    print("Total amount of tokens:", sum(data))
 
     plt.hist(data, bins=30, alpha=0.5, color="blue", edgecolor="black")
     plt.xlabel("Number of tokens")
@@ -57,7 +59,7 @@ def token_stats(documents: list[PetDocument], dataset_name: str, n_max: int = 51
     plt.show()
 
 # Statistics about tokens
-if False:
+if True:
     token_stats(importer._pet_documents, dataset_name="PET Dataset")
     token_stats(importer._sap_sam_documents, dataset_name="SAP SAM Dataset")
 
@@ -120,7 +122,7 @@ if False:
     actors_words(importer._sap_sam_documents, dataset_name="SAP SAM Dataset")
 
 # Check intersections between actors
-if True:
+if False:
     pet_actors = get_words_for_actors(importer._pet_documents)
     sap_sam_actors = get_words_for_actors(importer._sap_sam_documents)
 
@@ -133,7 +135,7 @@ if True:
 # ==================================
 # Relations
 # ==================================
-def count_relations(documents: list[PetDocument], dataset_name: str):
+def count_relations(documents: list[PetDocument], dataset_name: str) -> pd.DataFrame:
     """Count all relations by types in the dataset."""
     relations: dict[str, int] = dict()
 
@@ -155,16 +157,31 @@ def count_relations(documents: list[PetDocument], dataset_name: str):
     print(df)
     print()
 
+    return df
 
-if False:
-    count_relations(importer._pet_documents, dataset_name="PET Dataset")
-    count_relations(importer._sap_sam_documents, dataset_name="SAP SAM Dataset")
+def show_barplot(df_pet: pd.Series, df_sap_sam: pd.Series, type: str):
+    """Create a bar plot for the relations in both datasets."""
+    df = pd.concat([df_pet, df_sap_sam], axis=1)
+    df.columns = ["PET Dataset", "SAP SAM Dataset"]
+    df.plot(kind="barh", figsize=(12, 6), width=0.8, alpha=0.7)
+    
+    plt.title(f"{type} in PET and SAP SAM Datasets")
+    plt.xticks(range(0, int(round(df.max().max(), -1)) + 5, 5))
+    plt.xlabel("Relative Count (%)")
+    plt.ylabel("Type")
+    plt.tight_layout()
+    plt.show()
 
+if True:
+    df_pet = count_relations(importer._pet_documents, dataset_name="PET Dataset")
+    df_sap_sam = count_relations(importer._sap_sam_documents, dataset_name="SAP SAM Dataset")
+
+    show_barplot(df_pet["Percent"], df_sap_sam["Percent"], type="Relations")
 
 # ==================================
 # Entities
 # ==================================
-def count_entities(documents: list[PetDocument], dataset_name: str):
+def count_entities(documents: list[PetDocument], dataset_name: str) -> pd.DataFrame:
     entities: dict[str, int] = dict()
 
     for document in documents:
@@ -196,6 +213,11 @@ def count_entities(documents: list[PetDocument], dataset_name: str):
     print(df)
     print()
 
-if False:
-    count_entities(importer._pet_documents, dataset_name="PET Dataset")
-    count_entities(importer._sap_sam_documents, dataset_name="SAP SAM Dataset")
+    return df
+
+if True:
+    df_pet = count_entities(importer._pet_documents, dataset_name="PET Dataset")
+    df_sap_sam = count_entities(importer._sap_sam_documents, dataset_name="SAP SAM Dataset")
+
+    # create bar plot
+    show_barplot(df_pet["Percent"], df_sap_sam["Percent"], type="Entities")
